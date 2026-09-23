@@ -1,0 +1,18 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Source & Resource files
+*.java text diff=java eol=lf
+*.json text eol=lf
+*.py text diff=python eol=lf
+*.fsh text eol=lf
+*.vsh text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.mcmeta text eol=lf
+
+# Binary files
+*.png binary
+*.jar binary
+*.bbmodel binary
+*.ogg binary

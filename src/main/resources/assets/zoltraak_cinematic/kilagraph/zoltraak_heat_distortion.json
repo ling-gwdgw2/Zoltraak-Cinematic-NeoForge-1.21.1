@@ -1,0 +1,49 @@
+{
+  "graph_name": "zoltraak_heat_distortion",
+  "author": "Frieren Flight & Zoltraak Cinematic Team",
+  "version": "1.0.0",
+  "type": "RenderTypeGraph",
+  "description": "Screen-space heat distortion and optical refraction envelope surrounding the Zoltraak beam core.",
+  "settings": {
+    "blend_mode": "TRANSLUCENT",
+    "depth_test": "LEQUAL",
+    "output_target": "MAIN_TARGET",
+    "vertex_format": "POSITION_COLOR_TEX_NORMAL"
+  },
+  "nodes": [
+    {
+      "id": "screen_pos",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.scene.ScreenPositionNode",
+      "outputs": ["screen_uv"]
+    },
+    {
+      "id": "voronoi_noise",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.procedural.noise.VoronoiNode",
+      "inputs": { "uv": "uv_node.uv", "angle_offset": "game_time.time_scaled" },
+      "outputs": ["distortion_vector"]
+    },
+    {
+      "id": "gradient_noise",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.procedural.noise.GradientNoiseNode",
+      "inputs": { "uv": "uv_node.uv", "scale": 18.0 },
+      "outputs": ["noise_scalar"]
+    },
+    {
+      "id": "distortion_add",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.math.basic.AddNode",
+      "inputs": { "a": "screen_pos.screen_uv", "b": "noise_scaled.output" },
+      "outputs": ["refracted_uv"]
+    },
+    {
+      "id": "scene_color",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.scene.SceneColorNode",
+      "inputs": { "uv": "distortion_add.refracted_uv" },
+      "outputs": ["warped_scene_rgb"]
+    },
+    {
+      "id": "fragment_output",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.fragment.FragmentBaseColorBlock",
+      "inputs": { "color": "scene_color.warped_scene_rgb", "alpha": "edge_falloff.alpha" }
+    }
+  ]
+}

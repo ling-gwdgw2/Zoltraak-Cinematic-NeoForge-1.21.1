@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build outputs
+build/
+bin/
+out/
+.gradle/
+
+# Built JAR artifacts
+*.jar
+*.war
+*.ear
+
+# IDEs & Editors
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch files & local logs
+scratch/
+*.log
+
+# Local Libraries (Game & Dependency jars are ignored to comply with Mojang EULA & keep repository clean)
+libs/

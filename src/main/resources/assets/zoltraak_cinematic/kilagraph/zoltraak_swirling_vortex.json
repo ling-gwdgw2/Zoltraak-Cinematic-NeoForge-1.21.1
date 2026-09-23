@@ -1,0 +1,55 @@
+{
+  "graph_name": "zoltraak_swirling_vortex",
+  "author": "Frieren Flight & Zoltraak Cinematic Team",
+  "version": "1.0.0",
+  "type": "RenderTypeGraph",
+  "description": "Polar-coordinate fluid energy whirlpool and rotating runes on the Zoltraak magic circle plane.",
+  "settings": {
+    "blend_mode": "ADDITIVE",
+    "depth_test": "LEQUAL",
+    "output_target": "MAIN_TARGET",
+    "vertex_format": "POSITION_COLOR_TEX"
+  },
+  "nodes": [
+    {
+      "id": "uv_input",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.input.UVNode",
+      "outputs": ["uv"]
+    },
+    {
+      "id": "polar_coords",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.uv.PolarCoordinatesNode",
+      "inputs": { "uv": "uv_input.uv", "center": [0.5, 0.5] },
+      "outputs": ["radius", "theta"]
+    },
+    {
+      "id": "twirl_node",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.uv.TwirlNode",
+      "inputs": { "uv": "uv_input.uv", "strength": 4.71, "radius": 0.5 },
+      "outputs": ["twirled_uv"]
+    },
+    {
+      "id": "texture_sampler",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.texture.SamplerTexture2DNode",
+      "texture": "zoltraak_cinematic:textures/entity/zoltraak_magic_circle.png",
+      "inputs": { "uv": "twirl_node.twirled_uv" },
+      "outputs": ["rgba"]
+    },
+    {
+      "id": "gradient_sample",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.artistic.gradient.SampleGradientNode",
+      "stops": [
+        { "pos": 0.0, "color": [1.0, 1.0, 1.0, 1.0] },
+        { "pos": 0.25, "color": [0.0, 0.9, 1.0, 1.0] },
+        { "pos": 0.5, "color": [0.0, 0.3, 0.8, 0.0] }
+      ],
+      "inputs": { "t": "polar_coords.radius" },
+      "outputs": ["gradient_rgb"]
+    },
+    {
+      "id": "fragment_emission",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.fragment.FragmentEmissionBlock",
+      "inputs": { "color": "gradient_sample.gradient_rgb", "multiplier": 2.2 }
+    }
+  ]
+}

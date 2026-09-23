@@ -1,0 +1,46 @@
+{
+  "graph_name": "zoltraak_energy_absorption",
+  "author": "Frieren Flight & Zoltraak Cinematic Team",
+  "version": "1.0.0",
+  "type": "RenderTypeGraph",
+  "description": "Dark gravitational singularity mana-absorption core with violent celestial Fresnel rim glow.",
+  "settings": {
+    "blend_mode": "ADDITIVE",
+    "depth_test": "LEQUAL",
+    "output_target": "MAIN_TARGET",
+    "vertex_format": "POSITION_COLOR_TEX_NORMAL"
+  },
+  "nodes": [
+    {
+      "id": "normal_input",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.input.NormalNode",
+      "outputs": ["normal"]
+    },
+    {
+      "id": "view_dir_input",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.input.ViewDirectionNode",
+      "outputs": ["view_dir"]
+    },
+    {
+      "id": "fresnel_calc",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.math.vector.FresnelNode",
+      "inputs": {
+        "normal": "normal_input.normal",
+        "view_dir": "view_dir_input.view_dir",
+        "power": 3.2
+      },
+      "outputs": ["fresnel_val"]
+    },
+    {
+      "id": "absorption_core",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.math.range.OneMinusNode",
+      "inputs": { "in": "fresnel_calc.fresnel_val" },
+      "outputs": ["inv_fresnel"]
+    },
+    {
+      "id": "fragment_emission",
+      "type": "com.lowdragmc.kilagraph.rendertype.nodes.fragment.FragmentEmissionBlock",
+      "inputs": { "rim_power": "fresnel_calc.fresnel_val", "core_absorb": "absorption_core.inv_fresnel" }
+    }
+  ]
+}
