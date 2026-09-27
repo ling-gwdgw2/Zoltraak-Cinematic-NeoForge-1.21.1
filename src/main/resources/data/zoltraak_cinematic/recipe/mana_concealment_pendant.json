@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "N": {
+      "item": "minecraft:iron_nugget"
+    },
+    "S": {
+      "item": "irons_spellbooks:shriving_stone"
+    },
+    "P": {
+      "item": "irons_spellbooks:dead_king_phylactery"
+    }
+  },
+  "pattern": [
+    " N ",
+    "NSN",
+    " P "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zoltraak_cinematic:mana_concealment_pendant"
+  }
+}

@@ -30,6 +30,7 @@ desktop.ini
 # Scratch files & local logs
 scratch/
 *.log
+*.mp4
 
 # Local Libraries (Game & Dependency jars are ignored to comply with Mojang EULA & keep repository clean)
 libs/

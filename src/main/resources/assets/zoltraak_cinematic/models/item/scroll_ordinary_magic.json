@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zoltraak_cinematic:item/scroll_ordinary_magic"
+  }
+}

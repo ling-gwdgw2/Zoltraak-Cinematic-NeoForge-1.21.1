@@ -22,7 +22,9 @@ def build():
     out_jar = os.path.join(base_dir, 'zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar')
     parent_jar = os.path.join(base_dir, '..', 'zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar')
     bin_dir = os.path.join(base_dir, 'build', 'classes')
-    libs_cp = os.path.join(base_dir, 'libs', '*')
+    nf_client = os.path.join(base_dir, 'libs', 'neoforge-21.1.248-client.jar')
+    nf_univ = os.path.join(base_dir, 'libs', 'neoforge-21.1.248-universal.jar')
+    libs_cp = f"{nf_client}{os.pathsep}{nf_univ}{os.pathsep}" + os.path.join(base_dir, 'libs', '*')
     src_dir = os.path.join(base_dir, 'src', 'main', 'java')
     res_dir = os.path.join(base_dir, 'src', 'main', 'resources')
 
@@ -38,7 +40,7 @@ def build():
                 java_files.append(os.path.join(root, f))
 
     print(f"Compiling {len(java_files)} Java files with Java 21...")
-    cmd = [javac_path, '-source', '21', '-target', '21', '-cp', libs_cp, '-d', bin_dir] + java_files
+    cmd = [javac_path, '-source', '21', '-target', '21', '-proc:none', '-cp', libs_cp, '-d', bin_dir] + java_files
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         print("[ERROR] Compilation failed!")
@@ -74,6 +76,16 @@ def build():
         print(f"[SUCCESS] Copied to parent folder: {parent_jar}")
     except Exception as e:
         print(f"[WARNING] Could not copy to parent: {e}")
+
+    # Copy to Curseforge test instance mods folder
+    cf_mods = r"C:\Users\vivo9\curseforge\minecraft\Instances\LING Horizons2.0test\mods"
+    if os.path.exists(cf_mods):
+        try:
+            cf_target = os.path.join(cf_mods, os.path.basename(out_jar))
+            shutil.copy2(out_jar, cf_target)
+            print(f"[SUCCESS] Copied to Curseforge test instance: {cf_target}")
+        except Exception as e:
+            print(f"[WARNING] Could not copy to Curseforge instance: {e}")
 
     # 4. Verify contents
     with zipfile.ZipFile(out_jar, 'r') as z:

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "P": {
+      "item": "irons_spellbooks:pyrium_ingot"
+    },
+    "D": {
+      "item": "irons_spellbooks:divine_soulshard"
+    },
+    "H": {
+      "item": "irons_spellbooks:frosted_helve"
+    },
+    "M": {
+      "item": "irons_spellbooks:mithril_ingot"
+    }
+  },
+  "pattern": [
+    " PD",
+    " HM",
+    "H  "
+  ],
+  "result": {
+    "count": 1,
+    "id": "zoltraak_cinematic:frieren_staff"
+  }
+}

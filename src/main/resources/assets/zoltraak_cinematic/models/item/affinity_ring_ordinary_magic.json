@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zoltraak_cinematic:item/affinity_ring_ordinary_magic"
+  }
+}

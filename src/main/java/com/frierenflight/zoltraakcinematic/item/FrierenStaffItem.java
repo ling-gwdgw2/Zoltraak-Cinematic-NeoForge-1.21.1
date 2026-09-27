@@ -44,6 +44,10 @@ public class FrierenStaffItem extends StaffItem {
                         new AttributeModifier(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "staff_spell_power"),
                                 0.45, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
                         EquipmentSlotGroup.MAINHAND)
+                .add(com.frierenflight.zoltraakcinematic.registry.ModCinematicAttributes.ZOLTRAAK_SPELL_POWER,
+                        new AttributeModifier(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "staff_zoltraak_power"),
+                                0.35, AttributeModifier.Operation.ADD_MULTIPLIED_BASE),
+                        EquipmentSlotGroup.MAINHAND)
                 .add(AttributeRegistry.MAX_MANA,
                         new AttributeModifier(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "staff_max_mana"),
                                 500.0, AttributeModifier.Operation.ADD_VALUE),

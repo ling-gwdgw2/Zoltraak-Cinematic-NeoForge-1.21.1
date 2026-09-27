@@ -21,6 +21,22 @@ public class ModCinematicEntities {
                     .updateInterval(1)
                     .build(ZoltraakCinematicMod.MODID + ":zoltraak_beam"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.frierenflight.zoltraakcinematic.entity.ZoltraakBarrageProjectileEntity>> ZOLTRAAK_BARRAGE_PROJECTILE =
+            ENTITIES.register("zoltraak_barrage_projectile", () -> EntityType.Builder.<com.frierenflight.zoltraakcinematic.entity.ZoltraakBarrageProjectileEntity>of(
+                            com.frierenflight.zoltraakcinematic.entity.ZoltraakBarrageProjectileEntity::new, MobCategory.MISC)
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ZoltraakCinematicMod.MODID + ":zoltraak_barrage_projectile"));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<com.frierenflight.zoltraakcinematic.entity.DefenseBarrierEntity>> DEFENSE_BARRIER =
+            ENTITIES.register("defense_barrier", () -> EntityType.Builder.<com.frierenflight.zoltraakcinematic.entity.DefenseBarrierEntity>of(
+                            com.frierenflight.zoltraakcinematic.entity.DefenseBarrierEntity::new, MobCategory.MISC)
+                    .sized(3.0f, 3.0f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ZoltraakCinematicMod.MODID + ":defense_barrier"));
+
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);
     }

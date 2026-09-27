@@ -27,7 +27,7 @@ public class ZoltraakCinematicSpell extends AbstractSpell {
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "zoltraak");
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
-            .setSchoolResource(SchoolRegistry.HOLY_RESOURCE)
+            .setSchoolResource(com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.ORDINARY_MAGIC_RESOURCE)
             .setMaxLevel(10)
             .setCooldownSeconds(4.0)
             .build();
@@ -85,7 +85,7 @@ public class ZoltraakCinematicSpell extends AbstractSpell {
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(getSpellPower(spellLevel, caster), 1)),
                 Component.translatable("ui.irons_spellbooks.distance", 64.0),
-                Component.translatable("ui.irons_spellbooks.radius", 10.0)
+                Component.translatable("ui.irons_spellbooks.radius", 12.0)
         );
     }
 }

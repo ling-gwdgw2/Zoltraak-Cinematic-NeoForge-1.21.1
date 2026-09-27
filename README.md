@@ -13,7 +13,7 @@
   <a href="https://www.minecraft.net/"><img src="https://img.shields.io/badge/Minecraft-1.21.1-brightgreen.svg" alt="Minecraft 1.21.1" /></a>
   <a href="https://neoforged.net/"><img src="https://img.shields.io/badge/Mod%20Loader-NeoForge%2021.1.248+-orange.svg" alt="NeoForge 21.1.248+" /></a>
   <a href="https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks"><img src="https://img.shields.io/badge/Requires-Iron's%20Spells%20'n%20Spellbooks-blue.svg" alt="Requires Iron's Spells" /></a>
-  <a href="https://modrinth.com/mod/photon"><img src="https://img.shields.io/badge/Optional-Photon%20VFX%20Engine-9cf.svg" alt="Optional Photon VFX" /></a>
+  <a href="https://modrinth.com/mod/iris"><img src="https://img.shields.io/badge/Compatible-Iris%20%2F%20Oculus-9cf.svg" alt="Iris / Oculus Compatible" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL%20v3.0-blueviolet.svg" alt="License: AGPL-3.0" /></a>
 </p>
 
@@ -66,11 +66,19 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 
 ---
 
-### 4. ⚡ Visual Engine Bridge & Zero-Crash Decoupling
-ม็อดถูกออกแบบด้วยสถาปัตยกรรม **Zero-Crash Decoupling** ผ่าน Dynamic Reflection:
-- **Photon VFX Engine (Optional)**: หากติดตั้งม็อด Photon ตัวเกมจะเปิดใช้งานอนุภาค GPU Compute Particles และระบบ HDR Bloom โดยอัตโนมัติ
-- **KilaGraph Shader Engine (Optional)**: หากติดตั้งม็อด KilaGraph ตัวเกมจะเปิดใช้งาน Atmospheric Heat Distortion (การหักเหแสงจากความร้อนรอบลำแสง) และ Swirling Mana Vortex
-- **Native Blaze3D Fallback**: หากไม่ได้ติดตั้งม็อดเสริมใดๆ ม็อดจะเรนเดอร์ผ่าน Native Blaze3D ทันที 100% โดยไม่มีข้อผิดพลาดหรือทำให้เกมแครช
+### 4. ⚡ Self-Contained Procedural Geometry & Core GLSL Shaders
+(ระบบคำนวณเรขาคณิตสามมิติ และ Core Shader ประจำม็อดแบบ Standalone 100%)
+เดิมทีระบบเคยพึ่งพาโมดูลภายนอกอย่าง Photon และ KilaGraph แต่ในสถาปัตยกรรมปัจจุบัน ม็อดได้รับการพัฒนาสู่ **Pure Procedural Geometry & Dedicated GLSL 150 Shader Architecture**:
+- **Procedural Vector Mesh Engine (Blaze3D & JOML)**: คำนวณโครงสร้าง Mesh สดแบบ Real-Time ด้วยหลักคณิตศาสตร์เรขาคณิต (Dynamic Ribbons, Arcs, Spiral Rings, Tapered Cylinders) จึงให้ความลื่นไหลระดับภาพยนตร์โดยไม่ต้องพึ่งโมเดลภายนอก
+- **Native Core GLSL 150 Shaders**:
+  - `zoltraak_beam`: Procedural Sine Ripple & Photonic Tapering
+  - `black_zoltraak_beam`: FBM (Fractal Brownian Motion) Dark Matter Soot & Screen-Derivative `fwidth` Particulate Grain
+  - `great_zoltraak_plume`: Volumetric Mana Erosion Plumes
+  - `corona`: Multi-axis Runic Aperture Flare
+  - `lens`: Gravitational Lensing & Chromatic Aberration
+- **SceneLens FBO Capture**: ระบบตรวจจับ Framebuffer ของตัวเกมผ่าน `glBlitFramebuffer` ส่งเข้า `SceneSampler` เพื่อสร้างมิติการบิดเบือนมิติ (Space Bending/Heat Refraction) ได้ด้วยตัวเกมเพียวๆ โดยไม่ต้องลง Mod หักเหแสงภายนอก
+- **ZoltraakRenderPass (Deferred Queue)**: จัดคิวการเรนเดอร์แยกพิเศษ (`AFTER_SKY` -> `AFTER_LEVEL`) แก้ปัญหา Translucent Sorting และ Z-Fighting อย่างสมบูรณ์แบบ
+- **Iris / Oculus Dynamic Compatibility (`ShaderCompatibility`)**: มีระบบตรวจจับ Shaderpack อัตโนมัติ ปรับระดับการเรนเดอร์ให้เข้ากับม็อด Shader (Oculus/Iris) โดยไม่เรนเดอร์ใน Shadow Pass และไม่มีปัญหาเกมแครช
 
 ---
 
@@ -80,9 +88,8 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 2. ติดตั้ง **[NeoForge](https://neoforged.net/) 21.1.248+**
 3. ติดตั้ง Mod ที่จำเป็น:
    - **[Iron's Spells 'n Spellbooks](https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks)** (1.21.1)
-4. *(แนะนำเพื่อความสมบูรณ์แบบสูงสุด)* ติดตั้ง Mod เสริมด้านกราฟิก:
-   - **[Photon](https://modrinth.com/mod/photon)** (สำหรับ GPU Particles & HDR Bloom)
-   - **KilaGraph** (สำหรับ Screen-Space Heat Distortion)
+   *(ไม่จำเป็นต้องติดตั้ง Photon หรือ KilaGraph เพิ่มเติมอีกต่อไป ม็อดมี Shader & Geometry Engine ในตัว 100%)*
+4. *(รองรับ)* เข้ากันได้ดีกับ **Oculus / Iris Shaders**
 5. ดาวน์โหลดไฟล์ `zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar` แล้ววางลงในโฟลเดอร์ `.minecraft/mods`
 
 ---

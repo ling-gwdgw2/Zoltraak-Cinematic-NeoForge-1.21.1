@@ -1,0 +1,74 @@
+{
+  "open": {
+    "subtitle": "subtitles.frierenvoid.open",
+    "sounds": [
+      {
+        "name": "frierenvoid:open",
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "accretion": {
+    "subtitle": "subtitles.frierenvoid.accretion",
+    "sounds": [
+      {
+        "name": "frierenvoid:accretion",
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "collapse": {
+    "subtitle": "subtitles.frierenvoid.collapse",
+    "sounds": [
+      {
+        "name": "frierenvoid:collapse",
+        "attenuation_distance": 48
+      }
+    ]
+  },
+  "release": {
+    "subtitle": "subtitles.frierenvoid.release",
+    "sounds": [
+      {
+        "name": "frierenvoid:release",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "zoltraak_charge": {
+    "subtitle": "subtitles.frierenvoid.zoltraak_charge",
+    "sounds": [
+      {
+        "name": "frierenvoid:zoltraak_charge",
+        "stream": false
+      }
+    ]
+  },
+  "zoltraak_fire": {
+    "subtitle": "subtitles.frierenvoid.zoltraak_fire",
+    "sounds": [
+      {
+        "name": "frierenvoid:zoltraak_fire",
+        "stream": false
+      }
+    ]
+  },
+  "zoltraak_impact": {
+    "subtitle": "subtitles.frierenvoid.zoltraak_impact",
+    "sounds": [
+      {
+        "name": "frierenvoid:zoltraak_impact",
+        "stream": false
+      }
+    ]
+  },
+  "zoltraak_great_fire": {
+    "subtitle": "subtitles.frierenvoid.zoltraak_great_fire",
+    "sounds": [
+      {
+        "name": "frierenvoid:zoltraak_great_fire",
+        "attenuation_distance": 64
+      }
+    ]
+  }
+}

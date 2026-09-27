@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:amethyst_shard",
+    "minecraft:diamond",
+    "zoltraak_cinematic:frieren_staff",
+    "zoltraak_cinematic:ordinary_grimoire",
+    "zoltraak_cinematic:mirror_lotus_ring",
+    "zoltraak_cinematic:mana_concealment_pendant"
+  ]
+}

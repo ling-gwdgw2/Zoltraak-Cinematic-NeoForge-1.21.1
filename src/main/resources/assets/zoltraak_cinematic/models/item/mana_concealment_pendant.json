@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "zoltraak_cinematic:item/mana_concealment_pendant"
+  }
+}

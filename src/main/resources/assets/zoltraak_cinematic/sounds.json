@@ -1,0 +1,38 @@
+{
+  "zoltraak_charge": {
+    "subtitle": "subtitles.zoltraak_cinematic.zoltraak_charge",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:zoltraak_charge",
+        "stream": false
+      }
+    ]
+  },
+  "zoltraak_fire": {
+    "subtitle": "subtitles.zoltraak_cinematic.zoltraak_fire",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:zoltraak_fire",
+        "stream": false
+      }
+    ]
+  },
+  "zoltraak_impact": {
+    "subtitle": "subtitles.zoltraak_cinematic.zoltraak_impact",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:zoltraak_impact",
+        "stream": false
+      }
+    ]
+  },
+  "zoltraak_great_fire": {
+    "subtitle": "subtitles.zoltraak_cinematic.zoltraak_great_fire",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:zoltraak_great_fire",
+        "attenuation_distance": 64
+      }
+    ]
+  }
+}
