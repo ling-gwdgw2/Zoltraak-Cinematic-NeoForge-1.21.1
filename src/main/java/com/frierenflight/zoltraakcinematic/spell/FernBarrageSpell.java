@@ -34,9 +34,9 @@ import java.util.Optional;
 public class FernBarrageSpell extends AbstractSpell {
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "zoltraak_barrage");
     private final DefaultConfig defaultConfig = new DefaultConfig()
-            .setMinRarity(SpellRarity.RARE)
+            .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.ORDINARY_MAGIC_RESOURCE)
-            .setMaxLevel(10)
+            .setMaxLevel(1)
             .setCooldownSeconds(1.5)
             .build();
 
@@ -94,9 +94,9 @@ public class FernBarrageSpell extends AbstractSpell {
     };
 
     public FernBarrageSpell() {
-        this.baseManaCost = 28;
+        this.baseManaCost = 40;
         this.manaCostPerLevel = 4;
-        this.baseSpellPower = 36;
+        this.baseSpellPower = 5;
         this.spellPowerPerLevel = 7;
         this.castTime = 60; // 3 seconds continuous channel
     }
@@ -251,8 +251,7 @@ public class FernBarrageSpell extends AbstractSpell {
         Vec3 right = Vec3.directionFromRotation(0, entity.getYRot() + 90);
         Vec3 worldUp = new Vec3(0, 1, 0);
 
-        float spellPower = getSpellPower(spellLevel, entity);
-        float bulletDamage = Math.max(1.8f, spellPower / 14.0f);
+        float bulletDamage = getBulletDamage(spellLevel, entity);
 
         // Spawn all 24 projectiles simultaneously from their individual 3D circles
         for (int i = 0; i < BARRAGE_CIRCLE_COUNT; i++) {
@@ -292,9 +291,13 @@ public class FernBarrageSpell extends AbstractSpell {
                 ModCinematicSounds.ZOLTRAAK_FIRE.get(), SoundSource.PLAYERS, 1.0f, basePitch * 1.28f);
     }
 
+    public float getBulletDamage(int spellLevel, LivingEntity entity) {
+        return Math.max(0.5f, getSpellPower(spellLevel, entity) / 6.0f);
+    }
+
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
-        float bulletDmg = Math.max(1.8f, getSpellPower(spellLevel, caster) / 14.0f);
+        float bulletDmg = getBulletDamage(spellLevel, caster);
         float salvoDmg = bulletDmg * 24.0f;
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(salvoDmg, 1) + " (" + Utils.stringTruncation(bulletDmg, 1) + "x24)"),

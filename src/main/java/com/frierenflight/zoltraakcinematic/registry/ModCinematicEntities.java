@@ -37,7 +37,21 @@ public class ModCinematicEntities {
                     .updateInterval(1)
                     .build(ZoltraakCinematicMod.MODID + ":defense_barrier"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity>> QUAL_BOSS =
+            ENTITIES.register("qual_boss", () -> EntityType.Builder.<com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity>of(
+                            com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity::new, MobCategory.MONSTER)
+                    .sized(1.4f, 3.2f)
+                    .clientTrackingRange(128)
+                    .updateInterval(1)
+                    .fireImmune()
+                    .build(ZoltraakCinematicMod.MODID + ":qual_boss"));
+
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);
+        eventBus.addListener(ModCinematicEntities::onEntityAttributeCreation);
+    }
+
+    public static void onEntityAttributeCreation(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {
+        event.put(QUAL_BOSS.get(), com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity.prepareAttributes().build());
     }
 }

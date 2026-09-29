@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "zoltraak_cinematic:block/qual_sealing_stone_top",
+    "side": "zoltraak_cinematic:block/qual_sealing_stone_side"
+  }
+}

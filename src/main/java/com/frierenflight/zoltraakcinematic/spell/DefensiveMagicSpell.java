@@ -31,10 +31,10 @@ public class DefensiveMagicSpell extends AbstractSpell {
             .build();
 
     public DefensiveMagicSpell() {
-        this.baseManaCost = 45;
+        this.baseManaCost = 200;
         this.manaCostPerLevel = 10;
-        this.baseSpellPower = 70;
-        this.spellPowerPerLevel = 25;
+        this.baseSpellPower = 200;
+        this.spellPowerPerLevel = 67;
         this.castTime = 0; // Instant deployment!
     }
 
@@ -64,7 +64,7 @@ public class DefensiveMagicSpell extends AbstractSpell {
     }
 
     public int getDurationTicks(int spellLevel, LivingEntity caster) {
-        return 300 + spellLevel * 20; // 15 seconds base + 1 second per level (up to 25s)
+        return 300 + (spellLevel - 1) * 22; // 15s (300 ticks) base up to ~25s (498-500 ticks) at level 10
     }
 
     @Override

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "G": {
+      "item": "zoltraak_cinematic:ordinary_grimoire"
+    },
+    "Q": {
+      "item": "zoltraak_cinematic:horn_of_corruption"
+    },
+    "C": {
+      "item": "zoltraak_cinematic:corruption_core"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    }
+  },
+  "pattern": [
+    "QNQ",
+    "QGQ",
+    "QCQ"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zoltraak_cinematic:elder_sage_grimoire"
+  }
+}

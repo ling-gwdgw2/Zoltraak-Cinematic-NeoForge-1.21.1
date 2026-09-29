@@ -74,23 +74,20 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
                             DefenseBarrierEntity.VisualPose pose, Vec3 hit) {
         double R = DefenseBarrierEntity.DOME_RADIUS;
 
-        // --- Layer A: Ground Arcane Magic Circle (Textured Neon Quad) ---
-        renderGroundCircle(m, buffers, age, fade);
-
-        // --- Layer B: Translucent Energy Dome Shell (Smooth Hemisphere Body) ---
+        // --- Layer A: Translucent Energy Dome Shell (Smooth 360° Sphere Body) ---
         if (life > 0.0F) {
             renderEnergyDomeShell(m, buffers, R * 0.985, age, fade, life, partial, hit, entity.hitAge(partial));
         }
 
-        // --- Layer C: Seamless Geodesic Honeycomb Plates & Glowing Cyan Seams ---
+        // --- Layer B: Seamless Geodesic Honeycomb Plates & Glowing Cyan Seams (Full 360° Sphere) ---
         renderGeodesicHoneycomb(m, buffers, R, age, fade, life, partial, hit, entity.hitAge(partial));
 
-        // --- Layer D: Equator Orbit Ring & Sweeping Electric Arc Ribbon ---
+        // --- Layer C: Sweeping Electric Arc Ribbon ---
         if (life > 0.0F) {
-            renderEquatorAndElectricArc(m, buffers, R, age, fade);
+            renderElectricArc(m, buffers, R, age, fade);
         }
 
-        // --- Layer E: Impact Overdrive Flash Glow ---
+        // --- Layer D: Impact Overdrive Flash Glow ---
         float impact = entity.hitAge(partial);
         if (impact < 14.0F) {
             VertexConsumer glow = buffers.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
@@ -101,47 +98,6 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
         }
     }
 
-    private void renderGroundCircle(Matrix4f m, MultiBufferSource buffers, float age, float fade) {
-        RenderType groundType = ZoltraakRenderTypes.magicAdditive(TEX_GROUND_CIRCLE);
-        VertexConsumer b = buffers.getBuffer(groundType);
-        double groundY = 0.035;
-
-        // Base Ring (Rotating clockwise)
-        double r1 = DefenseBarrierEntity.DOME_RADIUS * 1.22; // ~3.9m radius
-        float rot1 = age * 0.025f;
-        drawTexturedGroundQuad(b, m, groundY, r1, rot1, 0.80F, 0.95F, 1.0F, fade * 0.95F);
-
-        // Secondary Outer Ring (Counter-rotating violet/blue accent)
-        double r2 = DefenseBarrierEntity.DOME_RADIUS * 1.34;
-        float rot2 = -age * 0.015f;
-        drawTexturedGroundQuad(b, m, groundY + 0.005, r2, rot2, 0.65F, 0.40F, 1.0F, fade * 0.55F);
-
-        flush(buffers, groundType);
-    }
-
-    private static void drawTexturedGroundQuad(VertexConsumer b, Matrix4f m, double y, double r, float angle,
-                                               float red, float green, float blue, float alpha) {
-        float cos = (float) Math.cos(angle);
-        float sin = (float) Math.sin(angle);
-
-        float x1 = (float) (-r * cos - -r * sin);
-        float z1 = (float) (-r * sin + -r * cos);
-
-        float x2 = (float) (r * cos - -r * sin);
-        float z2 = (float) (r * sin + -r * cos);
-
-        float x3 = (float) (r * cos - r * sin);
-        float z3 = (float) (r * sin + r * cos);
-
-        float x4 = (float) (-r * cos - r * sin);
-        float z4 = (float) (-r * sin + r * cos);
-
-        b.addVertex(m, x1, (float) y, z1).setUv(0.0F, 0.0F).setColor(red, green, blue, alpha);
-        b.addVertex(m, x2, (float) y, z2).setUv(1.0F, 0.0F).setColor(red, green, blue, alpha);
-        b.addVertex(m, x3, (float) y, z3).setUv(1.0F, 1.0F).setColor(red, green, blue, alpha);
-        b.addVertex(m, x4, (float) y, z4).setUv(0.0F, 1.0F).setColor(red, green, blue, alpha);
-    }
-
     private void renderEnergyDomeShell(Matrix4f m, MultiBufferSource buffers, double r,
                                        float age, float fade, float life, float partial,
                                        Vec3 hit, float hitAge) {
@@ -149,7 +105,7 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
         int slices = 32;
         int stacks = 14;
 
-        for (int j = 0; j < stacks; j++) {
+        for (int j = -stacks; j < stacks; j++) {
             double phi1 = (j * Math.PI * 0.5) / stacks;
             double phi2 = ((j + 1) * Math.PI * 0.5) / stacks;
 
@@ -158,14 +114,14 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
             double r1 = Math.cos(phi1) * r;
             double r2 = Math.cos(phi2) * r;
 
-            // Electric blue gradient from base to apex
-            float t1 = (float) j / stacks;
-            float t2 = (float) (j + 1) / stacks;
+            // Electric blue gradient from equator to poles
+            float t1 = (float) Math.abs(j) / stacks;
+            float t2 = (float) Math.abs(j + 1) / stacks;
 
             float red1 = 0.02F + 0.15F * t1;
             float green1 = 0.25F + 0.55F * t1;
             float blue1 = 0.88F + 0.12F * t1;
-            float alpha1 = (0.28F + 0.22F * (1.0F - t1)) * fade; // brighter on horizon rim!
+            float alpha1 = (0.28F + 0.22F * (1.0F - t1)) * fade; // brighter on horizon/equator rim!
 
             float red2 = 0.02F + 0.15F * t2;
             float green2 = 0.25F + 0.55F * t2;
@@ -288,33 +244,18 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
         flush(buffers, ZoltraakRenderTypes.LIGHT);
     }
 
-    private void renderEquatorAndElectricArc(Matrix4f m, MultiBufferSource buffers, double radius, float age, float fade) {
+    private void renderElectricArc(Matrix4f m, MultiBufferSource buffers, double radius, float age, float fade) {
         VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
 
-        // 1. Equator Orbital Cyan Ring at Height 1.6m
-        double eqY = radius * 0.50; // mid height
-        double eqR = Math.sqrt(Math.max(0.1, radius * radius - eqY * eqY));
-        int segments = 48;
-        float eqAlpha = fade * 0.85F;
-
-        for (int i = 0; i < segments; i++) {
-            double a1 = i * Math.PI * 2.0 / segments;
-            double a2 = (i + 1) * Math.PI * 2.0 / segments;
-            Vec3 p1 = new Vec3(Math.cos(a1) * eqR, eqY, Math.sin(a1) * eqR);
-            Vec3 p2 = new Vec3(Math.cos(a2) * eqR, eqY, Math.sin(a2) * eqR);
-            line(lines, m, p1, p2, p1.normalize(), 0.040, eqAlpha * 0.25F, 0.0F, 0.85F, 1.0F);
-            line(lines, m, p1, p2, p1.normalize(), 0.014, eqAlpha * 0.90F, 0.4F, 0.95F, 1.0F);
-        }
-
-        // 2. Sweeping Electric Arc Ribbon (as in Reference Anime frame-20)
+        // Sweeping Electric Arc Ribbon (as in Reference Anime frame-20)
         double arcAngleBase = age * 0.04;
         int arcSteps = 24;
         for (int i = 0; i < arcSteps; i++) {
             double frac1 = (double) i / arcSteps;
             double frac2 = (double) (i + 1) / arcSteps;
 
-            double phi1 = Math.toRadians(15.0 + 55.0 * Math.sin(frac1 * Math.PI));
-            double phi2 = Math.toRadians(15.0 + 55.0 * Math.sin(frac2 * Math.PI));
+            double phi1 = Math.toRadians(-40.0 + 80.0 * Math.sin(frac1 * Math.PI));
+            double phi2 = Math.toRadians(-40.0 + 80.0 * Math.sin(frac2 * Math.PI));
 
             double th1 = arcAngleBase + frac1 * Math.PI * 0.75;
             double th2 = arcAngleBase + frac2 * Math.PI * 0.75;

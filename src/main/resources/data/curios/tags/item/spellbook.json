@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "zoltraak_cinematic:ordinary_grimoire"
+    "zoltraak_cinematic:ordinary_grimoire",
+    "zoltraak_cinematic:elder_sage_grimoire"
   ]
 }

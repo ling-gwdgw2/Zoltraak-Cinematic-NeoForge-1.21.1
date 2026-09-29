@@ -33,9 +33,9 @@ public class ZoltraakCinematicSpell extends AbstractSpell {
             .build();
 
     public ZoltraakCinematicSpell() {
-        this.baseManaCost = 40;
+        this.baseManaCost = 200;
         this.manaCostPerLevel = 6;
-        this.baseSpellPower = 40;
+        this.baseSpellPower = 80;
         this.spellPowerPerLevel = 8;
         this.castTime = 0;
     }

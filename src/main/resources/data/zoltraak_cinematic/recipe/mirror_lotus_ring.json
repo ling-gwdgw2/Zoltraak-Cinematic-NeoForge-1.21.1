@@ -13,11 +13,14 @@
     },
     "R": {
       "item": "irons_spellbooks:cooldown_ring"
+    },
+    "Q": {
+      "item": "zoltraak_cinematic:horn_of_corruption"
     }
   },
   "pattern": [
     " M ",
-    "E S",
+    "EQS",
     " R "
   ],
   "result": {

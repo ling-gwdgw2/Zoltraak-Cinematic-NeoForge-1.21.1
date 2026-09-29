@@ -88,6 +88,7 @@ public class ZoltraakCinematicClientEvents {
         event.registerEntityRenderer(ModCinematicEntities.ZOLTRAAK_BEAM.get(), ZoltraakPhotonBeamRenderer::new);
         event.registerEntityRenderer(ModCinematicEntities.ZOLTRAAK_BARRAGE_PROJECTILE.get(), com.frierenflight.zoltraakcinematic.client.renderer.ZoltraakBarrageProjectileRenderer::new);
         event.registerEntityRenderer(ModCinematicEntities.DEFENSE_BARRIER.get(), com.frierenflight.zoltraakcinematic.client.renderer.DefenseBarrierRenderer::new);
+        event.registerEntityRenderer(ModCinematicEntities.QUAL_BOSS.get(), com.frierenflight.zoltraakcinematic.client.renderer.QualBossRenderer::new);
     }
 
     /**

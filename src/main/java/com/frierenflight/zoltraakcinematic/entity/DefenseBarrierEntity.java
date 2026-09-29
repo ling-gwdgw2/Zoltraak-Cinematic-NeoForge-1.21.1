@@ -73,7 +73,7 @@ public final class DefenseBarrierEntity extends Entity {
         entity.entityData.set(STATE, tag);
 
         if (mode == MODE_DOME) {
-            entity.setPos(caster.getX(), caster.getY(), caster.getZ());
+            entity.setPos(caster.getX(), caster.getY() + 0.9, caster.getZ());
         } else {
             entity.follow(caster);
         }
@@ -204,7 +204,7 @@ public final class DefenseBarrierEntity extends Entity {
             if (mode() == MODE_DOME) {
                 Vec3 center = new Vec3(
                         Mth.lerp(partial, caster.xOld, caster.getX()),
-                        Mth.lerp(partial, caster.yOld, caster.getY()),
+                        Mth.lerp(partial, caster.yOld, caster.getY()) + 0.9,
                         Mth.lerp(partial, caster.zOld, caster.getZ())
                 );
                 this.lastVisualPose = new VisualPose(center, new Vec3(0, 1, 0), new Vec3(1, 0, 0), new Vec3(0, 0, 1));
@@ -285,17 +285,11 @@ public final class DefenseBarrierEntity extends Entity {
                 discriminant = Math.sqrt(discriminant);
                 double t1 = (-b - discriminant) / (2.0 * a);
                 if (t1 >= 0.0 && t1 <= 1.0) {
-                    Vec3 hit = from.add(d.scale(t1));
-                    if (hit.y >= center.y - 0.2) {
-                        return Optional.of(hit);
-                    }
+                    return Optional.of(from.add(d.scale(t1)));
                 }
                 double t2 = (-b + discriminant) / (2.0 * a);
                 if (t2 >= 0.0 && t2 <= 1.0) {
-                    Vec3 hit = from.add(d.scale(t2));
-                    if (hit.y >= center.y - 0.2) {
-                        return Optional.of(hit);
-                    }
+                    return Optional.of(from.add(d.scale(t2)));
                 }
             }
             return Optional.empty();
@@ -390,7 +384,7 @@ public final class DefenseBarrierEntity extends Entity {
 
                 if (this.active()) {
                     if (mode() == MODE_DOME) {
-                        this.setPos(caster.getX(), caster.getY(), caster.getZ());
+                        this.setPos(caster.getX(), caster.getY() + 0.9, caster.getZ());
                     } else {
                         this.follow(caster);
                     }

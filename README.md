@@ -19,7 +19,7 @@
 
 ---
 
-## 📖 Overview / ภาพรวมม็อด
+## Overview / ภาพรวมม็อด
 
 **Zoltraak: Cinematic Edition** is a premier visual addon for **Iron's Spells 'n Spellbooks (NeoForge 1.21.1)** that recreates the iconic "Ordinary Offensive Magic" (Zoltraak / ゾルトラーク) used by Frieren and Fern with cinema-grade fidelity.
 
@@ -29,9 +29,9 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 
 ---
 
-## ✨ Features / จุดเด่นของม็อด
+## Features / จุดเด่นของม็อด
 
-### 1. 🌟 19-Layer Cinematic VFX Stack (ถอดแบบเอฟเฟกต์ 19 เลเยอร์)
+### 1. 19-Layer Cinematic VFX Stack (ถอดแบบเอฟเฟกต์ 19 เลเยอร์)
 - **Zero Black Smoke**: ปราศจากควันดำหรือสะเก็ดดินปืน เป็นพลังงานแสงไอออนไนซ์พลาสมาและละอองดาวโบราณ 100%
 - **Single Magic Circle ($R = 0.8\text{m}$)**: วงเวทเดี่ยวระนาบเดียว อักขระสีขาวขอบทองสว่างเรืองรอง หมุนวนอย่างนุ่มนวล
 - **4-Point Center Aperture Cross Flare**: แสงประกายกากบาท 4 แฉกที่รูเปิดแกนกลางวงเวท
@@ -48,17 +48,17 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 
 ---
 
-### 2. 🪄 Frieren's Staff (คทาของฟรีเรน)
+### 2. Frieren's Staff (คทาของฟรีเรน)
 - **Custom 3D Voxel Model**: โมเดล 3 มิติความละเอียดสูง ออกแบบมุมมองและตำแหน่งมือจับอย่างแม่นยำ (First-Person, Third-Person, Ground, และ Inventory GUI)
 - **Iron's Spells Attribute Modifiers**:
-  - ⚡ **Spell Power**: `+45%`
-  - 💧 **Max Mana**: `+500`
-  - ⏳ **Cooldown Reduction**: `+20%`
-  - ⚔️ **Base Attack Damage**: `6.0`
+  - **Spell Power**: `+45%`
+  - **Max Mana**: `+500`
+  - **Cooldown Reduction**: `+20%`
+  - **Base Attack Damage**: `6.0`
 
 ---
 
-### 3. 💥 Combat Mechanics & Environment (ระบบต่อสู้และสิ่งแวดล้อม)
+### 3. Combat Mechanics & Environment (ระบบต่อสู้และสิ่งแวดล้อม)
 - **Shield Breaker**: ทำลายและปลดการป้องกันของโล่ทันทีเมื่อสัมผัสลำแสง
 - **Distance-Based Blast Damage**: ความเสียหายของแรงระเบิดจะรุนแรงที่สุดที่จุดกึ่งกลางและลดหลั่นตามระยะทาง
 - **Crater Carving**: เจาะทะลวงบล็อกในรัศมี 3 บล็อก (ทำงานภายใต้ GameRule `mobGriefing` โดยไม่ทำลายบล็อกแข็งอย่าง Obsidian และ Bedrock)
@@ -66,7 +66,7 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 
 ---
 
-### 4. ⚡ Self-Contained Procedural Geometry & Core GLSL Shaders
+### 4. Self-Contained Procedural Geometry & Core GLSL Shaders
 (ระบบคำนวณเรขาคณิตสามมิติ และ Core Shader ประจำม็อดแบบ Standalone 100%)
 เดิมทีระบบเคยพึ่งพาโมดูลภายนอกอย่าง Photon และ KilaGraph แต่ในสถาปัตยกรรมปัจจุบัน ม็อดได้รับการพัฒนาสู่ **Pure Procedural Geometry & Dedicated GLSL 150 Shader Architecture**:
 - **Procedural Vector Mesh Engine (Blaze3D & JOML)**: คำนวณโครงสร้าง Mesh สดแบบ Real-Time ด้วยหลักคณิตศาสตร์เรขาคณิต (Dynamic Ribbons, Arcs, Spiral Rings, Tapered Cylinders) จึงให้ความลื่นไหลระดับภาพยนตร์โดยไม่ต้องพึ่งโมเดลภายนอก
@@ -82,7 +82,7 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 
 ---
 
-## 📦 Installation / การติดตั้ง
+## Installation / การติดตั้ง
 
 1. ติดตั้ง **Minecraft 1.21.1**
 2. ติดตั้ง **[NeoForge](https://neoforged.net/) 21.1.248+**
@@ -94,7 +94,7 @@ Built with a complete 19-layer visual stack, the spell delivers high-speed proje
 
 ---
 
-## 🛠️ Building from Source / วิธีการบิลด์
+## Building from Source / วิธีการบิลด์
 
 โปรเจกต์นี้มีสคริปต์คอมไพล์อัตโนมัติด้วย **Python** และ **JDK 21**:
 
@@ -112,7 +112,7 @@ python build.py
 
 ---
 
-## 📜 License & Credits
+## License & Credits
 
 - **Source Code License**: [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
 - **Frieren: Beyond Journey's End (葬送のフリーレン)** © Kanehito Yamada, Tsukasa Abe / Shogakukan / "Sousou no Frieren" Production Committee

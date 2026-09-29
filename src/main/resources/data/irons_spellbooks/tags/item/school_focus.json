@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "zoltraak_cinematic:frieren_staff",
-    "zoltraak_cinematic:ordinary_grimoire"
+    "#zoltraak_cinematic:ordinary_magic_focus"
   ]
 }

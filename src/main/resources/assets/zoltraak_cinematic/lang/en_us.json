@@ -49,5 +49,15 @@
   "ui.zoltraak_cinematic.flight_activated": "✦ Flight Magic: Activated",
   "ui.zoltraak_cinematic.flight_deactivated": "✦ Flight Magic: Deactivated",
   "ui.zoltraak_cinematic.flight_mana_depleted": "⚠ Mana Depleted! Flight Magic Collapsed!",
-  "ui.zoltraak_cinematic.flight_not_in_spellbook": "Flight Magic is not inscribed in your equipped spellbook!"
+  "entity.zoltraak_cinematic.qual_boss": "✦ Qual, Elder Sage of Corruption ✦",
+  "item.zoltraak_cinematic.qual_spawn_egg": "Qual Spawn Egg",
+  "block.zoltraak_cinematic.qual_sealing_stone": "Qual's Ancient Sealing Monolith",
+  "item.zoltraak_cinematic.qual_sealing_stone": "Qual's Ancient Sealing Monolith",
+  "item.zoltraak_cinematic.elder_sage_grimoire": "Grimoire of the Elder Sage",
+  "item.zoltraak_cinematic.elder_sage_grimoire.desc": "Ancient forbidden spellbook of Qual. Saturated with the pure calculus of Killing Magic (Zoltraak).",
+  "item.zoltraak_cinematic.horn_of_corruption": "Saint Quartz of Corruption",
+  "item.zoltraak_cinematic.horn_of_corruption.desc": "A radiant seven-pointed prismatic crystal condensed from the ancient mana of the Elder Sage Qual. Used as a supreme catalyst for crafting mythic artifacts.",
+  "item.zoltraak_cinematic.corruption_core": "Qual's Core of Corruption",
+  "item.zoltraak_cinematic.corruption_core.desc": "Singularity talisman torn from the Elder Sage. Grants massive Zoltraak power and rapid mana recovery.",
+  "message.zoltraak_cinematic.unsealing_started": "§c⚠ The ancient seal begins to crack! Frieren's runes turn blood-red! ⚠"
 }

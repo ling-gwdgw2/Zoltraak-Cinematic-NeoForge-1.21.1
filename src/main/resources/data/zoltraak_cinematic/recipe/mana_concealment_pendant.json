@@ -8,14 +8,14 @@
     "S": {
       "item": "irons_spellbooks:shriving_stone"
     },
-    "P": {
-      "item": "irons_spellbooks:dead_king_phylactery"
+    "Q": {
+      "item": "zoltraak_cinematic:horn_of_corruption"
     }
   },
   "pattern": [
     " N ",
     "NSN",
-    " P "
+    " Q "
   ],
   "result": {
     "count": 1,

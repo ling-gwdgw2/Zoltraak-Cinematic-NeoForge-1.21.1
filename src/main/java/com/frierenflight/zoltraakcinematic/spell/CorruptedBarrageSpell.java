@@ -24,15 +24,15 @@ public class CorruptedBarrageSpell extends FernBarrageSpell {
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.ORDINARY_MAGIC_RESOURCE)
-            .setMaxLevel(10)
+            .setMaxLevel(1)
             .setCooldownSeconds(1.2)
             .build();
 
     public CorruptedBarrageSpell() {
         super();
-        this.baseManaCost = 35;
+        this.baseManaCost = 50;
         this.manaCostPerLevel = 5;
-        this.baseSpellPower = 42;
+        this.baseSpellPower = 7;
         this.spellPowerPerLevel = 8;
         this.castTime = 60;
     }
@@ -54,7 +54,7 @@ public class CorruptedBarrageSpell extends FernBarrageSpell {
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
-        float bulletDmg = Math.max(2.0f, getSpellPower(spellLevel, caster) / 14.0f);
+        float bulletDmg = getBulletDamage(spellLevel, caster);
         float salvoDmg = bulletDmg * 24.0f;
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(salvoDmg, 1) + " (" + Utils.stringTruncation(bulletDmg, 1) + "x24)"),

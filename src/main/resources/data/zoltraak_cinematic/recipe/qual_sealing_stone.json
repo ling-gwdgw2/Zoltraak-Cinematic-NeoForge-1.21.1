@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "O": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "D": {
+      "item": "minecraft:deepslate"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    }
+  },
+  "pattern": [
+    "AOA",
+    "OSO",
+    "DOD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zoltraak_cinematic:qual_sealing_stone"
+  }
+}

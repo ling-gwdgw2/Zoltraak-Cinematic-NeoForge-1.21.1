@@ -1,0 +1,517 @@
+package com.frierenflight.zoltraakcinematic.entity.boss;
+
+import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualAntiBarrierGoal;
+import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualCataclysmicGoal;
+import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualCombatGoal;
+import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualHoverGoal;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicAttributes;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSpells;
+import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
+import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
+import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.RawAnimation;
+import software.bernie.geckolib.util.GeckoLibUtil;
+
+import java.util.EnumSet;
+import java.util.List;
+
+/**
+ * 📜 QualBossEntity — มหาจอมเวทควาล (Qual, The Elder Sage of Corruption)
+ * Originator of Zoltraak (Killing Magic).
+ *
+ * Core Specifications:
+ * - Base HP: 1500 (Scales +200 HP per nearby player within 48 blocks)
+ * - Armor: 30, Armor Toughness: 10, Knockback Resistance: 0.8
+ * - Magic Resistance: +40%, Spell Power: +40% (Zoltraak +50%)
+ * - Movement: 3D Demonic Aerial Flight (Hovering 4–15 blocks above terrain)
+ * - Boss Bar: PURPLE, PROGRESS, World Fog & Darken Screen enabled
+ * - 4-Phase Combat Progression State Machine (100% -> 75% -> 40% -> 20% -> 0%)
+ */
+public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, GeoEntity {
+
+    public static final EntityDataAccessor<Integer> PHASE =
+            SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Boolean> DATA_CHARGING_CATACLYSMIC =
+            SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Integer> DATA_CASTING_STATE =
+            SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.INT);
+
+    public static final int CAST_STATE_IDLE = 0;
+    public static final int CAST_STATE_BEAM = 1;
+    public static final int CAST_STATE_BARRAGE = 2;
+    public static final int CAST_STATE_CATACLYSMIC = 3;
+
+    public static final double BASE_MAX_HEALTH = 1500.0;
+    public static final double HEALTH_PER_PLAYER = 200.0;
+
+    private final ServerBossEvent bossEvent = (ServerBossEvent) new ServerBossEvent(
+            Component.translatable("entity.zoltraak_cinematic.qual_boss"),
+            BossEvent.BossBarColor.PURPLE,
+            BossEvent.BossBarOverlay.PROGRESS
+    ).setDarkenScreen(true).setPlayBossMusic(true).setCreateWorldFog(true);
+
+    private final AnimatableInstanceCache animCache = GeckoLibUtil.createInstanceCache(this);
+    private static final RawAnimation ANIM_IDLE_FLIGHT = RawAnimation.begin().thenLoop("fly");
+    private static final RawAnimation ANIM_CAST_BEAM = RawAnimation.begin().thenLoop("cast_beam");
+    private static final RawAnimation ANIM_CAST_BARRAGE = RawAnimation.begin().thenLoop("cast_barrage");
+    private static final RawAnimation ANIM_CAST_CHARGE = RawAnimation.begin().thenLoop("cast_charge");
+    private static final RawAnimation ANIM_DEATH = RawAnimation.begin().thenPlayAndHold("death");
+
+    private boolean scaledHealthInitialized = false;
+    private int spellCastCooldown = 40;
+    private int phaseTransitionTimer = 0;
+
+    public QualBossEntity(EntityType<? extends AbstractSpellCastingMob> entityType, Level level) {
+        super(entityType, level);
+        this.xpReward = 100;
+        this.setPersistenceRequired();
+
+        // Configure 3D Demonic Levitation & Flight
+        this.moveControl = new FlyingMoveControl(this, 20, true);
+        this.setNoGravity(true);
+    }
+
+    public static AttributeSupplier.Builder prepareAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, BASE_MAX_HEALTH)
+                .add(Attributes.ARMOR, 30.0)
+                .add(Attributes.ARMOR_TOUGHNESS, 10.0)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
+                .add(Attributes.FOLLOW_RANGE, 96.0)
+                .add(Attributes.FLYING_SPEED, 0.35)
+                .add(Attributes.MOVEMENT_SPEED, 0.30)
+                .add(Attributes.ATTACK_DAMAGE, 12.0)
+                .add(AttributeRegistry.MAX_MANA, 6000.0)
+                .add(AttributeRegistry.MANA_REGEN, 60.0)
+                .add(AttributeRegistry.SPELL_POWER, 1.4)
+                .add(AttributeRegistry.SPELL_RESIST, 1.4)
+                .add(AttributeRegistry.CAST_TIME_REDUCTION, 0.35)
+                .add(AttributeRegistry.COOLDOWN_REDUCTION, 0.30)
+                .add(ModCinematicAttributes.ZOLTRAAK_SPELL_POWER, 1.5)
+                .add(ModCinematicAttributes.ZOLTRAAK_MAGIC_RESIST, 1.4);
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        FlyingPathNavigation nav = new FlyingPathNavigation(this, level);
+        nav.setCanOpenDoors(false);
+        nav.setCanPassDoors(true);
+        return nav;
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(PHASE, 1);
+        builder.define(DATA_CHARGING_CATACLYSMIC, false);
+        builder.define(DATA_CASTING_STATE, CAST_STATE_IDLE);
+    }
+
+    public int getPhase() {
+        return this.entityData.get(PHASE);
+    }
+
+    public void setPhase(int phase) {
+        this.entityData.set(PHASE, phase);
+    }
+
+    public boolean isCataclysmicCharging() {
+        return this.entityData.get(DATA_CHARGING_CATACLYSMIC);
+    }
+
+    public void setCataclysmicCharging(boolean charging) {
+        this.entityData.set(DATA_CHARGING_CATACLYSMIC, charging);
+    }
+
+    public int getCastingState() {
+        return this.entityData.get(DATA_CASTING_STATE);
+    }
+
+    public void setCastingState(int state) {
+        this.entityData.set(DATA_CASTING_STATE, state);
+    }
+
+    /**
+     * Client-side fail-safe casting state resolver.
+     * Combines our direct SynchedEntityData with Iron's Spells ClientMagicData.
+     */
+    public int getEffectiveCastingState() {
+        int state = this.getCastingState();
+        if (state != CAST_STATE_IDLE) {
+            return state;
+        }
+        if (this.level().isClientSide) {
+            return com.frierenflight.zoltraakcinematic.client.QualClientHelper.getSyncedSpellState(this);
+        }
+        return CAST_STATE_IDLE;
+    }
+
+    @Override
+    protected void registerGoals() {
+        super.registerGoals();
+
+        // Target selectors
+        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
+
+        // Hierarchical Boss AI Goals:
+        // Priority 1: Phase 4 Cataclysmic Overdrive Ultimate (HP < 20%)
+        this.goalSelector.addGoal(1, new QualCataclysmicGoal(this));
+        // Priority 2: Anti-Barrier Intelligence (Shadow Blink & Focused Dome Pressure)
+        this.goalSelector.addGoal(2, new QualAntiBarrierGoal(this));
+        // Priority 3: 4-Phase Combat Spellcasting Progression
+        this.goalSelector.addGoal(3, new QualCombatGoal(this));
+        // Priority 4: 3D Aerial Hovering & Orbital Strafing
+        this.goalSelector.addGoal(4, new QualHoverGoal(this));
+        // Priority 5: Look & Float
+        this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 48.0f));
+        this.goalSelector.addGoal(6, new FloatGoal(this));
+    }
+
+    @Override
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, SpawnGroupData spawnGroupData) {
+        SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
+        initializeHealthScaling();
+        return data;
+    }
+
+    /**
+     * Dynamically scales Qual's health based on nearby players within 48 blocks.
+     */
+    public void initializeHealthScaling() {
+        if (!this.level().isClientSide && !scaledHealthInitialized) {
+            List<Player> nearbyPlayers = this.level().getEntitiesOfClass(
+                    Player.class,
+                    this.getBoundingBox().inflate(48.0),
+                    p -> !p.isSpectator() && p.isAlive()
+            );
+
+            int playerCount = Math.max(1, nearbyPlayers.size());
+            double scaledMax = BASE_MAX_HEALTH + (playerCount - 1) * HEALTH_PER_PLAYER;
+
+            AttributeInstance maxHealthAttr = this.getAttribute(Attributes.MAX_HEALTH);
+            if (maxHealthAttr != null) {
+                maxHealthAttr.setBaseValue(scaledMax);
+                this.setHealth((float) scaledMax);
+            }
+            this.scaledHealthInitialized = true;
+        }
+    }
+
+    @Override
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+
+        if (!scaledHealthInitialized && this.tickCount > 20) {
+            initializeHealthScaling();
+        }
+
+        // Update Boss Bar progress
+        this.bossEvent.setProgress(Math.max(0.0f, Math.min(1.0f, this.getHealth() / this.getMaxHealth())));
+
+        // Determine combat phase from remaining HP percentage
+        float hpPercent = this.getHealth() / this.getMaxHealth();
+        int targetPhase;
+        if (hpPercent > 0.75f) {
+            targetPhase = 1; // Probing Stance
+        } else if (hpPercent > 0.40f) {
+            targetPhase = 2; // Demonic Barrage Matrix
+        } else if (hpPercent > 0.20f) {
+            targetPhase = 3; // Tactical Adaptation
+        } else {
+            targetPhase = 4; // Cataclysmic Overdrive
+        }
+
+        if (targetPhase != getPhase()) {
+            transitionToPhase(targetPhase);
+        }
+
+        // Handle Phase Transition Effects & Timers
+        if (phaseTransitionTimer > 0) {
+            phaseTransitionTimer--;
+            if (phaseTransitionTimer % 4 == 0 && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
+                sl.sendParticles(ParticleTypes.WITCH, this.getX(), this.getY() + 1.6, this.getZ(), 10, 0.8, 1.2, 0.8, 0.05);
+            }
+        }
+
+        // Synchronize Active Combat Casting State to Tracking Clients
+        int currentCastState = CAST_STATE_IDLE;
+        if (this.isCataclysmicCharging()) {
+            currentCastState = CAST_STATE_CATACLYSMIC;
+        } else if (this.isCasting()) {
+            String spellId = this.getMagicData() != null ? this.getMagicData().getCastingSpellId() : null;
+            if (spellId != null && spellId.contains("barrage")) {
+                currentCastState = CAST_STATE_BARRAGE;
+            } else {
+                currentCastState = CAST_STATE_BEAM;
+            }
+        }
+        if (this.getCastingState() != currentCastState) {
+            this.setCastingState(currentCastState);
+        }
+    }
+
+    @Override
+    public void initiateCastSpell(AbstractSpell spell, int spellLevel) {
+        super.initiateCastSpell(spell, spellLevel);
+        if (spell != null) {
+            String spellId = spell.getSpellId();
+            if (spellId != null && spellId.contains("barrage")) {
+                setCastingState(CAST_STATE_BARRAGE);
+            } else {
+                setCastingState(CAST_STATE_BEAM);
+            }
+        }
+    }
+
+    @Override
+    public void cancelCast() {
+        super.cancelCast();
+        if (this.getCastingState() == CAST_STATE_BEAM || this.getCastingState() == CAST_STATE_BARRAGE) {
+            setCastingState(CAST_STATE_IDLE);
+        }
+    }
+
+    private void transitionToPhase(int newPhase) {
+        setPhase(newPhase);
+        phaseTransitionTimer = 30; // 1.5s visual charge
+
+        if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            serverLevel.playSound(null, this.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.HOSTILE, 1.4f, 0.85f);
+            serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.8, this.getZ(), 1, 0, 0, 0, 0);
+            serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.6, this.getZ(), 60, 1.2, 1.8, 1.2, 0.2);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        // Boss Aerial Stabilization: Dampen excessive upward vertical velocity from external spells/explosions
+        Vec3 dm = this.getDeltaMovement();
+        if (dm.y > 0.25) {
+            this.setDeltaMovement(dm.x, 0.08, dm.z);
+        }
+
+        // Active altitude ceiling: if knocked or pushed higher than 14 blocks above target, pull down to combat range
+        if (!this.level().isClientSide) {
+            LivingEntity target = this.getTarget();
+            if (target != null && target.isAlive()) {
+                double maxCombatY = target.getY() + 14.0;
+                if (this.getY() > maxCombatY) {
+                    this.setDeltaMovement(dm.x, -0.35, dm.z);
+                }
+            }
+        }
+
+        // Visual Demonic Corruption Aura
+        if (this.level().isClientSide) {
+            double px = this.getX() + (this.getRandom().nextDouble() - 0.5) * 1.4;
+            double py = this.getY() + 0.2 + this.getRandom().nextDouble() * 2.8;
+            double pz = this.getZ() + (this.getRandom().nextDouble() - 0.5) * 1.4;
+
+            // Black void / Witch purple particles trailing behind Qual
+            this.level().addParticle(ParticleTypes.WITCH, px, py, pz, 0, -0.02, 0);
+            if (this.getRandom().nextFloat() < 0.35f) {
+                this.level().addParticle(ParticleTypes.PORTAL, px, py, pz, (this.getRandom().nextDouble() - 0.5) * 0.2, -0.1, (this.getRandom().nextDouble() - 0.5) * 0.2);
+            }
+        }
+    }
+
+    @Override
+    public void knockback(double strength, double x, double z) {
+        // Complete Boss Immunity: Qual's demonic levitation cancels all external knockback forces
+    }
+
+    @Override
+    public void push(net.minecraft.world.entity.Entity entity) {
+        // Boss cannot be shoved around by colliding players or mobs
+    }
+
+    @Override
+    public void push(double x, double y, double z) {
+        // Immune to external velocity pushes (wind charges, explosions, etc.)
+    }
+
+    @Override
+    public void startSeenByPlayer(ServerPlayer player) {
+        super.startSeenByPlayer(player);
+        this.bossEvent.addPlayer(player);
+    }
+
+    @Override
+    public void stopSeenByPlayer(ServerPlayer player) {
+        super.stopSeenByPlayer(player);
+        this.bossEvent.removePlayer(player);
+    }
+
+    @Override
+    public void setCustomName(Component name) {
+        super.setCustomName(name);
+        this.bossEvent.setName(this.getDisplayName());
+    }
+
+    @Override
+    public boolean causeFallDamage(float fallDistance, float multiplier, DamageSource source) {
+        return false;
+    }
+
+    @Override
+    protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
+        // Absolute immunity to fall damage
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putInt("Phase", getPhase());
+        tag.putBoolean("ScaledHealth", this.scaledHealthInitialized);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.contains("Phase")) {
+            setPhase(tag.getInt("Phase"));
+        }
+        if (tag.contains("ScaledHealth")) {
+            this.scaledHealthInitialized = tag.getBoolean("ScaledHealth");
+        }
+    }
+
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return SoundEvents.WITHER_AMBIENT;
+    }
+
+    @Override
+    protected SoundEvent getHurtSound(DamageSource damageSource) {
+        return SoundEvents.WITHER_HURT;
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return SoundEvents.WITHER_DEATH;
+    }
+
+    @Override
+    public float getVoicePitch() {
+        return 0.65f; // Deep, ancient demonic resonance
+    }
+
+    // --- GeckoLib 4 Animatable Implementation ---
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.animCache;
+    }
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        // Override and replace default biped controllers with Qual's custom demonic boss animations
+        controllers.add(new AnimationController<>(this, "qual_flight_controller", 4, state -> {
+            if (this.isDeadOrDying()) {
+                return state.setAndContinue(ANIM_DEATH);
+            }
+            int castState = this.getEffectiveCastingState();
+            return switch (castState) {
+                case CAST_STATE_CATACLYSMIC -> state.setAndContinue(ANIM_CAST_CHARGE);
+                case CAST_STATE_BARRAGE -> state.setAndContinue(ANIM_CAST_BARRAGE);
+                case CAST_STATE_BEAM -> state.setAndContinue(ANIM_CAST_BEAM);
+                default -> state.setAndContinue(ANIM_IDLE_FLIGHT);
+            };
+        }));
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (this.isInvulnerableTo(source)) {
+            return false;
+        }
+
+        // Phase 3 & 4: Qual's Demonic Barrier Reactive Dispersion (35% chance against magic/ranged projectiles)
+        if (getPhase() >= 3 && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+            if ((source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE) || source.is(net.minecraft.tags.DamageTypeTags.WITCH_RESISTANT_TO)) && this.getRandom().nextFloat() < 0.35f) {
+                if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, this.getX(), this.getY() + 1.6, this.getZ(), 20, 0.6, 0.8, 0.6, 0.1);
+                    serverLevel.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY() + 1.6, this.getZ(), 10, 0.4, 0.6, 0.4, 0.05);
+                    serverLevel.playSound(null, this.blockPosition(), SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.HOSTILE, 1.4f, 1.8f);
+                }
+                amount *= 0.5f; // Absorb 50% of the damage
+            }
+        }
+
+        return super.hurt(source, amount);
+    }
+
+    @Override
+    protected void dropCustomDeathLoot(net.minecraft.server.level.ServerLevel serverLevel, DamageSource damageSource, boolean recentlyHit) {
+        super.dropCustomDeathLoot(serverLevel, damageSource, recentlyHit);
+
+        // Guaranteed Mythic Boss Drops from the Elder Sage
+        this.spawnAtLocation(new ItemStack(com.frierenflight.zoltraakcinematic.registry.ModCinematicItems.CORRUPTION_CORE.get()));
+
+        // 2 to 4 Severed Horns of Corruption
+        int hornCount = 2 + this.getRandom().nextInt(3);
+        this.spawnAtLocation(new ItemStack(com.frierenflight.zoltraakcinematic.registry.ModCinematicItems.HORN_OF_CORRUPTION.get(), hornCount));
+    }
+
+    @Override
+    public void die(DamageSource cause) {
+        super.die(cause);
+        this.bossEvent.removeAllPlayers();
+        if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+            serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.5, this.getZ(), 3, 0.5, 0.5, 0.5, 0);
+            serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.5, this.getZ(), 120, 1.5, 2.0, 1.5, 0.5);
+            serverLevel.playSound(null, this.blockPosition(), SoundEvents.ENDER_DRAGON_DEATH, SoundSource.HOSTILE, 1.5f, 0.7f);
+        }
+    }
+
+    @Override
+    public void remove(net.minecraft.world.entity.Entity.RemovalReason reason) {
+        super.remove(reason);
+        this.bossEvent.removeAllPlayers();
+    }
+}

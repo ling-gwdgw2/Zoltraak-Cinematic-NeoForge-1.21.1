@@ -38,9 +38,9 @@ public class CorruptedZoltraakSpell extends AbstractSpell {
             .build();
 
     public CorruptedZoltraakSpell() {
-        this.baseManaCost = 48;
+        this.baseManaCost = 250;
         this.manaCostPerLevel = 7;
-        this.baseSpellPower = 45;
+        this.baseSpellPower = 100;
         this.spellPowerPerLevel = 9;
         this.castTime = 0;
     }

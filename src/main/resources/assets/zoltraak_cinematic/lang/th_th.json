@@ -49,5 +49,16 @@
   "ui.zoltraak_cinematic.flight_activated": "✦ เปิดใช้งานเวทบิน (Flight Magic)",
   "ui.zoltraak_cinematic.flight_deactivated": "✦ ปิดใช้งานเวทบิน (Flight Magic)",
   "ui.zoltraak_cinematic.flight_mana_depleted": "⚠ มานาหมดสิ้น! เวทบินพังทลายลง!",
-  "ui.zoltraak_cinematic.flight_not_in_spellbook": "ไม่พบเวทบินในสมุดเวทที่สวมใส่!"
+  "ui.zoltraak_cinematic.flight_not_in_spellbook": "ไม่พบเวทบินในสมุดเวทที่สวมใส่!",
+  "entity.zoltraak_cinematic.qual_boss": "✦ มหาจอมเวทควาล (Qual, 腐敗の賢老) ✦",
+  "item.zoltraak_cinematic.qual_spawn_egg": "ไข่เกิดมหาจอมเวทควาล",
+  "block.zoltraak_cinematic.qual_sealing_stone": "ศิลาสะกดมารของฟรีเรน (Qual's Sealing Monolith)",
+  "item.zoltraak_cinematic.qual_sealing_stone": "ศิลาสะกดมารของฟรีเรน",
+  "item.zoltraak_cinematic.elder_sage_grimoire": "บันทึกมหาเวทของควาล (Grimoire of the Elder Sage)",
+  "item.zoltraak_cinematic.elder_sage_grimoire.desc": "คัมภีร์เวทมนตร์ต้องห้ามโบราณของควาล บันทึกสูตรโครงสร้างดั้งเดิมของมหาเวทสังหารมนุษย์ (โซลทราค)",
+  "item.zoltraak_cinematic.horn_of_corruption": "ผลึกมารเรืองแสง (Saint Quartz of Corruption)",
+  "item.zoltraak_cinematic.horn_of_corruption.desc": "ผลึกแก้วปริซึม 7 สีที่ตกผลึกจากพลังเวทและเจตจำนงโบราณของมหาจอมเวทควาล เปล่งแสงประกายอัดแน่นไปด้วยมานาบริสุทธิ์ ใช้เป็นวัตถุดิบหลอมสร้างอุปกรณ์เวทระดับตำนาน",
+  "item.zoltraak_cinematic.corruption_core": "แก่นแท้แห่งการเน่าเปื่อย (Qual's Core of Corruption)",
+  "item.zoltraak_cinematic.corruption_core.desc": "แก่นผลึกหลุมดำที่สกัดจากทรวงอกของควาล เพิ่มพลังเวทโซลทราคมหาศาลและฟื้นฟูมานาอย่างรวดเร็ว",
+  "message.zoltraak_cinematic.unsealing_started": "§c⚠ รอยผนึกโบราณเริ่มปริแตก! อักขระเวทของฟรีเรนกำลังเปลี่ยนเป็นสีเลือด! ⚠"
 }
