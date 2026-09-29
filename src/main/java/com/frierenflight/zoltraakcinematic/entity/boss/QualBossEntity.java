@@ -107,6 +107,8 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
     private static final RawAnimation ANIM_DEATH = RawAnimation.begin().thenPlayAndHold("death");
 
     private boolean scaledHealthInitialized = false;
+    private int lastKnownPlayerCount = 1;
+    private int healthScalingCheckTimer = 0;
     private int spellCastCooldown = 40;
     private int phaseTransitionTimer = 0;
 
@@ -214,9 +216,9 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
     protected void registerGoals() {
         super.registerGoals();
 
-        // Target selectors
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
-        this.targetSelector.addGoal(2, new HurtByTargetGoal(this));
+        // Target selectors: HurtByTarget takes priority so damaging players draw retaliation aggro
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
 
         // Hierarchical Boss AI Goals:
         // Priority 1: Phase 4 Cataclysmic Overdrive Ultimate (HP < 20%)
@@ -235,22 +237,34 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, SpawnGroupData spawnGroupData) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData);
-        initializeHealthScaling();
+        updateDynamicHealthScaling(true);
         return data;
     }
 
     /**
-     * Dynamically scales Qual's health based on nearby players within 48 blocks.
+     * Initializes health scaling for backwards compatibility (e.g. from QualSealingStoneBlockEntity).
      */
     public void initializeHealthScaling() {
-        if (!this.level().isClientSide && !scaledHealthInitialized) {
-            List<Player> nearbyPlayers = this.level().getEntitiesOfClass(
-                    Player.class,
-                    this.getBoundingBox().inflate(48.0),
-                    p -> !p.isSpectator() && p.isAlive()
-            );
+        updateDynamicHealthScaling(true);
+    }
 
-            int playerCount = Math.max(1, nearbyPlayers.size());
+    /**
+     * Dynamically scales Qual's health based on nearby active players within 48 blocks.
+     * Smoothly scales up mid-fight if additional players join the battle.
+     */
+    public void updateDynamicHealthScaling(boolean forceInitial) {
+        if (this.level().isClientSide) return;
+
+        List<Player> nearbyPlayers = this.level().getEntitiesOfClass(
+                Player.class,
+                this.getBoundingBox().inflate(48.0),
+                p -> !p.isSpectator() && !p.isCreative() && p.isAlive()
+        );
+
+        int playerCount = Math.max(1, nearbyPlayers.size());
+
+        if (forceInitial || !scaledHealthInitialized) {
+            this.lastKnownPlayerCount = playerCount;
             double scaledMax = BASE_MAX_HEALTH + (playerCount - 1) * HEALTH_PER_PLAYER;
 
             AttributeInstance maxHealthAttr = this.getAttribute(Attributes.MAX_HEALTH);
@@ -259,6 +273,26 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 this.setHealth((float) scaledMax);
             }
             this.scaledHealthInitialized = true;
+        } else if (playerCount > this.lastKnownPlayerCount) {
+            // New players joined the raid! Scale max health up while preserving HP percentage
+            double oldMax = this.getMaxHealth();
+            double newMax = BASE_MAX_HEALTH + (playerCount - 1) * HEALTH_PER_PLAYER;
+            float currentHealth = this.getHealth();
+            float hpRatio = (float) (currentHealth / Math.max(1.0, oldMax));
+
+            AttributeInstance maxHealthAttr = this.getAttribute(Attributes.MAX_HEALTH);
+            if (maxHealthAttr != null) {
+                maxHealthAttr.setBaseValue(newMax);
+                this.setHealth(Math.min((float) newMax, (float) (newMax * hpRatio)));
+            }
+            this.lastKnownPlayerCount = playerCount;
+
+            // Roar of demonic awareness when more challengers arrive
+            if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.WITCH, this.getX(), this.getY() + 1.6, this.getZ(), 45, 1.2, 1.2, 1.2, 0.1);
+                serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.6, this.getZ(), 60, 1.2, 1.6, 1.2, 0.3);
+                serverLevel.playSound(null, this.blockPosition(), SoundEvents.WITHER_AMBIENT, SoundSource.HOSTILE, 1.8f, 0.7f);
+            }
         }
     }
 
@@ -267,7 +301,21 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         super.customServerAiStep();
 
         if (!scaledHealthInitialized && this.tickCount > 20) {
-            initializeHealthScaling();
+            updateDynamicHealthScaling(true);
+        }
+
+        // Periodic dynamic health check for late-joining players every 60 ticks (3 seconds)
+        if (++healthScalingCheckTimer >= 60) {
+            healthScalingCheckTimer = 0;
+            updateDynamicHealthScaling(false);
+        }
+
+        // Drop invalid targets (dead players, creative/spectator switchers)
+        LivingEntity curTarget = this.getTarget();
+        if (curTarget != null) {
+            if (!curTarget.isAlive() || (curTarget instanceof Player p && (p.isSpectator() || p.isCreative()))) {
+                this.setTarget(null);
+            }
         }
 
         // Update Boss Bar progress
@@ -445,6 +493,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         super.addAdditionalSaveData(tag);
         tag.putInt("Phase", getPhase());
         tag.putBoolean("ScaledHealth", this.scaledHealthInitialized);
+        tag.putInt("LastKnownPlayerCount", this.lastKnownPlayerCount);
     }
 
     @Override
@@ -455,6 +504,9 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         }
         if (tag.contains("ScaledHealth")) {
             this.scaledHealthInitialized = tag.getBoolean("ScaledHealth");
+        }
+        if (tag.contains("LastKnownPlayerCount")) {
+            this.lastKnownPlayerCount = tag.getInt("LastKnownPlayerCount");
         }
     }
 
@@ -526,6 +578,21 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
             }
         }
 
+        // Multiplayer Threat Retaliation: Switch aggro towards attacker on significant damage
+        net.minecraft.world.entity.Entity attacker = source.getEntity();
+        if (attacker instanceof LivingEntity livingAttacker && livingAttacker.isAlive() && !(livingAttacker instanceof QualBossEntity)) {
+            LivingEntity cur = this.getTarget();
+            if (cur != livingAttacker) {
+                boolean forceSwitch = cur == null || !cur.isAlive() || amount >= 25.0f;
+                float switchChance = forceSwitch ? 1.0f : (amount >= 8.0f ? 0.65f : 0.40f);
+                if (this.getRandom().nextFloat() < switchChance) {
+                    this.setTarget(livingAttacker);
+                    this.setLastHurtByMob(livingAttacker);
+                    faceTargetDirectly(livingAttacker);
+                }
+            }
+        }
+
         return super.hurt(source, amount);
     }
 
@@ -536,9 +603,15 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         // Guaranteed Mythic Boss Drops from the Elder Sage
         this.spawnAtLocation(new ItemStack(com.frierenflight.zoltraakcinematic.registry.ModCinematicItems.CORRUPTION_CORE.get()));
 
-        // 2 to 4 Severed Horns of Corruption
-        int hornCount = 2 + this.getRandom().nextInt(3);
+        // Horns of Corruption: 2 to 4 base + 1 extra horn per additional player in the raid!
+        int bonusHorns = Math.max(0, this.lastKnownPlayerCount - 1);
+        int hornCount = 2 + this.getRandom().nextInt(3) + bonusHorns;
         this.spawnAtLocation(new ItemStack(com.frierenflight.zoltraakcinematic.registry.ModCinematicItems.HORN_OF_CORRUPTION.get(), hornCount));
+
+        // Bonus corruption core for large raid teams (>= 3 players)
+        if (this.lastKnownPlayerCount >= 3 && this.getRandom().nextFloat() < 0.5f) {
+            this.spawnAtLocation(new ItemStack(com.frierenflight.zoltraakcinematic.registry.ModCinematicItems.CORRUPTION_CORE.get()));
+        }
     }
 
     @Override
@@ -549,6 +622,12 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.5, this.getZ(), 3, 0.5, 0.5, 0.5, 0);
             serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.5, this.getZ(), 120, 1.5, 2.0, 1.5, 0.5);
             serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.QUAL_DEATH.get(), SoundSource.HOSTILE, 2.0f, 1.0f);
+
+            // Award bonus XP orbs scaled with player count
+            int bonusXp = (this.lastKnownPlayerCount - 1) * 75;
+            if (bonusXp > 0) {
+                net.minecraft.world.entity.ExperienceOrb.award(serverLevel, this.position(), bonusXp);
+            }
         }
     }
 

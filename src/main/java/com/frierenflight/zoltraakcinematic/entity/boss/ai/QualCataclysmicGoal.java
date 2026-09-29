@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
@@ -71,7 +72,18 @@ public class QualCataclysmicGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        return chargeTimer > 0 && qual.getTarget() != null && qual.getTarget().isAlive();
+        if (chargeTimer <= 0) return false;
+        LivingEntity target = qual.getTarget();
+        if (target == null || !target.isAlive()) {
+            Player nextPlayer = qual.level().getNearestPlayer(qual, 48.0);
+            if (nextPlayer != null && nextPlayer.isAlive() && !nextPlayer.isCreative() && !nextPlayer.isSpectator()) {
+                qual.setTarget(nextPlayer);
+                qual.faceTargetDirectly(nextPlayer);
+                return true;
+            }
+            return false;
+        }
+        return true;
     }
 
     @Override

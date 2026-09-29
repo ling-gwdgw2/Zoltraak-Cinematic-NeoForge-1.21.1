@@ -10,9 +10,11 @@ import net.minecraft.sounds.SoundSource;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * 📜 QualAntiBarrierGoal — Anti-Barrier Intelligence & Tactical Adaptation.
@@ -135,8 +137,36 @@ public class QualAntiBarrierGoal extends Goal {
 
     /**
      * Executes continuous heavy pressure against 360-degree Geodesic Domes.
+     * In multiplayer, also scans for exposed allies without active barriers to punish them!
      */
     private void handleDomeTactics(LivingEntity target, DefenseBarrierEntity barrier) {
+        // Multi-player Tactical Check: If an ally is completely unprotected nearby, punish them!
+        if (qual.getRandom().nextFloat() < 0.70f) {
+            List<Player> allies = qual.level().getEntitiesOfClass(
+                    Player.class,
+                    qual.getBoundingBox().inflate(36.0),
+                    p -> p != target && !p.isSpectator() && !p.isCreative() && p.isAlive()
+            );
+
+            for (Player ally : allies) {
+                DefenseBarrierEntity allyBarrier = DefenseBarrierEntity.find(ally);
+                boolean isProtected = allyBarrier != null && allyBarrier.active();
+                if (!isProtected) {
+                    qual.setTarget(ally);
+                    qual.faceTargetDirectly(ally);
+                    if (!qual.isCasting()) {
+                        if (qual.getRandom().nextFloat() < 0.6f) {
+                            qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 8);
+                        } else {
+                            qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
+                        }
+                    }
+                    pressureTimer = 50 + qual.getRandom().nextInt(20);
+                    return;
+                }
+            }
+        }
+
         if (pressureTimer > 0) {
             pressureTimer--;
             return;

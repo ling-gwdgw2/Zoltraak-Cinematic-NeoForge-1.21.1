@@ -5,7 +5,10 @@ import com.frierenflight.zoltraakcinematic.registry.ModCinematicSpells;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
+import net.minecraft.world.entity.player.Player;
+
 import java.util.EnumSet;
+import java.util.List;
 
 /**
  * 📜 QualCombatGoal — 4-Phase Combat Progression Spellcasting AI.
@@ -15,6 +18,7 @@ import java.util.EnumSet;
  * - Phase 2 (Demonic Barrage): 24-circle Corrupted Phalanx Barrage
  * - Phase 3 (Tactical Adaptation): High-tempo alternating barrages and beams
  * - Phase 4 (Overdrive): Relentless pressure between Cataclysmic cooldowns
+ * - Multi-Player Awareness: Alternates attention among multiple active challengers
  */
 public class QualCombatGoal extends Goal {
     private final QualBossEntity qual;
@@ -86,6 +90,44 @@ public class QualCombatGoal extends Goal {
                     attackTimer = 35 + qual.getRandom().nextInt(15);
                 }
             }
+        }
+
+        // Multiplayer Tactical Cycling: evaluate switching target between spell volleys
+        considerTargetSwitch(target);
+    }
+
+    /**
+     * In multiplayer encounters, periodically alternates attention between active challengers.
+     * Prevents tunnel vision and ensures all players in the raid remain engaged.
+     */
+    private void considerTargetSwitch(LivingEntity currentTarget) {
+        if (qual.getRandom().nextFloat() > 0.45f) {
+            return;
+        }
+
+        List<Player> challengers = qual.level().getEntitiesOfClass(
+                Player.class,
+                qual.getBoundingBox().inflate(48.0),
+                p -> p != currentTarget && !p.isSpectator() && !p.isCreative() && p.isAlive()
+        );
+
+        if (challengers.isEmpty()) {
+            return;
+        }
+
+        Player newTarget;
+        if (qual.getRandom().nextBoolean()) {
+            // Find closest challenger
+            challengers.sort((a, b) -> Double.compare(qual.distanceToSqr(a), qual.distanceToSqr(b)));
+            newTarget = challengers.get(0);
+        } else {
+            // Pick a random challenger
+            newTarget = challengers.get(qual.getRandom().nextInt(challengers.size()));
+        }
+
+        if (newTarget != null && newTarget.isAlive()) {
+            qual.setTarget(newTarget);
+            qual.faceTargetDirectly(newTarget);
         }
     }
 }
