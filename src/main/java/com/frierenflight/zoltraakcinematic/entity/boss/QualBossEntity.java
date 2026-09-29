@@ -94,6 +94,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
     ).setDarkenScreen(true).setPlayBossMusic(true).setCreateWorldFog(true);
 
     private final AnimatableInstanceCache animCache = GeckoLibUtil.createInstanceCache(this);
+    private static final RawAnimation ANIM_IDLE = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation ANIM_IDLE_FLIGHT = RawAnimation.begin().thenLoop("fly");
     private static final RawAnimation ANIM_CAST_BEAM = RawAnimation.begin().thenLoop("cast_beam");
     private static final RawAnimation ANIM_CAST_BARRAGE = RawAnimation.begin().thenLoop("cast_barrage");
@@ -461,7 +462,13 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 case CAST_STATE_CATACLYSMIC -> state.setAndContinue(ANIM_CAST_CHARGE);
                 case CAST_STATE_BARRAGE -> state.setAndContinue(ANIM_CAST_BARRAGE);
                 case CAST_STATE_BEAM -> state.setAndContinue(ANIM_CAST_BEAM);
-                default -> state.setAndContinue(ANIM_IDLE_FLIGHT);
+                default -> {
+                    if (this.getDeltaMovement().horizontalDistanceSqr() > 0.005) {
+                        yield state.setAndContinue(ANIM_IDLE_FLIGHT);
+                    } else {
+                        yield state.setAndContinue(ANIM_IDLE);
+                    }
+                }
             };
         }));
     }

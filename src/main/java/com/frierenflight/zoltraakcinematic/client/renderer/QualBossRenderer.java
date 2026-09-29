@@ -14,6 +14,6 @@ public class QualBossRenderer extends GeoEntityRenderer<QualBossEntity> {
 
     public QualBossRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new QualBossModel());
-        this.shadowRadius = 0.8f;
+        this.shadowRadius = 0.6f;
     }
 }

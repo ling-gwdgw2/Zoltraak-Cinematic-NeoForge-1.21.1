@@ -40,7 +40,7 @@ public class ModCinematicEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity>> QUAL_BOSS =
             ENTITIES.register("qual_boss", () -> EntityType.Builder.<com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity>of(
                             com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity::new, MobCategory.MONSTER)
-                    .sized(1.4f, 3.2f)
+                    .sized(1.0f, 2.8f)
                     .clientTrackingRange(128)
                     .updateInterval(1)
                     .fireImmune()
