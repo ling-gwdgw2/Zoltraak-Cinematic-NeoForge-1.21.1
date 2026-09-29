@@ -125,7 +125,7 @@ public final class ZoltraakRenderTypes extends RenderType {
       false,
       false,
       CompositeState.builder()
-         .setShaderState(new ShaderStateShard(GameRenderer::getPositionTexColorShader))
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.cinematicFlare))
          .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
          .setTransparencyState(ADD)
          .setCullState(NO_CULL)
@@ -176,7 +176,7 @@ public final class ZoltraakRenderTypes extends RenderType {
       false,
       false,
       CompositeState.builder()
-         .setShaderState(new ShaderStateShard(GameRenderer::getPositionTexColorShader))
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.cinematicFlare))
          .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
          .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
          .setCullState(NO_CULL)
@@ -288,7 +288,22 @@ public final class ZoltraakRenderTypes extends RenderType {
 
    public static final RenderType BARRAGE_CIRCLE = ZOL_CIRCLE;
 
-   public static final RenderType BARRAGE_ATLAS = magicAdditive(TEX_ATLAS);
+   public static final RenderType BARRAGE_ATLAS = create(
+      "zol_barrage_atlas",
+      DefaultVertexFormat.POSITION_TEX_COLOR,
+      Mode.QUADS,
+      4096,
+      false,
+      true,
+      CompositeState.builder()
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.barrageFx))
+         .setTextureState(new TextureStateShard(TEX_ATLAS, false, false))
+         .setTransparencyState(ADD)
+         .setCullState(NO_CULL)
+         .setDepthTestState(LEQUAL_DEPTH_TEST)
+         .setWriteMaskState(COLOR_WRITE)
+         .createCompositeState(false)
+   );
 
    public static RenderType magicAdditive(ResourceLocation texture) {
       return create(
