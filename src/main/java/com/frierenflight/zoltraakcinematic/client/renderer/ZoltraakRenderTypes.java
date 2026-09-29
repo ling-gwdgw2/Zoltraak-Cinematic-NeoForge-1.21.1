@@ -27,6 +27,13 @@ public final class ZoltraakRenderTypes extends RenderType {
       });
    }
 
+   private static ShaderStateShard safeShaderColor(Supplier<ShaderInstance> primary) {
+      return new ShaderStateShard(() -> {
+         ShaderInstance s = primary.get();
+         return s != null ? s : GameRenderer.getPositionColorShader();
+      });
+   }
+
    public static final RenderType LIGHT = create(
       "zol_light",
       DefaultVertexFormat.POSITION_COLOR,
@@ -51,7 +58,7 @@ public final class ZoltraakRenderTypes extends RenderType {
       false,
       false,
       CompositeState.builder()
-         .setShaderState(POSITION_COLOR_SHADER)
+         .setShaderState(safeShaderColor(() -> ZoltraakCinematicShaders.defenseBarrier))
          .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
          .setCullState(NO_CULL)
          .setDepthTestState(LEQUAL_DEPTH_TEST)

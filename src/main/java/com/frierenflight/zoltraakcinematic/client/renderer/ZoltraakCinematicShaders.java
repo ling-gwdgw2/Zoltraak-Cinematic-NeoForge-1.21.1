@@ -21,6 +21,7 @@ public final class ZoltraakCinematicShaders {
    public static ShaderInstance greatPlume;
    public static ShaderInstance magicCircle;
    public static ShaderInstance blackMagicCircle;
+   public static ShaderInstance defenseBarrier;
 
    @SubscribeEvent
    public static void onRegisterShaders(RegisterShadersEvent e) {
@@ -34,11 +35,16 @@ public final class ZoltraakCinematicShaders {
       registerSafe(e, "great_zoltraak_plume", s -> greatPlume = s);
       registerSafe(e, "magic_circle", s -> magicCircle = s);
       registerSafe(e, "black_magic_circle", s -> blackMagicCircle = s);
+      registerSafe(e, "defense_barrier", DefaultVertexFormat.POSITION_COLOR, s -> defenseBarrier = s);
    }
 
    private static void registerSafe(RegisterShadersEvent e, String name, java.util.function.Consumer<ShaderInstance> onLoaded) {
+      registerSafe(e, name, DefaultVertexFormat.POSITION_TEX_COLOR, onLoaded);
+   }
+
+   private static void registerSafe(RegisterShadersEvent e, String name, com.mojang.blaze3d.vertex.VertexFormat format, java.util.function.Consumer<ShaderInstance> onLoaded) {
       try {
-         e.registerShader(new ShaderInstance(e.getResourceProvider(), id(name), DefaultVertexFormat.POSITION_TEX_COLOR), onLoaded);
+         e.registerShader(new ShaderInstance(e.getResourceProvider(), id(name), format), onLoaded);
       } catch (IOException ex) {
          System.err.println("[ZoltraakCinematic] Failed to register core shader '" + name + "': " + ex.getMessage());
       }
