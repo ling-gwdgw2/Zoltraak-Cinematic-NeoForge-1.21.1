@@ -218,7 +218,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
 
         // Target selectors: HurtByTarget takes priority so damaging players draw retaliation aggro
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, false));
 
         // Hierarchical Boss AI Goals:
         // Priority 1: Phase 4 Cataclysmic Overdrive Ultimate (HP < 20%)
