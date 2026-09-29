@@ -9,41 +9,6 @@ in vec3 viewPosition;
 
 out vec4 fragColor;
 
-// --- Hexagonal Grid Distance Function ---
-// Returns distance to nearest hexagon edge (0 at boundary, ~0.5 at center)
-float hexEdgeDist(vec2 p) {
-    p = abs(p);
-    float d = max(dot(p, vec2(0.5, 0.8660254)), p.x);
-    return 0.5 - d;
-}
-
-float hexCellGrid(vec2 uv, float scale, float lineWidth) {
-    vec2 p = uv * scale;
-    vec2 s = vec2(1.0, 1.7320508);
-    vec2 h = s * 0.5;
-    vec2 a = mod(p, s) - h;
-    vec2 b = mod(p - h, s) - h;
-    vec2 g = dot(a, a) < dot(b, b) ? a : b;
-    float edge = hexEdgeDist(g);
-    // Anti-aliased line width using screen-space derivative with robust lower bound
-    float w = max(fwidth(edge) * 1.5, lineWidth);
-    return 1.0 - smoothstep(0.0, w, edge);
-}
-
-// Triplanar hexagonal micro-mesh projection
-float getTriplanarHex(vec3 pos, vec3 norm, float scale, float lineWidth) {
-    vec3 w = pow(abs(norm), vec3(4.0));
-    float sum = w.x + w.y + w.z;
-    if (sum < 0.0001) return 0.0;
-    w /= sum;
-
-    float h1 = hexCellGrid(pos.yz, scale, lineWidth);
-    float h2 = hexCellGrid(pos.zx, scale, lineWidth);
-    float h3 = hexCellGrid(pos.xy, scale, lineWidth);
-
-    return w.x * h1 + w.y * h2 + w.z * h3;
-}
-
 void main() {
     // 1. Surface normal in view space & camera direction (NaN-safe guarded normalization)
     vec3 vCross = cross(dFdx(viewPosition), dFdy(viewPosition));
@@ -55,57 +20,42 @@ void main() {
 
     float facing = clamp(abs(dot(viewNormal, viewDir)), 0.0, 1.0);
 
-    // 2. Fresnel edge glow (intense at silhouette edges, translucent in center)
-    float fresnel = pow(1.0 - facing, 2.5);
-    float rimGlow = pow(1.0 - facing, 5.0);
+    // 2. High-clarity Fresnel rim (crystal clear facing, radiant at grazing edges)
+    float fresnel = pow(1.0 - facing, 2.2);
+    float rimGlow = pow(1.0 - facing, 4.5);
 
-    // 3. World surface normal for triplanar projection (NaN-safe)
-    vec3 wCross = cross(dFdx(worldPos), dFdy(worldPos));
-    float wLen = length(wCross);
-    vec3 worldNormal = wLen > 0.0001 ? wCross / wLen : vec3(0.0, 1.0, 0.0);
-
-    // 4. Procedural Hexagonal Micro-Mesh (scale 2.8 gives crisp ~0.35m micro-tiles)
-    float microHex = getTriplanarHex(worldPos, worldNormal, 2.8, 0.038);
-
-    // 5. Mana Shimmer & Wave Propagation
-    float t = GameTime * 2.5;
-    // Harmonic vertical mana flow
-    float verticalWave = sin(worldPos.y * 3.2 - t * 3.5);
-    // Subtle cross-interference ripple
-    float radialRipple = sin(length(worldPos.xz) * 4.0 - t * 4.0);
-    float shimmer = 0.5 + 0.5 * (verticalWave * 0.6 + radialRipple * 0.4);
+    // 3. Smooth Harmonic Mana Shimmer (isotropic, no vertical barcode lines)
+    float t = GameTime * 2.0;
+    float localDist = length(worldPos.xz);
+    float pulse1 = sin(worldPos.y * 1.5 - t * 2.0 + localDist * 1.2);
+    float pulse2 = cos(localDist * 2.5 - t * 2.8);
+    float manaShimmer = 0.5 + 0.5 * (pulse1 * 0.55 + pulse2 * 0.45);
 
     // Impact overdrive detection: vertexColor.r increases when barrier is struck
-    float hitFactor = smoothstep(0.15, 0.90, vertexColor.r);
-    float shockwave = sin(length(worldPos) * 8.0 - t * 12.0) * hitFactor;
+    float hitFactor = smoothstep(0.15, 0.85, vertexColor.r);
+    float shockwave = sin(length(worldPos) * 6.0 - t * 10.0) * hitFactor;
 
-    // 6. Chromatic Energy Color Palette (Frieren Anime Style)
+    // 4. Anime Crystalline Mana Color Palette (Frieren Anime Style)
     // Deep mana base: electric sapphire & translucent cyan
-    vec3 deepCyan = vec3(0.04, 0.45, 0.95);
-    // Active plate color from CPU vertex (includes pulse tiles & base tint)
-    vec3 baseColor = mix(deepCyan, vertexColor.rgb, 0.75);
+    vec3 deepCyan = vec3(0.05, 0.48, 0.95);
+    vec3 baseColor = mix(deepCyan, vertexColor.rgb, 0.70);
 
-    // Micro-hex lines: glowing neon aqua
-    vec3 gridColor = vec3(0.35, 0.92, 1.0);
-
-    // Fresnel rim: iridescent chromatic dispersion (deep cyan -> incandescent white-blue)
-    vec3 rimColor = mix(vec3(0.12, 0.78, 1.0), vec3(0.92, 0.98, 1.0), fresnel);
+    // Fresnel rim: iridescent chromatic dispersion (deep cyan -> bright aqua -> incandescent white-blue)
+    vec3 rimColor = mix(vec3(0.15, 0.82, 1.0), vec3(0.92, 0.98, 1.0), fresnel);
 
     // Combine color layers
-    vec3 color = baseColor * (0.85 + 0.25 * shimmer);
-    // Add micro-mesh glow (stronger on angled edges)
-    color += gridColor * microHex * (0.40 + 0.60 * fresnel);
+    vec3 color = baseColor * (0.90 + 0.20 * manaShimmer);
     // Add brilliant Fresnel rim luminescence
-    color += rimColor * (fresnel * 0.70 + rimGlow * 0.50);
+    color += rimColor * (fresnel * 0.75 + rimGlow * 0.55);
     // Add impact shockwave surge
-    color += vec3(0.8, 0.95, 1.0) * max(0.0, shockwave * 0.4);
+    color += vec3(0.85, 0.96, 1.0) * max(0.0, shockwave * 0.5);
 
-    // 7. Dynamic Alpha calculation:
-    // Core of barrier is semi-translucent so player can see incoming spells/threats
-    // Edges and micro-hex lines are luminous and clearly defined
-    float alpha = vertexColor.a * (0.28 + 0.72 * fresnel + 0.35 * microHex);
+    // 5. Dynamic Alpha calculation:
+    // Core of barrier is semi-translucent crystal so player can see incoming spells/threats
+    // Edges and bevel facets are luminous and clearly defined
+    float alpha = vertexColor.a * (0.30 + 0.70 * fresnel);
     // Add extra opacity on impact hit
-    alpha = clamp(alpha + hitFactor * 0.25, 0.0, 1.0);
+    alpha = clamp(alpha + hitFactor * 0.30, 0.0, 1.0);
 
     alpha *= ColorModulator.a;
     color *= ColorModulator.rgb;

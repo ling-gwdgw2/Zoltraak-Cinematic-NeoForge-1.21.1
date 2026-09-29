@@ -27,11 +27,16 @@ void main() {
     // 3. Center Muzzle Plasma Eruption Burst
     float centerBurst = exp(-r * 7.5) * 1.15;
 
-    // 4. Sample Texture Mask
-    float texLuma = texture(Sampler0, uv).r;
+    // 4. Sample Texture Mask (Multiply by texture alpha to avoid rectangular edge leakage)
+    vec4 texSample = texture(Sampler0, uv);
+    float texLuma = texSample.r * texSample.a;
 
     // Combined explosive shockwave density
     float density = max(wave * 1.35 + ripple + centerBurst, texLuma * (1.0 + wave * 0.8));
+
+    // Smooth boundary vignette preventing quad edge cutoffs
+    float boundaryFade = 1.0 - smoothstep(0.85, 1.0, r);
+    density *= boundaryFade;
 
     // 5. Chromatic Shockwave Palette (Theme-aware: Cyan, Amber/Gold, Violet)
     vec3 baseTheme = vertexColor.rgb;

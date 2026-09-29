@@ -46,8 +46,9 @@ void main() {
 
     float flameNoise = fire1 * 0.58 + fire2 * 0.42;
 
-    // 2. Texture Sample from Fire Beam
-    float texLuma = texture(Sampler0, vec2(uv.x, uv.y - t * 0.8)).r;
+    // 2. Texture Sample from Fire Beam (multiplied by alpha)
+    vec4 texSample = texture(Sampler0, vec2(uv.x, uv.y - t * 0.8));
+    float texLuma = texSample.r * texSample.a;
     float flameDensity = flameNoise * 0.65 + texLuma * 0.35;
 
     // 3. Central White-Hot Incandescent Core
