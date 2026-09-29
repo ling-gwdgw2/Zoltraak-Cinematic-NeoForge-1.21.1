@@ -9,12 +9,6 @@ in vec3 viewPosition;
 
 out vec4 fragColor;
 
-// Safe normalization preventing division by zero / NaNs
-vec3 safeNormalize(vec3 v, vec3 fallback) {
-    float len = length(v);
-    return len > 0.0001 ? (v / len) : fallback;
-}
-
 // --- Hexagonal Grid Distance Function ---
 // Returns distance to nearest hexagon edge (0 at boundary, ~0.5 at center)
 float hexEdgeDist(vec2 p) {
@@ -29,12 +23,9 @@ float hexCellGrid(vec2 uv, float scale, float lineWidth) {
     vec2 h = s * 0.5;
     vec2 a = mod(p, s) - h;
     vec2 b = mod(p - h, s) - h;
-    vec2 g = a;
-    if (dot(b, b) < dot(a, a)) {
-        g = b;
-    }
+    vec2 g = dot(a, a) < dot(b, b) ? a : b;
     float edge = hexEdgeDist(g);
-    // Anti-aliased line width using screen-space derivative
+    // Anti-aliased line width using screen-space derivative with robust lower bound
     float w = max(fwidth(edge) * 1.5, lineWidth);
     return 1.0 - smoothstep(0.0, w, edge);
 }
@@ -54,21 +45,24 @@ float getTriplanarHex(vec3 pos, vec3 norm, float scale, float lineWidth) {
 }
 
 void main() {
-    if (vertexColor.a <= 0.003) {
-        discard;
-    }
+    // 1. Surface normal in view space & camera direction (NaN-safe guarded normalization)
+    vec3 vCross = cross(dFdx(viewPosition), dFdy(viewPosition));
+    float vLen = length(vCross);
+    vec3 viewNormal = vLen > 0.0001 ? vCross / vLen : vec3(0.0, 0.0, 1.0);
 
-    // 1. Surface normal in view space & camera direction
-    vec3 viewNormal = safeNormalize(cross(dFdx(viewPosition), dFdy(viewPosition)), vec3(0.0, 0.0, 1.0));
-    vec3 viewDir = safeNormalize(-viewPosition, vec3(0.0, 0.0, 1.0));
-    float facing = abs(dot(viewNormal, viewDir));
+    float viewLen = length(viewPosition);
+    vec3 viewDir = viewLen > 0.0001 ? -viewPosition / viewLen : vec3(0.0, 0.0, 1.0);
+
+    float facing = clamp(abs(dot(viewNormal, viewDir)), 0.0, 1.0);
 
     // 2. Fresnel edge glow (intense at silhouette edges, translucent in center)
     float fresnel = pow(1.0 - facing, 2.5);
     float rimGlow = pow(1.0 - facing, 5.0);
 
-    // 3. World surface normal for triplanar projection
-    vec3 worldNormal = safeNormalize(cross(dFdx(worldPos), dFdy(worldPos)), vec3(0.0, 1.0, 0.0));
+    // 3. World surface normal for triplanar projection (NaN-safe)
+    vec3 wCross = cross(dFdx(worldPos), dFdy(worldPos));
+    float wLen = length(wCross);
+    vec3 worldNormal = wLen > 0.0001 ? wCross / wLen : vec3(0.0, 1.0, 0.0);
 
     // 4. Procedural Hexagonal Micro-Mesh (scale 2.8 gives crisp ~0.35m micro-tiles)
     float microHex = getTriplanarHex(worldPos, worldNormal, 2.8, 0.038);
@@ -116,6 +110,7 @@ void main() {
     alpha *= ColorModulator.a;
     color *= ColorModulator.rgb;
 
+    // GPU-safe single terminal discard at end of shader (derivatives executed uniformly)
     if (alpha <= 0.003) {
         discard;
     }
