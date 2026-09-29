@@ -66,6 +66,7 @@ public class QualFollowPlayerGoal extends Goal {
      */
     private void tickCombatFlight(LivingEntity target) {
         qual.getLookControl().setLookAt(target, 35.0f, 35.0f);
+        qual.faceTargetDirectly(target);
 
         double dist = qual.distanceTo(target);
         int phase = qual.getPhase();
@@ -123,6 +124,7 @@ public class QualFollowPlayerGoal extends Goal {
 
         if (nearestPlayer != null && nearestPlayer.isAlive()) {
             qual.getLookControl().setLookAt(nearestPlayer, 30.0f, 30.0f);
+            qual.faceTargetDirectly(nearestPlayer);
 
             double dist = qual.distanceTo(nearestPlayer);
             double targetY = nearestPlayer.getY() + 2.5;

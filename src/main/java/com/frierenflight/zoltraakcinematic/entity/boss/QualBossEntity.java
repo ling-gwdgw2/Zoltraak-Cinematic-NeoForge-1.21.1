@@ -319,6 +319,15 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         if (this.entityData.get(DATA_IS_FLYING) != isFlying) {
             this.entityData.set(DATA_IS_FLYING, isFlying);
         }
+
+        // Active Head & Body Facing towards Player (Eliminates sideways and backwards angles)
+        LivingEntity focus = this.getTarget();
+        if (focus == null || !focus.isAlive()) {
+            focus = this.level().getNearestPlayer(this, 48.0);
+        }
+        if (focus != null && focus.isAlive()) {
+            faceTargetDirectly(focus);
+        }
     }
 
     @Override
@@ -567,6 +576,42 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         this.calculateEntityAnimation(false);
     }
 
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        if (this.level().isClientSide) {
+            // Keep client-side body strictly aligned with head to eliminate sideways drift
+            this.yBodyRot = this.yHeadRot;
+            this.yBodyRotO = this.yHeadRotO;
+        }
+    }
+
+    /**
+     * Actively rotates the entity, body, and head directly towards the specified entity.
+     * Eliminates awkward sideways angles and ensures direct face-to-face contact.
+     */
+    public void faceTargetDirectly(LivingEntity targetEntity) {
+        if (targetEntity == null) return;
+        double dx = targetEntity.getX() - this.getX();
+        double dz = targetEntity.getZ() - this.getZ();
+        double horizDist = Math.sqrt(dx * dx + dz * dz);
+        if (horizDist > 0.05) {
+            float targetYaw = (float) (Mth.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+            float smoothYaw = Mth.rotLerp(0.35f, this.getYRot(), targetYaw);
+            this.setYRot(smoothYaw);
+            this.yRotO = smoothYaw;
+            this.yBodyRot = smoothYaw;
+            this.yBodyRotO = smoothYaw;
+            this.yHeadRot = smoothYaw;
+            this.yHeadRotO = smoothYaw;
+
+            double dy = targetEntity.getEyeY() - this.getEyeY();
+            float targetPitch = (float) (-(Mth.atan2(dy, horizDist) * (180.0 / Math.PI)));
+            this.setXRot(Mth.rotLerp(0.35f, this.getXRot(), targetPitch));
+            this.xRotO = this.getXRot();
+        }
+    }
+
     /**
      * 📜 QualFlightMoveControl — Dedicated 3D Aerial Kinematics & Flight Controller.
      * Provides smooth, fluid acceleration, deceleration, and 3D flight trajectory towards wanted positions.
@@ -597,11 +642,20 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 double dist = Math.sqrt(distSqr);
                 Vec3 dir = new Vec3(dx / dist, dy / dist, dz / dist);
 
-                LivingEntity target = this.qual.getTarget();
-                if (target == null || !target.isAlive()) {
-                    float targetYaw = (float) (Mth.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
-                    this.qual.setYRot(this.rotlerp(this.qual.getYRot(), targetYaw, 15.0F));
-                    this.qual.yBodyRot = this.qual.getYRot();
+                // Facing logic: if player/target is nearby, keep looking directly at them; only orient towards flight direction if alone in wilderness
+                LivingEntity focus = this.qual.getTarget();
+                if (focus == null || !focus.isAlive()) {
+                    focus = this.qual.level().getNearestPlayer(this.qual, 48.0);
+                }
+
+                if (focus != null && focus.isAlive()) {
+                    this.qual.faceTargetDirectly(focus);
+                } else if (distSqr > 0.04) {
+                    float moveYaw = (float) (Mth.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                    float smoothYaw = this.rotlerp(this.qual.getYRot(), moveYaw, 15.0F);
+                    this.qual.setYRot(smoothYaw);
+                    this.qual.yBodyRot = smoothYaw;
+                    this.qual.yHeadRot = smoothYaw;
                 }
 
                 double baseSpeed = this.qual.getAttributeValue(Attributes.FLYING_SPEED);

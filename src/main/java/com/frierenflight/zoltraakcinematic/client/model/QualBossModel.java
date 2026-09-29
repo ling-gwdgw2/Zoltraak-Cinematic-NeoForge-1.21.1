@@ -32,4 +32,23 @@ public class QualBossModel extends GeoModel<QualBossEntity> {
     public ResourceLocation getAnimationResource(QualBossEntity animatable) {
         return ANIMATION_RESOURCE;
     }
+
+    @Override
+    public void setCustomAnimations(QualBossEntity animatable, long instanceId, software.bernie.geckolib.animation.AnimationState<QualBossEntity> animationState) {
+        super.setCustomAnimations(animatable, instanceId, animationState);
+
+        // Dynamic 3D Head Tracking: rotates Head directly towards the player's eye height
+        software.bernie.geckolib.cache.object.GeoBone head = this.getAnimationProcessor().getBone("Head");
+        if (head != null) {
+            software.bernie.geckolib.model.data.EntityModelData modelData =
+                    animationState.getData(software.bernie.geckolib.constant.DataTickets.ENTITY_MODEL_DATA);
+            if (modelData != null) {
+                float pitch = net.minecraft.util.Mth.clamp(modelData.headPitch(), -45.0f, 45.0f);
+                head.setRotX(pitch * (float) (Math.PI / 180.0));
+
+                float netYaw = net.minecraft.util.Mth.clamp(modelData.netHeadYaw(), -30.0f, 30.0f);
+                head.setRotY(netYaw * (float) (Math.PI / 180.0));
+            }
+        }
+    }
 }
