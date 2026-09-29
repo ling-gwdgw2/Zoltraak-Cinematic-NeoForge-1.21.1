@@ -36,7 +36,7 @@ public class QualAntiBarrierGoal extends Goal {
 
     public QualAntiBarrierGoal(QualBossEntity qual) {
         this.qual = qual;
-        this.setFlags(EnumSet.of(Flag.LOOK));
+        this.setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override

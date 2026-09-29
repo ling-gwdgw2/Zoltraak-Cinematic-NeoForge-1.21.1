@@ -22,7 +22,7 @@ public class QualCombatGoal extends Goal {
 
     public QualCombatGoal(QualBossEntity qual) {
         this.qual = qual;
-        this.setFlags(EnumSet.of(Flag.LOOK));
+        this.setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override

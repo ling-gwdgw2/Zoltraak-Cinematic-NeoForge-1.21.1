@@ -3,9 +3,12 @@ package com.frierenflight.zoltraakcinematic.entity.boss;
 import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualAntiBarrierGoal;
 import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualCataclysmicGoal;
 import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualCombatGoal;
-import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualHoverGoal;
+import com.frierenflight.zoltraakcinematic.entity.boss.ai.QualFollowPlayerGoal;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicAttributes;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSpells;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
@@ -110,8 +113,8 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         this.xpReward = 100;
         this.setPersistenceRequired();
 
-        // Configure 3D Demonic Levitation & Flight
-        this.moveControl = new FlyingMoveControl(this, 20, true);
+        // Configure 3D Demonic/Witch Levitation & Responsive Flight
+        this.moveControl = new QualFlightMoveControl(this);
         this.setNoGravity(true);
     }
 
@@ -122,7 +125,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 .add(Attributes.ARMOR_TOUGHNESS, 10.0)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0)
                 .add(Attributes.FOLLOW_RANGE, 96.0)
-                .add(Attributes.FLYING_SPEED, 0.35)
+                .add(Attributes.FLYING_SPEED, 0.45)
                 .add(Attributes.MOVEMENT_SPEED, 0.30)
                 .add(Attributes.ATTACK_DAMAGE, 12.0)
                 .add(AttributeRegistry.MAX_MANA, 6000.0)
@@ -203,10 +206,10 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         this.goalSelector.addGoal(1, new QualCataclysmicGoal(this));
         // Priority 2: Anti-Barrier Intelligence (Shadow Blink & Focused Dome Pressure)
         this.goalSelector.addGoal(2, new QualAntiBarrierGoal(this));
-        // Priority 3: 4-Phase Combat Spellcasting Progression
+        // Priority 3: 4-Phase Combat Spellcasting Progression (Simultaneous with flight)
         this.goalSelector.addGoal(3, new QualCombatGoal(this));
-        // Priority 4: 3D Aerial Hovering & Orbital Strafing
-        this.goalSelector.addGoal(4, new QualHoverGoal(this));
+        // Priority 4: 3D Aerial Flight, Pursuit & Player Following AI
+        this.goalSelector.addGoal(4, new QualFollowPlayerGoal(this));
         // Priority 5: Look & Float
         this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 48.0f));
         this.goalSelector.addGoal(6, new FloatGoal(this));
@@ -331,10 +334,10 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
     public void tick() {
         super.tick();
 
-        // Boss Aerial Stabilization: Dampen excessive upward vertical velocity from external spells/explosions
+        // Boss Aerial Stabilization: Dampen excessive upward vertical velocity from external explosions
         Vec3 dm = this.getDeltaMovement();
-        if (dm.y > 0.25) {
-            this.setDeltaMovement(dm.x, 0.08, dm.z);
+        if (dm.y > 0.85) {
+            this.setDeltaMovement(dm.x, 0.4, dm.z);
         }
 
         // Active altitude ceiling: if knocked or pushed higher than 14 blocks above target, pull down to combat range
@@ -463,7 +466,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 case CAST_STATE_BARRAGE -> state.setAndContinue(ANIM_CAST_BARRAGE);
                 case CAST_STATE_BEAM -> state.setAndContinue(ANIM_CAST_BEAM);
                 default -> {
-                    if (this.getDeltaMovement().horizontalDistanceSqr() > 0.005) {
+                    if (this.getDeltaMovement().lengthSqr() > 0.003) {
                         yield state.setAndContinue(ANIM_IDLE_FLIGHT);
                     } else {
                         yield state.setAndContinue(ANIM_IDLE);
@@ -521,5 +524,77 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
     public void remove(net.minecraft.world.entity.Entity.RemovalReason reason) {
         super.remove(reason);
         this.bossEvent.removeAllPlayers();
+    }
+
+    @Override
+    public void travel(Vec3 travelVector) {
+        if (this.isControlledByLocalInstance()) {
+            if (this.isInWater()) {
+                this.moveRelative(0.02F, travelVector);
+                this.move(MoverType.SELF, this.getDeltaMovement());
+                this.setDeltaMovement(this.getDeltaMovement().scale(0.8D));
+            } else if (this.isInLava()) {
+                this.moveRelative(0.02F, travelVector);
+                this.move(MoverType.SELF, this.getDeltaMovement());
+                this.setDeltaMovement(this.getDeltaMovement().scale(0.5D));
+            } else {
+                this.move(MoverType.SELF, this.getDeltaMovement());
+            }
+        }
+        this.calculateEntityAnimation(false);
+    }
+
+    /**
+     * 📜 QualFlightMoveControl — Dedicated 3D Aerial Kinematics & Flight Controller.
+     * Provides smooth, fluid acceleration, deceleration, and 3D flight trajectory towards wanted positions.
+     */
+    public static class QualFlightMoveControl extends MoveControl {
+        private final QualBossEntity qual;
+
+        public QualFlightMoveControl(QualBossEntity qual) {
+            super(qual);
+            this.qual = qual;
+        }
+
+        @Override
+        public void tick() {
+            if (this.operation == Operation.MOVE_TO) {
+                this.operation = Operation.WAIT;
+
+                double dx = this.wantedX - this.qual.getX();
+                double dy = this.wantedY - this.qual.getY();
+                double dz = this.wantedZ - this.qual.getZ();
+                double distSqr = dx * dx + dy * dy + dz * dz;
+
+                if (distSqr < 0.06) {
+                    this.qual.setDeltaMovement(this.qual.getDeltaMovement().scale(0.6));
+                    return;
+                }
+
+                double dist = Math.sqrt(distSqr);
+                Vec3 dir = new Vec3(dx / dist, dy / dist, dz / dist);
+
+                LivingEntity target = this.qual.getTarget();
+                if (target == null || !target.isAlive()) {
+                    float targetYaw = (float) (Mth.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0F;
+                    this.qual.setYRot(this.rotlerp(this.qual.getYRot(), targetYaw, 15.0F));
+                    this.qual.yBodyRot = this.qual.getYRot();
+                }
+
+                double baseSpeed = this.qual.getAttributeValue(Attributes.FLYING_SPEED);
+                double targetSpeed = baseSpeed * this.speedModifier;
+
+                if (dist > 18.0) {
+                    targetSpeed *= 1.35;
+                }
+
+                Vec3 targetVelocity = dir.scale(targetSpeed);
+                Vec3 currentVelocity = this.qual.getDeltaMovement();
+                this.qual.setDeltaMovement(currentVelocity.lerp(targetVelocity, 0.22));
+            } else {
+                Vec3 dm = this.qual.getDeltaMovement();
+                this.qual.setDeltaMovement(dm.x * 0.88, dm.y * 0.88, dm.z * 0.88);
+            }
+        }
     }
 }
