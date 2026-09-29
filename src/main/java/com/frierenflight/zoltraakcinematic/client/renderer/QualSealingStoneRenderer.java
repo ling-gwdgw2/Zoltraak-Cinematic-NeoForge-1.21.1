@@ -42,9 +42,9 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
     public static final ResourceLocation TEX_FIRE_BEAM = ResourceLocation.fromNamespaceAndPath(
             ZoltraakCinematicMod.MODID, "textures/spell/unsealing_fire_beam.png");
 
-    public static final RenderType RENDER_TYPE_CIRCLE = ZoltraakRenderTypes.magicAdditive(TEX_MAGIC_CIRCLE);
-    public static final RenderType RENDER_TYPE_RUNE_RING = ZoltraakRenderTypes.magicAdditive(TEX_RUNE_RING);
-    public static final RenderType RENDER_TYPE_FIRE_BEAM = ZoltraakRenderTypes.magicAdditive(TEX_FIRE_BEAM);
+    public static final RenderType RENDER_TYPE_CIRCLE = ZoltraakRenderTypes.unsealingCircle(TEX_MAGIC_CIRCLE);
+    public static final RenderType RENDER_TYPE_RUNE_RING = ZoltraakRenderTypes.unsealingCircle(TEX_RUNE_RING);
+    public static final RenderType RENDER_TYPE_FIRE_BEAM = ZoltraakRenderTypes.unsealingFireBeam(TEX_FIRE_BEAM);
 
     private static final List<DeferredSealingDraw> DEFERRED_DRAWS = new ArrayList<>();
 

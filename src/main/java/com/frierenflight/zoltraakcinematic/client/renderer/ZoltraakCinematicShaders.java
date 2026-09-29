@@ -22,6 +22,8 @@ public final class ZoltraakCinematicShaders {
    public static ShaderInstance magicCircle;
    public static ShaderInstance blackMagicCircle;
    public static ShaderInstance defenseBarrier;
+   public static ShaderInstance unsealingMagicCircle;
+   public static ShaderInstance unsealingFireColumn;
 
    @SubscribeEvent
    public static void onRegisterShaders(RegisterShadersEvent e) {
@@ -36,6 +38,8 @@ public final class ZoltraakCinematicShaders {
       registerSafe(e, "magic_circle", s -> magicCircle = s);
       registerSafe(e, "black_magic_circle", s -> blackMagicCircle = s);
       registerSafe(e, "defense_barrier", DefaultVertexFormat.POSITION_COLOR, s -> defenseBarrier = s);
+      registerSafe(e, "unsealing_magic_circle", s -> unsealingMagicCircle = s);
+      registerSafe(e, "unsealing_fire_column", s -> unsealingFireColumn = s);
    }
 
    private static void registerSafe(RegisterShadersEvent e, String name, java.util.function.Consumer<ShaderInstance> onLoaded) {

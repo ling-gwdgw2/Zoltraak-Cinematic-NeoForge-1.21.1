@@ -328,6 +328,44 @@ public final class ZoltraakRenderTypes extends RenderType {
       );
    }
 
+   public static RenderType unsealingCircle(ResourceLocation texture) {
+      return create(
+         "zol_unsealing_circle",
+         DefaultVertexFormat.POSITION_TEX_COLOR,
+         Mode.QUADS,
+         4096,
+         false,
+         true,
+         CompositeState.builder()
+            .setShaderState(safeShader(() -> ZoltraakCinematicShaders.unsealingMagicCircle))
+            .setTextureState(new TextureStateShard(texture, false, false))
+            .setTransparencyState(ADD)
+            .setCullState(NO_CULL)
+            .setDepthTestState(LEQUAL_DEPTH_TEST)
+            .setWriteMaskState(COLOR_WRITE)
+            .createCompositeState(false)
+      );
+   }
+
+   public static RenderType unsealingFireBeam(ResourceLocation texture) {
+      return create(
+         "zol_unsealing_fire_beam",
+         DefaultVertexFormat.POSITION_TEX_COLOR,
+         Mode.QUADS,
+         4096,
+         false,
+         true,
+         CompositeState.builder()
+            .setShaderState(safeShader(() -> ZoltraakCinematicShaders.unsealingFireColumn))
+            .setTextureState(new TextureStateShard(texture, false, false))
+            .setTransparencyState(ADD)
+            .setCullState(NO_CULL)
+            .setDepthTestState(LEQUAL_DEPTH_TEST)
+            .setWriteMaskState(COLOR_WRITE)
+            .createCompositeState(false)
+      );
+   }
+
    private ZoltraakRenderTypes(String n, VertexFormat f, Mode m, int s, boolean c, boolean o, Runnable a, Runnable b) {
       super(n, f, m, s, c, o, a, b);
    }
