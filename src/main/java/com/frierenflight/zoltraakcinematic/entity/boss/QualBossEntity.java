@@ -81,6 +81,8 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
             SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.BOOLEAN);
     public static final EntityDataAccessor<Integer> DATA_CASTING_STATE =
             SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.INT);
+    public static final EntityDataAccessor<Boolean> DATA_IS_FLYING =
+            SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.BOOLEAN);
 
     public static final int CAST_STATE_IDLE = 0;
     public static final int CAST_STATE_BEAM = 1;
@@ -152,6 +154,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         builder.define(PHASE, 1);
         builder.define(DATA_CHARGING_CATACLYSMIC, false);
         builder.define(DATA_CASTING_STATE, CAST_STATE_IDLE);
+        builder.define(DATA_IS_FLYING, false);
     }
 
     public int getPhase() {
@@ -176,6 +179,20 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
 
     public void setCastingState(int state) {
         this.entityData.set(DATA_CASTING_STATE, state);
+    }
+
+    /**
+     * Determines whether the entity is actively flying through the air (for animation switching).
+     * Combines server-synced flag with client-side position delta tracking.
+     */
+    public boolean isFlyingMovement() {
+        if (this.entityData.get(DATA_IS_FLYING)) {
+            return true;
+        }
+        double dx = this.getX() - this.xo;
+        double dy = this.getY() - this.yo;
+        double dz = this.getZ() - this.zo;
+        return (dx * dx + dy * dy + dz * dz) > 0.002 || this.getDeltaMovement().lengthSqr() > 0.003;
     }
 
     /**
@@ -295,6 +312,12 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         }
         if (this.getCastingState() != currentCastState) {
             this.setCastingState(currentCastState);
+        }
+
+        // Synchronize 3D aerial flight movement state to tracking clients
+        boolean isFlying = this.getDeltaMovement().lengthSqr() > 0.005;
+        if (this.entityData.get(DATA_IS_FLYING) != isFlying) {
+            this.entityData.set(DATA_IS_FLYING, isFlying);
         }
     }
 
@@ -466,7 +489,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 case CAST_STATE_BARRAGE -> state.setAndContinue(ANIM_CAST_BARRAGE);
                 case CAST_STATE_BEAM -> state.setAndContinue(ANIM_CAST_BEAM);
                 default -> {
-                    if (this.getDeltaMovement().lengthSqr() > 0.003) {
+                    if (this.isFlyingMovement()) {
                         yield state.setAndContinue(ANIM_IDLE_FLIGHT);
                     } else {
                         yield state.setAndContinue(ANIM_IDLE);
