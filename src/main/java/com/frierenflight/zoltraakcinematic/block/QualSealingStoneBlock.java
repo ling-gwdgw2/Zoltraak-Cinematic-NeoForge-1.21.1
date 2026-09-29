@@ -18,6 +18,10 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraft.world.level.BlockGetter;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -28,6 +32,11 @@ import org.jetbrains.annotations.Nullable;
  */
 public class QualSealingStoneBlock extends Block implements EntityBlock {
 
+    protected static final VoxelShape SHAPE = Shapes.or(
+            Block.box(0.0D, 0.0D, 0.0D, 16.0D, 7.2D, 16.0D),
+            Block.box(3.0D, 7.2D, 3.0D, 13.0D, 25.0D, 13.0D)
+    );
+
     public QualSealingStoneBlock() {
         super(BlockBehaviour.Properties.of()
                 .sound(SoundType.ANCIENT_DEBRIS)
@@ -35,6 +44,11 @@ public class QualSealingStoneBlock extends Block implements EntityBlock {
                 .noOcclusion()
                 .lightLevel(state -> 6)
         );
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
     }
 
     @Nullable
