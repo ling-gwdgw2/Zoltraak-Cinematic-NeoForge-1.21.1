@@ -60,9 +60,13 @@ public class QualSealingStoneBlock extends Block implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> blockEntityType) {
-        return level.isClientSide ? null : (lvl, p, st, be) -> {
+        return (lvl, p, st, be) -> {
             if (be instanceof QualSealingStoneBlockEntity tile) {
-                tile.tick();
+                if (lvl.isClientSide()) {
+                    tile.clientTick();
+                } else {
+                    tile.tick();
+                }
             }
         };
     }
