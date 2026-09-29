@@ -39,7 +39,7 @@ public class QualSealingStoneBlock extends Block implements EntityBlock {
 
     public QualSealingStoneBlock() {
         super(BlockBehaviour.Properties.of()
-                .sound(SoundType.ANCIENT_DEBRIS)
+                .sound(SoundType.STONE)
                 .strength(-1.0f, 3600000.0f) // Indestructible
                 .noOcclusion()
                 .lightLevel(state -> 6)
