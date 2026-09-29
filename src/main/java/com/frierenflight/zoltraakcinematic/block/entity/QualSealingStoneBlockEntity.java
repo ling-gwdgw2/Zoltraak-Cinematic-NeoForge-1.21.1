@@ -10,6 +10,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -101,7 +102,7 @@ public class QualSealingStoneBlockEntity extends BlockEntity {
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, cx, cy + 1.0, cz, 2, 0, 0, 0, 0);
             serverLevel.sendParticles(ParticleTypes.PORTAL, cx, cy + 1.5, cz, 80, 1.5, 2.0, 1.5, 0.25);
             serverLevel.playSound(null, worldPosition, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 2.0f, 0.7f);
-            serverLevel.playSound(null, worldPosition, SoundEvents.WITHER_SPAWN, SoundSource.HOSTILE, 2.0f, 0.8f);
+            serverLevel.playSound(null, worldPosition, ModCinematicSounds.QUAL_SPAWN.get(), SoundSource.HOSTILE, 2.5f, 1.0f);
 
             // Spawn Qual Boss floating in the air
             QualBossEntity qual = ModCinematicEntities.QUAL_BOSS.get().create(serverLevel);

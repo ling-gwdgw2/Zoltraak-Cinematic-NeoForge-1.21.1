@@ -7,6 +7,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
@@ -111,8 +112,7 @@ public class QualAntiBarrierGoal extends Goal {
         // Origin Disintegration VFX & SFX
         serverLevel.sendParticles(ParticleTypes.SQUID_INK, origin.x, origin.y + 1.6, origin.z, 25, 0.6, 1.2, 0.6, 0.08);
         serverLevel.sendParticles(ParticleTypes.WITCH, origin.x, origin.y + 1.6, origin.z, 20, 0.5, 1.0, 0.5, 0.05);
-        serverLevel.playSound(null, qual.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.3f, 0.65f);
-        serverLevel.playSound(null, qual.blockPosition(), SoundEvents.WITHER_SHOOT, SoundSource.HOSTILE, 0.9f, 0.75f);
+        serverLevel.playSound(null, qual.blockPosition(), ModCinematicSounds.QUAL_TELEPORT.get(), SoundSource.HOSTILE, 1.5f, 0.95f);
 
         // Teleport to flank/rear
         qual.teleportTo(destination.x, destination.y, destination.z);
@@ -120,7 +120,7 @@ public class QualAntiBarrierGoal extends Goal {
         // Destination Materialization VFX
         serverLevel.sendParticles(ParticleTypes.PORTAL, destination.x, destination.y + 1.6, destination.z, 30, 0.8, 1.2, 0.8, 0.1);
         serverLevel.sendParticles(ParticleTypes.WITCH, destination.x, destination.y + 1.6, destination.z, 15, 0.4, 0.8, 0.4, 0.04);
-        serverLevel.playSound(null, qual.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.HOSTILE, 1.2f, 0.80f);
+        serverLevel.playSound(null, qual.blockPosition(), ModCinematicSounds.QUAL_TELEPORT.get(), SoundSource.HOSTILE, 1.5f, 1.05f);
 
         // Immediately face player's exposed back
         qual.getLookControl().setLookAt(target, 180.0f, 180.0f);

@@ -21,6 +21,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
@@ -319,7 +320,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         phaseTransitionTimer = 30; // 1.5s visual charge
 
         if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            serverLevel.playSound(null, this.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.HOSTILE, 1.4f, 0.85f);
+            serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.QUAL_PHASE_TRANSITION.get(), SoundSource.HOSTILE, 1.8f, 1.0f);
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.8, this.getZ(), 1, 0, 0, 0, 0);
             serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.6, this.getZ(), 60, 1.2, 1.8, 1.2, 0.2);
         }
@@ -423,17 +424,17 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.WITHER_AMBIENT;
+        return ModCinematicSounds.QUAL_AMBIENT.get();
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        return SoundEvents.WITHER_HURT;
+        return ModCinematicSounds.QUAL_HURT.get();
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.WITHER_DEATH;
+        return ModCinematicSounds.QUAL_DEATH.get();
     }
 
     @Override
@@ -505,7 +506,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.5, this.getZ(), 3, 0.5, 0.5, 0.5, 0);
             serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.5, this.getZ(), 120, 1.5, 2.0, 1.5, 0.5);
-            serverLevel.playSound(null, this.blockPosition(), SoundEvents.ENDER_DRAGON_DEATH, SoundSource.HOSTILE, 1.5f, 0.7f);
+            serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.QUAL_DEATH.get(), SoundSource.HOSTILE, 2.0f, 1.0f);
         }
     }
 

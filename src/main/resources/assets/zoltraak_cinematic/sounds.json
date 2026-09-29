@@ -34,5 +34,68 @@
         "attenuation_distance": 80
       }
     ]
+  },
+  "qual_spawn": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_spawn",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_spawn",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "qual_ambient": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_ambient",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_ambient",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "qual_hurt": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_hurt",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_hurt",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "qual_death": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_death",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_death",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "qual_phase_transition": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_phase_transition",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_phase_transition",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "qual_cataclysmic_charge": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_cataclysmic_charge",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_cataclysmic_charge",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "qual_teleport": {
+    "subtitle": "subtitles.zoltraak_cinematic.qual_teleport",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:qual_teleport",
+        "attenuation_distance": 32
+      }
+    ]
   }
 }
