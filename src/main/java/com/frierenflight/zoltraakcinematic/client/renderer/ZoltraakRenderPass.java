@@ -22,6 +22,7 @@ public final class ZoltraakRenderPass {
 
    public static void begin() {
       DRAWS.clear();
+      QualSealingStoneRenderer.clearDeferred();
    }
 
    @SuppressWarnings("unchecked")
@@ -50,11 +51,13 @@ public final class ZoltraakRenderPass {
 
    public static void finish() {
       boolean hasBarrageDeferred = ZoltraakBarrageArrayRenderer.hasDeferredDraw();
-      if (!DRAWS.isEmpty() || hasBarrageDeferred) {
+      boolean hasSealingDeferred = QualSealingStoneRenderer.hasDeferredDraw();
+      if (!DRAWS.isEmpty() || hasBarrageDeferred || hasSealingDeferred) {
          Minecraft mc = Minecraft.getInstance();
          if (mc.level == null) {
             DRAWS.clear();
             ZoltraakBarrageArrayRenderer.clearDeferred();
+            QualSealingStoneRenderer.clearDeferred();
          } else {
             ShaderInstance previousShader = RenderSystem.getShader();
             float[] color = (float[])RenderSystem.getShaderColor().clone();
@@ -81,11 +84,16 @@ public final class ZoltraakRenderPass {
                   ZoltraakBarrageArrayRenderer.renderDeferred(BUFFERS, modelView);
                }
 
+               if (hasSealingDeferred) {
+                  QualSealingStoneRenderer.renderDeferred(BUFFERS, modelView);
+               }
+
                BUFFERS.endBatch();
             } finally {
                replaying = false;
                DRAWS.clear();
                ZoltraakBarrageArrayRenderer.clearDeferred();
+               QualSealingStoneRenderer.clearDeferred();
                modelView.popMatrix();
                RenderSystem.applyModelViewMatrix();
                RenderSystem.restoreProjectionMatrix();
