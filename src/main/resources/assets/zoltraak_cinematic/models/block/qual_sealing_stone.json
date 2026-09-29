@@ -718,7 +718,7 @@
           6.8
         ],
         "axis": "z",
-        "angle": 32.0
+        "angle": 22.5
       },
       "faces": {
         "down": {
@@ -796,7 +796,7 @@
           6.8
         ],
         "axis": "z",
-        "angle": -32.0
+        "angle": -22.5
       },
       "faces": {
         "down": {
