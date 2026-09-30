@@ -2,23 +2,26 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
+    "B": {
+      "item": "irons_spellbooks:diamond_spell_book"
+    },
+    "S": {
+      "item": "irons_spellbooks:arcane_salvage"
+    },
+    "I": {
+      "item": "irons_spellbooks:arcane_ingot"
+    },
     "A": {
       "item": "minecraft:amethyst_shard"
-    },
-    "B": {
-      "item": "minecraft:book"
-    },
-    "G": {
-      "item": "minecraft:gold_ingot"
     },
     "C": {
       "item": "irons_spellbooks:magic_cloth"
     }
   },
   "pattern": [
-    "AGA",
-    "CBC",
-    "AGA"
+    "ASA",
+    "IBI",
+    "ACA"
   ],
   "result": {
     "count": 1,

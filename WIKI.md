@@ -326,9 +326,28 @@
 
 ---
 
-## สมบัติและโบราณวัตถุของมหาจอมเวทควาล (Elder Sage Artifacts)
+## สมบัติและคัมภีร์เวทมนตร์ (Grimoires & Artifacts)
 
-### 1. Grimoire of the Elder Sage (บันทึกมหาเวทของควาล)
+### 1. Grimoire of Ordinary Magic (บันทึกมหาเวทโจมตีสามัญ)
+คัมภีร์เวทมนตร์มาตรฐานของจอมเวทยุคปัจจุบัน รวบรวมทฤษฎีและโครงสร้างการร่ายของมหาเวทสังหารที่มนุษยชาติและฟรีเรนร่วมกันพัฒนา อัปเกรดจากสมุดเวทมนตร์ระดับสูง Enchanted Spell Book (Diamond Tier) เพื่อก้าวสู่ระดับจอมเวทชั้นสูง 10 ช่อง
+
+- **Item ID**: `zoltraak_cinematic:ordinary_grimoire`
+- **ประเภท**: สมุดเวทมนตร์ (Spellbook - 10 ช่องใส่เวท)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟไม่ไหม้ลาวา)
+- **คุณสมบัติสถานะ**:
+  - **จำนวนช่องเวทมนตร์**: **10 ช่อง**
+  - **Zoltraak Spell Power**: **+30%**
+  - **All Spell Power**: **+15%**
+  - **Max Mana**: **+300** หน่วย
+  - **Cooldown Reduction**: **+15%**
+- **สูตรคราฟต์อัปเกรด (Diamond Tier Upgrade Recipe)**:
+  ```
+  [ Amethyst Shard ] [ Arcane Salvage ]    [ Amethyst Shard ]
+  [ Arcane Ingot ]   [ Diamond Spellbook ] [ Arcane Ingot ]
+  [ Amethyst Shard ] [ Arcane Cloth ]      [ Amethyst Shard ]
+  ```
+
+### 2. Grimoire of the Elder Sage (บันทึกมหาเวทของควาล)
 คัมภีร์เวทต้องห้ามดั้งเดิมของควาล บันทึกสูตรโครงสร้างดั้งเดิมของมหาเวทสังหารมนุษย์ (อัปเกรดจาก Ordinary Grimoire ด้วยวัตถุดิบดรอปจากบอสควาล)
 
 - **Item ID**: `zoltraak_cinematic:elder_sage_grimoire`
