@@ -41,7 +41,8 @@ public class FernBarrageSpell extends AbstractSpell {
             .build();
 
     public static final int BARRAGE_CIRCLE_COUNT = 24;
-    private static final String NBT_SALVO_KEY = "ZoltraakSalvos";
+    public static final int BARRAGE_FIRE_INTERVAL = 10; // Rhythmic firing interval: every 10 ticks (0.5s = 2 volleys/sec)
+    public static final int BARRAGE_INITIAL_DELAY = 8;   // 8 ticks (~0.4s) for opening celestial circle blossom
 
     // 24-Circle Grand Celestial Array (Exact 5-Row Staggered Matrix matching screenshot)
     public static final Vec3[] BARRAGE_CIRCLE_OFFSETS = new Vec3[] {
@@ -98,7 +99,7 @@ public class FernBarrageSpell extends AbstractSpell {
         this.manaCostPerLevel = 4;
         this.baseSpellPower = 5;
         this.spellPowerPerLevel = 7;
-        this.castTime = 60; // 3 seconds continuous channel
+        this.castTime = 200; // Continuous channel up to 10 seconds (or until released/out of mana)
     }
 
     @Override
@@ -131,49 +132,17 @@ public class FernBarrageSpell extends AbstractSpell {
     }
 
     @Override
-    public void onServerPreCast(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
-        super.onServerPreCast(level, spellLevel, entity, playerMagicData);
-        if (!level.isClientSide) {
-            entity.getPersistentData().putInt(NBT_SALVO_KEY, 0);
-        }
-    }
-
-    @Override
-    public void onServerCastComplete(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData, boolean cancelled) {
-        super.onServerCastComplete(level, spellLevel, entity, playerMagicData, cancelled);
-        if (!level.isClientSide) {
-            entity.getPersistentData().remove(NBT_SALVO_KEY);
-        }
-    }
-
-    @Override
     public void onServerCastTick(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
         super.onServerCastTick(level, spellLevel, entity, playerMagicData);
 
-        int total = Math.max(20, playerMagicData.getCastDuration());
+        int total = playerMagicData.getCastDuration();
         int remaining = playerMagicData.getCastDurationRemaining();
         int elapsed = total - remaining;
-        int salvosFired = entity.getPersistentData().getInt(NBT_SALVO_KEY);
 
-        // 4 deterministic salvos evenly spaced across channeling duration:
-        // Salvo 1: at ~22% duration (after opening blossom)
-        // Salvo 2: at ~46% duration
-        // Salvo 3: at ~70% duration
-        // Salvo 4: at ~92% duration (right before channel end)
-        int targetSalvo = 0;
-        float progress = (float) elapsed / (float) total;
-        if (progress >= 0.92f) {
-            targetSalvo = 4;
-        } else if (progress >= 0.70f) {
-            targetSalvo = 3;
-        } else if (progress >= 0.46f) {
-            targetSalvo = 2;
-        } else if (progress >= 0.22f) {
-            targetSalvo = 1;
-        }
-
-        if (targetSalvo > salvosFired) {
-            entity.getPersistentData().putInt(NBT_SALVO_KEY, targetSalvo);
+        // Continuous unrestricted rhythmic barrage while right-click is held down:
+        // After initial circle blossom (8 ticks), fires a simultaneous 24-bullet volley
+        // every 10 ticks (0.5s) continuously for as long as mana and channeling last!
+        if (elapsed >= BARRAGE_INITIAL_DELAY && (elapsed - BARRAGE_INITIAL_DELAY) % BARRAGE_FIRE_INTERVAL == 0) {
             spawnSimultaneousVolley(level, spellLevel, entity, playerMagicData, getColorTheme());
         }
     }

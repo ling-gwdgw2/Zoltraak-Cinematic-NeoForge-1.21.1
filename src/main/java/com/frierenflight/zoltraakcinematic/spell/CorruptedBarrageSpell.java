@@ -34,7 +34,7 @@ public class CorruptedBarrageSpell extends FernBarrageSpell {
         this.manaCostPerLevel = 5;
         this.baseSpellPower = 7;
         this.spellPowerPerLevel = 8;
-        this.castTime = 60;
+        this.castTime = 200; // Continuous channel up to 10 seconds
     }
 
     @Override
