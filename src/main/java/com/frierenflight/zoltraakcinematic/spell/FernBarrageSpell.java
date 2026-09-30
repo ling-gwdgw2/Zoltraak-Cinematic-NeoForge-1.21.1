@@ -28,8 +28,8 @@ import java.util.Optional;
 
 /**
  * Fern's Grand Phalanx Barrage (Ordinary Defensive Magic - Demon Slaying).
- * Manifests an imposing 24-circle celestial matrix, unleashing 4 synchronized volleys
- * of 24 converging Zoltraak light lances (96 total) at the target point.
+ * Manifests an imposing 24-circle celestial matrix, continuously unleashing converging
+ * guided Zoltraak light lances at the target point.
  */
 public class FernBarrageSpell extends AbstractSpell {
     private final ResourceLocation spellId = ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "zoltraak_barrage");
@@ -292,7 +292,7 @@ public class FernBarrageSpell extends AbstractSpell {
     }
 
     public float getBulletDamage(int spellLevel, LivingEntity entity) {
-        return Math.max(0.5f, getSpellPower(spellLevel, entity) / 6.0f);
+        return Math.max(0.5f, getSpellPower(spellLevel, entity));
     }
 
     @Override
@@ -301,7 +301,7 @@ public class FernBarrageSpell extends AbstractSpell {
         float salvoDmg = bulletDmg * 24.0f;
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(salvoDmg, 1) + " (" + Utils.stringTruncation(bulletDmg, 1) + "x24)"),
-                Component.translatable("spell.zoltraak_cinematic.barrage_rate", "4x24 Salvos (96 Total)"),
+                Component.translatable("spell.zoltraak_cinematic.barrage_rate", "24x Guided Light Lances"),
                 Component.translatable("spell.zoltraak_cinematic.fern_barrage.perk")
         );
     }

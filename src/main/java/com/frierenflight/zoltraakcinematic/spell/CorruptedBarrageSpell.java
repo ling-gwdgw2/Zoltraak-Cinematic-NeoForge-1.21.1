@@ -58,7 +58,7 @@ public class CorruptedBarrageSpell extends FernBarrageSpell {
         float salvoDmg = bulletDmg * 24.0f;
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(salvoDmg, 1) + " (" + Utils.stringTruncation(bulletDmg, 1) + "x24)"),
-                Component.translatable("spell.zoltraak_cinematic.barrage_rate", "4x24 Salvos (96 Total)"),
+                Component.translatable("spell.zoltraak_cinematic.barrage_rate", "24x Guided Dark Thorns"),
                 Component.translatable("spell.zoltraak_cinematic.corrupted_barrage.perk")
         );
     }
