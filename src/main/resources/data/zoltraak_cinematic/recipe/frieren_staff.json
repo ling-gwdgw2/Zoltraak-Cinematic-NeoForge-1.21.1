@@ -2,8 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "equipment",
   "key": {
-    "P": {
-      "item": "irons_spellbooks:pyrium_ingot"
+    "C": {
+      "item": "zoltraak_cinematic:corruption_core"
+    },
+    "S": {
+      "item": "minecraft:nether_star"
+    },
+    "Q": {
+      "item": "zoltraak_cinematic:horn_of_corruption"
     },
     "D": {
       "item": "irons_spellbooks:divine_pearl"
@@ -11,14 +17,17 @@
     "H": {
       "item": "irons_spellbooks:frosted_helve"
     },
-    "M": {
-      "item": "irons_spellbooks:mithril_ingot"
+    "K": {
+      "item": "irons_spellbooks:dragonskin"
+    },
+    "N": {
+      "item": "minecraft:netherite_ingot"
     }
   },
   "pattern": [
-    " PD",
-    " HM",
-    "H  "
+    "CSQ",
+    "DHK",
+    "HN "
   ],
   "result": {
     "count": 1,

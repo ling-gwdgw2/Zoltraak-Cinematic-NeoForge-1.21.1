@@ -370,3 +370,29 @@
   -  **Max Mana**: **+350** หน่วย
   -  **Mana Regen (ฟื้นฟูมานา)**: **+2.5** หน่วย/วินาที
 
+---
+
+### 4. Frieren's Staff (คทาของฟรีเรน — อาวุธระดับตำนาน End Game)
+คทาเวทมนตร์โบราณประจำตัวของ "ฟรีเรนผู้พิชิตมาร" จอมเวทเอลฟ์ผู้มีอายุยืนยาวนับพันปีและเป็นหนึ่งในสมาชิกกลุ่มผู้กล้าที่ปราบราชาปิศาจ คทานี้ถูกสร้างขึ้นเพื่อรองรับและขยายพลังมานามหาศาลของฟรีเรนโดยเฉพาะ
+
+- **Item ID**: `zoltraak_cinematic:frieren_staff`
+- **ประเภท**: อาวุธคทาเวทมนตร์ (Staff - ถือสองมือหรือมือหลัก)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟไม่ถูกเผาไหม้)
+- **คุณสมบัติสถานะ (Item Attributes)**:
+  - **All Spell Power**: **+45%** (ขยายพลังเวททุกสายในเกม)
+  - **Zoltraak Spell Power**: **+35%** (โบนัสซ้อนทับเฉพาะเวทสายโซลทราค รวมสูงถึง **+80%**)
+  - **Max Mana (ขยายหลอดมานา)**: **+500** หน่วย
+  - **Cooldown Reduction (ลดคูลดาวน์)**: **-20%**
+  - **Attack Damage**: 6.0
+- **สูตรคราฟต์ระดับตำนาน (Post-Qual Mythic End Game Recipe)**:
+  > *ต้องผ่านการปราบบอส Qual the Elder Sage, บอส Wither และพิชิต Ender Dragon เพื่อรวบรวมวัตถุดิบสูงสุดของทั้ง 3 มิติ*
+
+  ```
+  [ Corruption Core ]   [ Nether Star ]      [ Horn of Corruption ]
+  [ Divine Pearl ]      [ Frosted Helve ]    [ Dragonskin ]
+  [ Frosted Helve ]     [ Netherite Ingot ]  [       -      ]
+  ```
+  - **Row 1 (ยอดคทา)**: `zoltraak_cinematic:corruption_core` + `minecraft:nether_star` + `zoltraak_cinematic:horn_of_corruption`
+  - **Row 2 (แกนกลาง)**: `irons_spellbooks:divine_pearl` + `irons_spellbooks:frosted_helve` + `irons_spellbooks:dragonskin`
+  - **Row 3 (ด้ามจับ)**: `irons_spellbooks:frosted_helve` + `minecraft:netherite_ingot`
+
