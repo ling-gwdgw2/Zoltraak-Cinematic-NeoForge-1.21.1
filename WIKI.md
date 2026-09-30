@@ -342,7 +342,7 @@
   - **Cooldown Reduction**: **+15%**
 - **สูตรคราฟต์อัปเกรด (Diamond Tier Upgrade Recipe)**:
   ```
-  [ Amethyst Shard ] [ Arcane Salvage ]    [ Amethyst Shard ]
+  [ Amethyst Shard ] [ Arcane Rune ]       [ Amethyst Shard ]
   [ Arcane Ingot ]   [ Diamond Spellbook ] [ Arcane Ingot ]
   [ Amethyst Shard ] [ Arcane Cloth ]      [ Amethyst Shard ]
   ```
