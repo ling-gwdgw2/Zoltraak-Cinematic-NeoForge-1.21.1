@@ -44,54 +44,54 @@ public class FernBarrageSpell extends AbstractSpell {
     public static final int BARRAGE_FIRE_INTERVAL = 10; // Rhythmic firing interval: every 10 ticks (0.5s = 2 volleys/sec)
     public static final int BARRAGE_INITIAL_DELAY = 8;   // 8 ticks (~0.4s) for opening celestial circle blossom
 
-    // 24-Circle Grand Celestial Array (Exact 5-Row Staggered Matrix matching screenshot)
+    // 24-Circle Grand Celestial Array (Parabolic Wings & Staggered Diamond Matrix)
     public static final Vec3[] BARRAGE_CIRCLE_OFFSETS = new Vec3[] {
-        // Row 1: Topmost Sky (5 Circles, Y = +1.90m)
-        new Vec3(-3.20,  1.90,  0.20), // 0: Far Left
-        new Vec3(-1.60,  1.90,  0.20), // 1: Mid Left
-        new Vec3( 0.00,  1.95,  0.20), // 2: Center Crown Overhead
-        new Vec3( 1.60,  1.90,  0.20), // 3: Mid Right
-        new Vec3( 3.20,  1.90,  0.20), // 4: Far Right
+        // Row 1: Topmost Crown (5 Circles, Y = +2.05m to +2.40m)
+        new Vec3(-3.75,  2.05,  0.15), // 0: Far Outer Left
+        new Vec3(-1.85,  2.25,  0.25), // 1: Mid Left
+        new Vec3( 0.00,  2.40,  0.30), // 2: Center Apex Crown
+        new Vec3( 1.85,  2.25,  0.25), // 3: Mid Right
+        new Vec3( 3.75,  2.05,  0.15), // 4: Far Outer Right
 
-        // Row 2: Upper-Mid (4 Circles, Y = +1.20m)
-        new Vec3(-2.40,  1.20,  0.25), // 5: Upper-Mid Outer Left
-        new Vec3(-0.90,  1.20,  0.25), // 6: Upper-Mid Inner Left
-        new Vec3( 0.90,  1.20,  0.25), // 7: Upper-Mid Inner Right
-        new Vec3( 2.40,  1.20,  0.25), // 8: Upper-Mid Outer Right
+        // Row 2: Upper-Mid (4 Circles, Y = +1.45m)
+        new Vec3(-2.85,  1.45,  0.25), // 5: Upper Outer Left
+        new Vec3(-1.10,  1.45,  0.35), // 6: Upper Inner Left
+        new Vec3( 1.10,  1.45,  0.35), // 7: Upper Inner Right
+        new Vec3( 2.85,  1.45,  0.25), // 8: Upper Outer Right
 
-        // Row 3: Mid / Chest Level (6 Circles flanking player, Y = +0.45m)
-        new Vec3(-3.30,  0.45,  0.25), // 9: Outer Left
-        new Vec3(-2.15,  0.45,  0.30), // 10: Mid Left
-        new Vec3(-1.00,  0.45,  0.30), // 11: Inner Left (beside shoulder)
-        new Vec3( 1.00,  0.45,  0.30), // 12: Inner Right (beside staff)
-        new Vec3( 2.15,  0.45,  0.30), // 13: Mid Right
-        new Vec3( 3.30,  0.45,  0.25), // 14: Outer Right
+        // Row 3: Mid Wings / Primary Battery (6 Circles, Y = +0.50m to +0.55m)
+        new Vec3(-4.25,  0.50,  0.20), // 9: Wingtip Far Left
+        new Vec3(-2.65,  0.55,  0.35), // 10: Mid Left
+        new Vec3(-1.25,  0.55,  0.40), // 11: Inner Left (flanking shoulder)
+        new Vec3( 1.25,  0.55,  0.40), // 12: Inner Right (flanking staff)
+        new Vec3( 2.65,  0.55,  0.35), // 13: Mid Right
+        new Vec3( 4.25,  0.50,  0.20), // 14: Wingtip Far Right
 
-        // Row 4: Lower-Mid / Waist Level (4 Circles, Y = -0.25m)
-        new Vec3(-2.50, -0.25,  0.25), // 15: Lower Outer Left
-        new Vec3(-1.25, -0.25,  0.25), // 16: Lower Inner Left
-        new Vec3( 1.25, -0.25,  0.25), // 17: Lower Inner Right
-        new Vec3( 2.50, -0.25,  0.25), // 18: Lower Outer Right
+        // Row 4: Lower-Mid (4 Circles, Y = -0.15m)
+        new Vec3(-3.10, -0.15,  0.25), // 15: Lower Outer Left
+        new Vec3(-1.45, -0.15,  0.35), // 16: Lower Inner Left
+        new Vec3( 1.45, -0.15,  0.35), // 17: Lower Inner Right
+        new Vec3( 3.10, -0.15,  0.25), // 18: Lower Outer Right
 
-        // Row 5: Bottom Ground Level (5 Circles, Y = -0.85m - safely elevated above terrain)
-        new Vec3(-3.00, -0.85,  0.20), // 19: Bottom Outer Left
-        new Vec3(-1.50, -0.85,  0.20), // 20: Bottom Inner Left
-        new Vec3( 0.00, -0.85,  0.20), // 21: Bottom Center (above hotbar)
-        new Vec3( 1.50, -0.85,  0.20), // 22: Bottom Inner Right
-        new Vec3( 3.00, -0.85,  0.20)  // 23: Bottom Outer Right
+        // Row 5: Bottom Base (5 Circles, safely elevated above ground Y = -0.75m to -0.80m)
+        new Vec3(-3.60, -0.75,  0.15), // 19: Bottom Outer Left
+        new Vec3(-1.80, -0.80,  0.25), // 20: Bottom Inner Left
+        new Vec3( 0.00, -0.80,  0.30), // 21: Bottom Center (above hotbar)
+        new Vec3( 1.80, -0.80,  0.25), // 22: Bottom Inner Right
+        new Vec3( 3.60, -0.75,  0.15)  // 23: Bottom Outer Right
     };
 
     public static final float[] BARRAGE_CIRCLE_SCALES = new float[] {
-        // Row 1 (5 Circles)
-        0.40f, 0.42f, 0.44f, 0.42f, 0.40f,
-        // Row 2 (4 Circles)
-        0.40f, 0.42f, 0.42f, 0.40f,
-        // Row 3 (6 Circles)
-        0.40f, 0.42f, 0.42f, 0.42f, 0.42f, 0.40f,
-        // Row 4 (4 Circles)
-        0.40f, 0.40f, 0.40f, 0.40f,
-        // Row 5 (5 Circles)
-        0.38f, 0.40f, 0.42f, 0.40f, 0.38f
+        // Row 1 (5 Circles: 0.48 - 0.58)
+        0.48f, 0.52f, 0.58f, 0.52f, 0.48f,
+        // Row 2 (4 Circles: 0.48 - 0.52)
+        0.48f, 0.52f, 0.52f, 0.48f,
+        // Row 3 (6 Circles: 0.46 - 0.54)
+        0.46f, 0.52f, 0.54f, 0.54f, 0.52f, 0.46f,
+        // Row 4 (4 Circles: 0.48 - 0.50)
+        0.48f, 0.50f, 0.50f, 0.48f,
+        // Row 5 (5 Circles: 0.46 - 0.52)
+        0.46f, 0.50f, 0.52f, 0.50f, 0.46f
     };
 
     public FernBarrageSpell() {
