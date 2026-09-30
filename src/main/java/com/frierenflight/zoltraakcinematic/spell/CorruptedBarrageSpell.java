@@ -25,12 +25,12 @@ public class CorruptedBarrageSpell extends FernBarrageSpell {
             .setMinRarity(SpellRarity.EPIC)
             .setSchoolResource(com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.ORDINARY_MAGIC_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(1.2)
+            .setCooldownSeconds(1.8)
             .build();
 
     public CorruptedBarrageSpell() {
         super();
-        this.baseManaCost = 50;
+        this.baseManaCost = 300;
         this.manaCostPerLevel = 5;
         this.baseSpellPower = 7;
         this.spellPowerPerLevel = 8;

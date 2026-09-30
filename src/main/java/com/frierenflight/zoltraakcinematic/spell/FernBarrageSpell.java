@@ -94,7 +94,7 @@ public class FernBarrageSpell extends AbstractSpell {
     };
 
     public FernBarrageSpell() {
-        this.baseManaCost = 40;
+        this.baseManaCost = 250;
         this.manaCostPerLevel = 4;
         this.baseSpellPower = 5;
         this.spellPowerPerLevel = 7;

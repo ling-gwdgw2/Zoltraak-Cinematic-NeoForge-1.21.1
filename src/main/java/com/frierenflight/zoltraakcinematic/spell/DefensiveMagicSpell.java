@@ -33,8 +33,8 @@ public class DefensiveMagicSpell extends AbstractSpell {
     public DefensiveMagicSpell() {
         this.baseManaCost = 200;
         this.manaCostPerLevel = 10;
-        this.baseSpellPower = 200;
-        this.spellPowerPerLevel = 67;
+        this.baseSpellPower = 150;
+        this.spellPowerPerLevel = 23; // Level 1 = 150, Level 10 = 357+ (scales with Spell Power)
         this.castTime = 0; // Instant deployment!
     }
 
