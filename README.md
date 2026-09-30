@@ -115,5 +115,4 @@ python build.py
 ## License & Credits
 
 - **Source Code License**: [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
-- **Frieren: Beyond Journey's End (葬送のフリーレン)** © Kanehito Yamada, Tsukasa Abe / Shogakukan / "Sousou no Frieren" Production Committee
-- **Mod Author**: Aling7788565 / Antigravity Team
+- **Mod Author**: Aling
