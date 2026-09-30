@@ -1,23 +1,355 @@
-# Zoltraak Cinematic Edition — Mod Wiki (Spells & Items)
+# Zoltraak Cinematic Edition — Mod Wiki & Compendium
 
-คู่มือสารานุกรมฉบับสมบูรณ์ของม็อด **Zoltraak: Cinematic Edition** (NeoForge 1.21.1 / Iron's Spells 'n Spellbooks Addon) รวบรวมข้อมูลเวทมนตร์ (Spells), อุปกรณ์/ไอเทมสวมใส่ (Items & Curios), สายเวท (Magic School), คุณสมบัติพิเศษ (Attributes) และสูตรการคราฟต์ทั้งหมด 100%
+> *A cinematic, high-fidelity Iron's Spells 'n Spellbooks addon faithfully recreating the iconic magic of **Sousou no Frieren** (Frieren: Beyond Journey's End) in Minecraft NeoForge 1.21.1.*
 
 ---
 
-## สายเวทมนตร์ (Magic School) & คุณสมบัติพิเศษ (Attributes)
+## 🌐 Language Navigation / สารบัญภาษา
+- [🇬🇧 English Documentation](#-english-documentation)
+  - [Magic School & Attributes](#1-magic-school--custom-attributes)
+  - [Spell Compendium](#2-spell-compendium)
+  - [Boss: Qual, the Elder Sage](#3-boss-qual-the-elder-sage-of-corruption)
+  - [Sealing Monolith & Ritual](#4-quals-ancient-sealing-monolith)
+  - [Equipment, Grimoires & Artifacts](#5-equipment-grimoires--artifacts)
+  - [Endgame Frieren Build](#6-endgame-build-synergy)
+- [🇹🇭 คู่มือภาษาไทย (Thai Documentation)](#-คู่มือภาษาไทย-thai-documentation)
+  - [สายเวทและคุณสมบัติพิเศษ](#1-สายเวทมนตร์-magic-school--คุณสมบัติพิเศษ)
+  - [สารานุกรมเวทมนตร์ 6 บท](#2-สารานุกรมเวทมนตร์-spells)
+  - [บอส: มหาจอมเวทควาล](#3-มหาจอมเวทควาล-qual-elder-sage-of-corruption)
+  - [ศิลาสะกดมารและพิธีกรรมปลดผนึก](#4-ศิลาสะกดมาร-quals-sealing-monolith)
+  - [สมบัติ คัมภีร์เวท และอาวุธระดับตำนาน](#5-สมบัติ-คัมภีร์เวท-และอาวุธระดับตำนาน)
+  - [การจัดเซ็ตอุปกรณ์ขั้นสุดยอด](#6-การจัดเซ็ตอุปกรณ์ขั้นสุดยอด-endgame-build)
+
+---
+
+# 🇬🇧 English Documentation
+
+## 1. Magic School & Custom Attributes
+
+### School: Ordinary Magic (`school.zoltraak_cinematic.ordinary_magic`)
+Mankind's standardized magic system, reverse-engineered and perfected by humanity and Frieren after researching Qual's devastating Killing Magic. Characterized by near-instantaneous casting cadence, hypersonic velocity, razor-sharp precision, and catastrophic energy detonation.
+
+### ⚔️ Custom Attributes
+| Attribute | Resource Location | Function & Gameplay Impact |
+| :--- | :--- | :--- |
+| **Zoltraak Spell Power** | `zoltraak_cinematic:zoltraak_spell_power` | Multiplicative power scaling specifically for all Zoltraak-class spells (Beams & Barrages). Multiplies on top of universal Spell Power. |
+| **Zoltraak Resistance** | `zoltraak_cinematic:zoltraak_magic_resist` | Percentage damage reduction against incoming Zoltraak beams, dark thorn barrages, and boss attacks. Prevents lethal one-shots. |
+
+---
+
+## 2. Spell Compendium
+
+### 1. Zoltraak: Frieren Blast (一般攻撃魔法 - ゾルトラーク)
+> *"Ordinary Offensive Magic perfected by Frieren. Discharges an ultra-dense photonic particle beam with hypersonic penetration and a devastating 12-block terminal shockwave."*
+
+- **Spell ID**: `zoltraak_cinematic:zoltraak`
+- **Cast Type**: Instant (`INSTANT`, Cast Time = 0)
+- **Rarity**: Epic (`EPIC`)
+- **Max Level**: 10
+- **Cooldown**: 4.0 seconds
+- **Mana Cost**: 200 (+6 per level)
+- **Base Power**: 80 Damage (+8 per level, scales with Spell Power)
+- **Range**: 64 blocks
+- **Terminal Shockwave Radius**: 12 blocks
+- **Visual & Audio FX**:
+  - Tri-layer rotating white-gold celestial rune rings with dynamic acceleration.
+  - Anamorphic optical lens flare with chromatic fringes and twin-core piercing photonic beam.
+  - Realistic camera shake, optical bloom, and radial shockwave dome at the impact point.
+
+---
+
+### 2. Corrupted Zoltraak: Qual (人を殺す魔法 - クヴァール)
+> *"Qual's original forbidden Killing Magic. Unleashes an Event-Horizon dark singularity beam wrapped in violent electric magenta lightning that shreds armor and withers flesh."*
+
+- **Spell ID**: `zoltraak_cinematic:corrupted_zoltraak`
+- **Cast Type**: Instant (`INSTANT`, Cast Time = 0)
+- **Rarity**: Epic (`EPIC`)
+- **Max Level**: 10
+- **Cooldown**: 4.5 seconds
+- **Mana Cost**: 250 (+7 per level)
+- **Base Power**: 100 Damage (+9 per level, scales with Spell Power)
+- **Range**: 64 blocks
+- **Special Perk**: **100% Armor-Piercing** & inflicts **Wither II** for 6.0 seconds.
+- **Visual & Audio FX**:
+  - Pitch-black void aperture with rotating abyssal runes.
+  - Heavy bass void-resonance audio that rattles the battlefield upon discharge.
+
+---
+
+### 3. Zoltraak: Grand Phalanx Barrage (連続魔法爆撃 - フェルン)
+> *"Fern's signature high-speed bombardment. Deploys a magnificent 24-circle celestial matrix, unleashing continuous guided Zoltraak light lances converging upon the crosshair."*
+
+- **Spell ID**: `zoltraak_cinematic:zoltraak_barrage`
+- **Cast Type**: Continuous Hold-to-Channel (`CONTINUOUS`, up to 10s channel duration)
+- **Rarity**: Epic (`EPIC`)
+- **Max Level**: 1
+- **Cooldown**: 1.5 seconds
+- **Mana Cost**: 250 Base Activation (+4 per level)
+- **Base Power**: 5.0 Damage per bullet (24 bullets per volley = **120.0 Base Damage per volley**)
+- **Firing Cadence**: Opens circle blossom in 8 ticks (~0.4s), then fires 1 full volley of 24 projectiles every 10 ticks (0.5s = **2 volleys / 48 bullets per second**) as long as right-click is held!
+- **Special Mechanics**:
+  - **Parabolic Celestial Wings**: 24 rune circles arranged in an anime-accurate 3D parabolic wing formation spanning $\pm 4.25\text{m}$ horizontally, elevated up to $+2.40\text{m}$ overhead.
+  - **Staggered Diamond Matrix**: 5 staggered rows (5-4-6-4-5) that prevent circles from occluding one another.
+  - **Dynamic Parallax Convergence**: Each circle automatically calculates its 3D pitch and yaw normals to tilt and converge upon the 48-meter target focal point.
+  - **3D Guided Trajectory**: Bullets dynamically curve towards the target dummy or targeted entity in flight.
+  - **First-Person Viewport Optimization**: Centers of vision remain unobstructed for pinpoint aiming.
+
+---
+
+### 4. Corrupted Zoltraak: Grand Phalanx Barrage (暗黒連弾魔法)
+> *"Manifests 24 dark singularity circles, continuously firing armor-piercing dark matter thorns that dissolve barriers and wither targets into ash."*
+
+- **Spell ID**: `zoltraak_cinematic:corrupted_barrage`
+- **Cast Type**: Continuous Hold-to-Channel (`CONTINUOUS`)
+- **Rarity**: Epic (`EPIC`)
+- **Max Level**: 1
+- **Cooldown**: 1.8 seconds
+- **Mana Cost**: 300 Base
+- **Base Power**: 7.0 Damage per bullet (24 bullets per volley = **168.0 Base Damage per volley**)
+- **Special Perk**: Barrier-piercing dark thorns with guaranteed Wither debuff.
+
+---
+
+### 5. Defensive Magic: Hexagonal Aegis (防御魔法)
+> *"Modern standard defensive magic co-developed by humanity and Frieren to counteract Killing Magic. Manifests an active geodesic honeycomb barrier while leaving both hands free for combat."*
+
+- **Spell ID**: `zoltraak_cinematic:defense`
+- **Cast Type**: Instant (`INSTANT`, Cast Time = 0)
+- **Rarity**: Uncommon – Rare (`UNCOMMON` / `RARE`)
+- **Max Level**: 10
+- **Cooldown**: 10.0 seconds
+- **Mana Cost**: 200 (+10 per level)
+- **Duration**: 15 – 25 seconds (300 – 500 ticks, scales with level)
+- **Absorption Capacity**: 150 – 350+ Damage (scales with level and Spell Power)
+- **Key Features**:
+  - **100% Free Hands**: Cast Zoltraak, attack with weapons, or sprint without interrupting the barrier!
+  - **Dual Stances**:
+    - **Directional Aegis (Normal Cast)**: 19 hexagonal plates aligned dynamically with player sightline.
+    - **Omnidirectional 360° Spherical Dome (Sneak Cast)**: 92 hexagonal plates enclosing the caster in a full sphere protecting from all angles (sky and ground).
+  - **Dynamic FX**: Brilliant white-cyan impact flashes, amethyst chime resonation, progressive stress cracks under 40% health, and floating explosive shard disintegration upon expiration.
+
+---
+
+### 6. Flight Magic: Demonic Transmutation (飛行魔法 - 人類の魔法)
+> *"One of humanity's greatest magical triumphs: reverse-engineering demonic flight magic into a standard skill for modern mages, granting free 3D aerial navigation."*
+
+- **Spell ID**: `zoltraak_cinematic:flight`
+- **Cast Type**: Instant Toggle On/Off (`INSTANT`)
+- **Rarity**: Rare (`RARE`, Levels 1–5)
+- **Cooldown**: 1.0 second
+- **Ignition Cost**: 25 Mana
+- **Controls**:
+  - **Right-Click**: Toggle flight on/off.
+  - **Keybind 'V'**: Instant toggle directly from equipped spellbook without holding the scroll.
+  - **Flight Maneuvers**: Space (Ascend), Shift (Descend), Ctrl+W (High-speed aerial sprint).
+- **Mana Consumption Mechanics**:
+  - **Base Hover Drain**: 50 mana/s (Lv 1) down to 40 mana/s (Lv 5).
+  - **Speed Multiplier**: Sprinting accelerates drain up to **2.5x – 6.0x+** (150–300+ mana/s).
+  - **Altitude Multiplier**: Flying higher into the cloud layer increases drain exponentially up to **5.0x – 15.0x+**.
+  - **Safety Parachute**: If mana depletes in midair, emergency Slow Falling (3.5s) activates automatically to prevent fatal impacts.
+  - **Fall Damage Immunity**: Complete immunity to fall damage while flight is active.
+
+---
+
+## 3. Boss: Qual, the Elder Sage of Corruption
+
+> *"The Elder Sage of Corruption (腐敗の賢老 クヴァール) — the demon who invented Killing Magic (Zoltraak) and slaughtered 40% of all mages and 70% of adventurers during the war before being sealed for 80 years by the Hero Party."*
+
+### Boss Attributes
+- **Health**: **1,500 HP** (+200 HP per additional player in 48-block radius)
+- **Armor / Toughness**: 30 Armor / 10 Toughness
+- **Magic Resistances**: +40% General Spell Resist / **+40% Zoltraak Resistance**
+- **Spell Power**: +40% General / **+50% Zoltraak Spell Power**
+- **Speed**: 0.35 (True 3D Omnidirectional Flight)
+- **Immunities**: Fire Immune, Fall Damage Immune
+
+### 4 Combat Phases
+1. **Phase 1: Probing Stance (100% – 75% HP)**: Hovers 5–12m above ground, circling at 16m range, firing single Corrupted Zoltraak beams every 3.5s.
+2. **Phase 2: Demonic Barrage Matrix (75% – 40% HP)**: Ascends into the upper atmosphere, manifests 24 dark singularity circles, and unleashes rapid Corrupted Barrages.
+3. **Phase 3: Tactical Adaptation (40% – 20% HP)**: Activates Demonic Dispersion Shield (35% chance to deflect 50% damage) and casts faster every 2.0s.
+4. **Phase 4: Cataclysmic Overdrive (< 20% HP)**: Charges for 3.0s and discharges the **Original Cataclysmic Zoltraak** (4m diameter beam, 95 base damage, 80-block piercing line, 20-block detonation shockwave).
+
+### Anti-Barrier AI
+- Detects directional shields and uses **Shadow Blink** to teleport directly behind the player.
+- Detects full domes and focuses concentrated heavy beam fire to rapidly exhaust barrier capacity.
+
+### Mythic Boss Drops
+- `zoltraak_cinematic:corruption_core` × 1 (Guaranteed)
+- `zoltraak_cinematic:horn_of_corruption` × 2–4 (Scales with raid player count)
+
+---
+
+## 4. Qual's Ancient Sealing Monolith
+
+- **Block ID**: `zoltraak_cinematic:qual_sealing_stone`
+- **Hardness**: Indestructible, Emits Level 6 Light
+- **Crafting Recipe**:
+  ```
+  [ Amethyst Shard ]  [ Crying Obsidian ]  [ Amethyst Shard ]
+  [ Crying Obsidian ] [ Nether Star ]      [ Crying Obsidian ]
+  [ Deepslate ]       [ Crying Obsidian ]  [ Deepslate ]
+  ```
+- **Unsealing Ritual (5.0s Sequence)**:
+  - Right-clicking triggers a 5-second ritual:
+    - **0.0s – 2.0s**: Blue runes turn blood-red, vibrating violently.
+    - **2.0s – 3.5s**: Four cardinal seal chains shatter.
+    - **3.5s – 5.0s**: A 24-block dark pillar pierces the heavens with thunderclaps.
+    - **5.0s**: The monolith detonates, and Qual emerges into the sky!
+
+---
+
+## 5. Equipment, Grimoires & Artifacts
+
+### 1. Frieren's Staff (คทาของฟรีเรน — Mythic Endgame Weapon)
+The legendary thousand-year staff of Frieren the Slayer, forged to channel elven mana of catastrophic scale.
+
+- **Item ID**: `zoltraak_cinematic:frieren_staff`
+- **Slot**: Mainhand Weapon / Two-Handed Staff
+- **Rarity**: Epic (`EPIC`, Fire Resistant)
+- **Attributes**:
+  - **All Spell Power**: **+45%**
+  - **Zoltraak Spell Power**: **+35%** (Combined **+80%** for Zoltraak spells)
+  - **Max Mana**: **+500**
+  - **Cooldown Reduction**: **+20%**
+  - **Attack Damage**: 6.0
+- **Post-Qual Mythic Recipe (Crafting Table 3x3)**:
+  ```
+  [ Corruption Core ]   [ Nether Star ]      [ Horn of Corruption ]
+  [ Divine Pearl ]      [ Frosted Helve ]    [ Dragonskin ]
+  [ Frosted Helve ]     [ Netherite Ingot ]  [       -      ]
+  ```
+
+---
+
+### 2. Grimoire of Ordinary Magic (บันทึกมหาเวทโจมตีสามัญ)
+Humanity's foundational grimoire compiling the complete theorems of Ordinary Offensive Magic. Upgraded from an Enchanted Diamond Spellbook into an elite 10-slot casting focus.
+
+- **Item ID**: `zoltraak_cinematic:ordinary_grimoire`
+- **Slot**: Curios `Spellbook` or Off-hand
+- **Rarity**: Epic (`EPIC`, Fire Resistant)
+- **Attributes**:
+  - **Spell Inscription Slots**: **10 Slots**
+  - **Zoltraak Spell Power**: **+30%**
+  - **All Spell Power**: **+15%**
+  - **Max Mana**: **+300**
+  - **Cooldown Reduction**: **+15%**
+- **Diamond Tier Upgrade Recipe**:
+  ```
+  [ Amethyst Shard ]  [ Arcane Rune ]        [ Amethyst Shard ]
+  [ Arcane Ingot ]    [ Diamond Spellbook ]  [ Arcane Ingot ]
+  [ Amethyst Shard ]  [ Arcane Cloth ]       [ Amethyst Shard ]
+  ```
+
+---
+
+### 3. Grimoire of the Elder Sage (บันทึกมหาเวทของควาล)
+Qual's original forbidden spellbook containing raw calculations of Killing Magic.
+
+- **Item ID**: `zoltraak_cinematic:elder_sage_grimoire`
+- **Slot**: Curios `Spellbook` or Off-hand
+- **Rarity**: Epic (`EPIC`, Fire Resistant)
+- **Attributes**:
+  - **Spell Inscription Slots**: **12 Slots**
+  - **Zoltraak Spell Power**: **+50%**
+  - **All Spell Power**: **+20%**
+  - **Max Mana**: **+1,000**
+  - **Cooldown Reduction**: **+30%**
+  - **Cast Time Reduction**: **+20%**
+- **Upgrade Recipe**:
+  ```
+  [ Horn of Corruption ] [ Netherite Ingot ]   [ Horn of Corruption ]
+  [ Horn of Corruption ] [ Ordinary Grimoire ] [ Horn of Corruption ]
+  [ Horn of Corruption ] [ Corruption Core ]   [ Horn of Corruption ]
+  ```
+
+---
+
+### 4. Ring of the Mirror Lotus (แหวนดอกบัวกระจกเงา)
+Silver ring engraved with the mirror lotus flower gifted by Himmel to Frieren, symbolizing eternal devotion.
+
+- **Item ID**: `zoltraak_cinematic:mirror_lotus_ring`
+- **Slot**: Curios `Ring`
+- **Rarity**: Epic (`EPIC`, Fire Resistant)
+- **Attributes**:
+  - **Zoltraak Spell Power**: **+25%**
+  - **Cooldown Reduction**: **+15%**
+  - **Max Mana**: **+150**
+  - **Mana Regen**: **+1.0 / sec**
+- **Recipe**:
+  ```
+  [ - ]              [ Mana Ring ]          [ - ]
+  [ Cast Time Ring ] [ Horn of Corruption ] [ Silver Ring ]
+  [ - ]              [ Cooldown Ring ]      [ - ]
+  ```
+
+---
+
+### 5. Mana Concealment Pendant (จี้มนตราซ่อนมานา)
+Pendant embodying the elven technique taught by Flamme: compressing mana leakage to complete imperceptibility.
+
+- **Item ID**: `zoltraak_cinematic:mana_concealment_pendant`
+- **Slot**: Curios `Necklace`
+- **Rarity**: Epic (`EPIC`, Fire Resistant)
+- **Attributes**:
+  - **Zoltraak Resistance**: **+20%**
+  - **Cast Time Reduction**: **+10%**
+  - **Max Mana**: **+200**
+- **Recipe**:
+  ```
+  [ - ]           [ Iron Nugget ]        [ - ]
+  [ Iron Nugget ] [ Shriving Stone ]     [ Iron Nugget ]
+  [ - ]           [ Horn of Corruption ] [ - ]
+  ```
+
+---
+
+### 6. Qual's Core of Corruption (แก่นแท้แห่งการเน่าเปื่อย)
+Black hole singularity core harvested directly from Qual's chest cavity.
+
+- **Item ID**: `zoltraak_cinematic:corruption_core`
+- **Slot**: Curios `Necklace`
+- **Rarity**: Epic (`EPIC`, Fire Resistant)
+- **Attributes**:
+  - **Zoltraak Spell Power**: **+35%**
+  - **Max Mana**: **+350**
+  - **Mana Regen**: **+2.5 / sec**
+
+---
+
+## 6. Endgame Build Synergy
+
+When fully equipped with the complete Frieren Artifact Set:
+- **Main Hand**: Frieren's Staff (+45% All, +35% Zoltraak, +500 Mana, +20% CDR)
+- **Off-hand / Curios**: Ordinary Grimoire (+15% All, +30% Zoltraak, +300 Mana, +15% CDR)
+- **Ring**: Ring of the Mirror Lotus (+25% Zoltraak, +150 Mana, +15% CDR, +1.0 Regen)
+- **Necklace**: Mana Concealment Pendant (+20% Zoltraak Resist, +10% Cast Time Reduction, +200 Mana)
+
+### Net Stat Summary:
+- **Total Zoltraak Spell Power**: **+90%** (Nearly double base output!)
+- **Total Universal Spell Power**: **+60%**
+- **Total Max Mana Bonus**: **+1,150 Mana**
+- **Total Cooldown Reduction**: **+50%** (Zoltraak fires every 2.0s; Barrage fires continuously with instant recovery!)
+- **Total Zoltraak Resistance**: **+20%**
+
+---
+---
+
+# 🇹🇭 คู่มือภาษาไทย (Thai Documentation)
+
+## 1. สายเวทมนตร์ (Magic School) & คุณสมบัติพิเศษ
 
 ### School: Ordinary Magic (人類の魔法 - เวทมนตร์สามัญ)
 เวทมนตร์สามัญที่ถูกพัฒนาขึ้นโดยมนุษยชาติและฟรีเรนจากการวิจัยเวทมนตร์สังหารของควาล โดดเด่นด้านความเร็วในการร่าย, ความแม่นยำสูง, ลำแสงความเร็วเหนือเสียง (Hypersonic Light Beam) และการระเบิดพลังงานเวทแบบเข้มข้น
 
 ### ⚔️ Custom Attributes
-| คุณสมบัติ (Attribute) | คำอธิบาย | ค่าสูงสุด / ผลลัพธ์ |
+| คุณสมบัติ (Attribute) | Resource Location | คำอธิบาย & ผลลัพธ์ในเกม |
 | :--- | :--- | :--- |
-| **Zoltraak Spell Power** (`zoltraak_cinematic:zoltraak_spell_power`) | เพิ่มพลังโจมตีเวทมนตร์ตระกูล Zoltraak โดยเฉพาะ | ทวีคูณความเสียหายทั้งลำแสงปกติและห่าฝนกระสุน |
-| **Zoltraak Resistance** (`zoltraak_cinematic:zoltraak_magic_resist`) | ลดทอนความเสียหายที่ได้รับจากเวทมนตร์ Zoltraak | ป้องกันการถูกโจมตีแบบ One-Shot จากเวทมนตร์ประเภทเดียวกัน |
+| **Zoltraak Spell Power** | `zoltraak_cinematic:zoltraak_spell_power` | เพิ่มพลังโจมตีเวทมนตร์ตระกูล Zoltraak โดยเฉพาะ ทวีคูณความเสียหายทั้งลำแสงปกติและห่าฝนกระสุน |
+| **Zoltraak Resistance** | `zoltraak_cinematic:zoltraak_magic_resist` | ลดทอนความเสียหายที่ได้รับจากเวทมนตร์ Zoltraak ป้องกันการถูกโจมตีแบบ One-Shot จากเวทมนตร์ประเภทเดียวกัน |
 
 ---
 
-## สารานุกรมเวทมนตร์ (Spells)
+## 2. สารานุกรมเวทมนตร์ (Spells)
 
 ### 1. Zoltraak: Frieren Blast (一般攻撃魔法 - ゾルトラーク)
 > *"เวทมนตร์โจมตีสามัญที่ถูกปรับปรุงจนสมบูรณ์แบบโดยฟรีเรน ยิงลำแสงโฟตอนบริสุทธิ์ทะลวงเป้าหมายด้วยความเร็วแสง พร้อมคลื่นช็อคเวฟทำลายล้างรอบจุดกระทบ"*
@@ -62,18 +394,19 @@
 > *"กระบวนท่าระดมยิงห่าฝนกระสุนเวทมนตร์ความเร็วสูงของเฟิร์น กางวงเวทย์ลอยฟ้า 24 วงล้อมรอบตัวผู้ร่าย ยิงกระสุนแสงนำวิถีพร้อมกัน พุ่งกระหน่ำใส่จุดเล็ง"*
 
 - **Spell ID**: `zoltraak_cinematic:zoltraak_barrage`
-- **ประเภทการร่าย (Cast Type)**:กดค้างเพื่อยิงต่อเนื่อง
-- **ความหายากขั้นต่ำ (Min Rarity)**: มหากาพย์ (`epic`)
+- **ประเภทการร่าย (Cast Type)**: กดค้างเพื่อยิงต่อเนื่อง (`CONTINUOUS`, สูงสุด 10 วินาที)
+- **ความหายากขั้นต่ำ (Min Rarity)**: มหากาพย์ (`EPIC`)
 - **เลเวลสูงสุด (Max Level)**: 1
 - **คูลดาวน์ (Cooldown)**: 1.5 วินาที
 - **ค่าใช้จ่ายมานา (Mana Cost)**: 250 มานา (+4 ต่อเลเวล)
-- **พลังโจมตีพื้นฐาน (Base Power)**: 5 ดาเมจ (+7 ต่อเลเวล)
+- **พลังโจมตีพื้นฐาน (Base Power)**: 5 ดาเมจ ต่อนัด (24 นัดต่อระลอก = **120.0 ดาเมจ ต่อระลอก**)
+- **จังหวะการยิง (Cadence)**: กางวงเวทย์ 8 Ticks (~0.4s) จากนั้นยิงระลอกละ 24 นัดทุกๆ 10 Ticks (0.5 วินาที = **2 ระลอก / 48 นัดต่อวินาที**) ตราบใดที่ยังกดค้างและมีมานาเพียงพอ
 - **ระบบพิเศษ (Smart Mechanics)**:
-  - **Parabolic Celestial Wings & Staggered Diamond Matrix**: การจัดเรียงวงเวทย์ 24 วงเป็นรูปปีกนกเรขาคณิตโอบล้อม 3D พร้อมสับหว่างรวงผึ้ง 5 แถว ขยายความกว้าง $\pm 4.25$ เมตร และขยายขนาดวงเวทย์ขึ้น 25-30% ให้ลวดลายรูนเปล่งประกายเด่นชัดโดยไม่ซ้อนทับกัน
-  - **Dynamic Parallax Convergence**: วงเวทย์ทั้ง 24 วงจะปรับองศาเอียงหันเข้าหาเป้าหมายที่อยู่ข้างหน้า 48 เมตรโดยอัตโนมัติ
-  - **3D Guided Projectiles**: กระสุนเวททุกนัดจะบินโค้งตามสายตาผู้ร่ายและพุ่งเข้าสู่จุดที่เล็งอย่างแม่นยำ
-  - **Perspective Viewport Optimization**: เมื่ออยู่ในมุมมองบุคคลที่หนึ่ง วงเวทย์จะเปิดช่องว่างตรงกลางไม่บดบังเป้าเล็ง
-
+  - **Parabolic Celestial Wings**: วงเวทย์ 24 วงจัดเรียงเป็นทรงปีกนกเรขาคณิต 3 มิติกว้าง $\pm 4.25$ เมตร ยกสูงถึง $+2.40$ เมตร
+  - **Staggered Diamond Matrix**: การสับหว่าง 5 แถว (5-4-6-4-5) ป้องกันขอบวงเวทย์ซ้อนทับกัน
+  - **Dynamic Parallax Convergence**: วงเวทย์ทั้ง 24 วงปรับองศาเอียงหันเข้าหาเป้าหมายระยะ 48 เมตรโดยอัตโนมัติ
+  - **3D Guided Projectiles**: กระสุนเวทโค้งเข้าหาเป้าหมายที่เล็งอย่างแม่นยำ
+  - **Perspective Viewport Optimization**: เปิดช่องว่างตรงกลางในมุมมองบุคคลที่หนึ่ง ไม่บังเป้าเล็ง
 
 ---
 
@@ -81,255 +414,129 @@
 > *"การปลดปล่อยวงเวทย์หลุมดำทมิฬ 24 วง ระดมยิงหนามสสารมืดพุ่งทำลายล้างม่านบาเรียเวทมนตร์และกัดกร่อนศัตรูให้สลายกลายเป็นเถ้าถ่าน"*
 
 - **Spell ID**: `zoltraak_cinematic:corrupted_barrage`
-- **ประเภทการร่าย (Cast Type)**: กดค้างเพื่อยิงต่อเนื่อง
-- **ความหายากขั้นต่ำ (Min Rarity)**: มหากาพย์ (`epic`)
+- **ประเภทการร่าย (Cast Type)**: กดค้างเพื่อยิงต่อเนื่อง (`CONTINUOUS`)
+- **ความหายากขั้นต่ำ (Min Rarity)**: มหากาพย์ (`EPIC`)
 - **เลเวลสูงสุด (Max Level)**: 1
 - **คูลดาวน์ (Cooldown)**: 1.8 วินาที
 - **ค่าใช้จ่ายมานา (Mana Cost)**: 300 มานา
-- **พลังโจมตีพื้นฐาน (Base Power)**: 7 ดาเมจ
+- **พลังโจมตีพื้นฐาน (Base Power)**: 7 ดาเมจ ต่อนัด (24 นัด = **168.0 ดาเมจ ต่อระลอก**)
 - **สถานะผิดปกติ (Debuff/Perk)**: หนามสสารมืดติดสถานะ **Wither** และมีเอฟเฟกต์ Dark Singularity ทะลวงบาเรีย
 
 ---
 
-### 5. Defensive Magic:เวทป้องกันมาตรฐาน
-> *"หนึ่งในสอง 'เวทมนตร์พื้นฐาน' ของจอมเวทยุคปัจจุบันร่วมกับโซลทราค ถูกวิจัยและพัฒนาขึ้นโดยมนุษยชาติร่วมกับฟรีเรน โดยมีเป้าหมายหลักในการป้องกันและหักล้างเวทมนตร์สังหาร (โซลทราค) โดยเฉพาะ"*
+### 5. Defensive Magic: เวทป้องกันมาตรฐาน (防御魔法)
+> *"หนึ่งในสอง 'เวทมนตร์พื้นฐาน' ของจอมเวทยุคปัจจุบันร่วมกับโซลทราค ถูกวิจัยและพัฒนาขึ้นโดยมนุษยชาติร่วมกับฟรีเรน โดยมีเป้าหมายหลักในการป้องกันและหักล้างเวทมนตร์สังหารโดยเฉพาะ"*
 
-- **Spell Name**: Defensive Magic
 - **Spell ID**: `zoltraak_cinematic:defense`
-- **สายเวท (Magic School)**: Ordinary Magic (`school.zoltraak_cinematic.ordinary_magic`)
 - **ประเภทการร่าย (Cast Type)**: ร่ายทันทีแบบกำหนดระยะเวลาคงอยู่ (`INSTANT`, Cast Time = 0)
 - **ความหายากขั้นต่ำ (Min Rarity)**: พิเศษ (`UNCOMMON` - `RARE`)
 - **เลเวลสูงสุด (Max Level)**: 10
 - **คูลดาวน์ (Cooldown)**: 10.0 วินาที
 - **ค่าใช้จ่ายมานา (Mana Cost)**: 200 มานา (+10 ต่อเลเวล)
-- **ระยะเวลาคงอยู่ (Duration)**: 15 - 25 วินาที (300 - 500 Ticks สเกลตามเลเวลเวท)
+- **ระยะเวลาคงอยู่ (Duration)**: 15 - 25 วินาที (300 - 500 Ticks สเกลตามเลเวล)
 - **ความจุการป้องกัน (Absorption Capacity)**: 150 - 350+ ดาเมจ (สเกลตาม `Spell Power` และเลเวลเวท)
-- **จุดเด่นสำคัญ (Key Feature)**: **มือเป็นอิสระ 100%!** ผู้เล่นสามารถร่ายเวทโจมตีอย่าง Zoltraak, Fern Barrage หรือสวิงอาวุธโจมตีศัตรูสวนกลับทะลุผ่านม่านบาเรียของตนเองได้อย่างอิสระ ขณะที่บาเรียยังคงปกป้องผู้เล่นอยู่รอบทิศ!
-
-#### รูปทรงและโครงสร้างทางกายภาพ (Visual Geometry & Structure)
-*อ้างอิงต้นแบบงานภาพจาก CG / Anime Reference:*
-- **1. การปกป้องรอบทิศทาง 360 องศา — ได้รับการปกป้องคุ้มครองจากทั้งเบื้องสูงและเบื้องต่ำ (Omnidirectional Spherical Aegis)**:
-  - **ได้รับการปกป้องคุ้มครองจากทั้งเบื้องสูงและเบื้องต่ำ**: บาเรียครอบคลุมรอบตัวผู้ร่ายเป็นทรงกลมรังผึ้งสมบูรณ์แบบ 360 องศา (Full Geodesic Honeycomb Sphere) ลอยห่อหุ้มร่างกายทั้งเหนือศีรษะและใต้ฝ่าเท้าอย่างสมบูรณ์ ป้องกันการโจมตีจากทั้งบนฟ้าและใต้พิภพ (รวมถึงขณะลอยตัวกลางอากาศด้วยเวทบิน Flight Magic)
-- **2. โครงสร้างผลึกรังผึ้งทรงกลม (Geodesic Honeycomb Sphere)**:
-  - ผิวของทรงกลมประกอบด้วยแผ่นเซลล์หกเหลี่ยม (Hexagonal Shield Plates) 92 แผ่นเรียงประสานกันอย่างไร้รอยต่อ
-  - ขอบของแต่ละเซลล์เปล่งแสงนีออนสีฟ้าครามสว่างคมชัด (Cyan Neon Outlines) และเนื้อผิวโปร่งแสงสีน้ำเงินอมฟ้า (Translucent Blue-Cyan Body)
-  - **ประกายกระแสพลังงาน (Arc Lightning & Energy Sparks)**: เส้นกระแสสายฟ้าเวทมนตร์ขนาดเล็กวิ่งแล่นไปตามรอยต่อของแผ่นหกเหลี่ยมตลอดเวลา
-- **3. แผงป้องกันเฉพาะจุด (Directional Aegis Stance)**:
-  - สามารถบีบรวมแผ่นหกเหลี่ยม 19 เซลล์มาเป็นแผงรังผึ้งแบนด้านหน้า หันตามมุมมองสายตาของผู้ร่ายแบบ Real-time เพื่อประหยัดมานาและเพิ่มความหนาแน่นสูงสุด
-
-#### กลไกการป้องกันและการสลายตัว (Anti-Zoltraak & Dynamic FX)
-- **การปะทะและการกระพริบแสง (Impact Overdrive & Cell Flashing)**:
-  - เมื่อลำแสง Zoltraak หรือกระสุนห่าฝนพุ่งเข้าชน แผ่นหกเหลี่ยมบริเวณจุดปะทะจะ **สว่างวาบจ้าเป็นสีขาว-ฟ้า (Brilliant White-Cyan Flash)** สะกดการเคลื่อนที่ของลำแสงไว้
-  - คลื่นช็อคเวฟระนาบจะแผ่ออกจากจุดปะทะไปตามเซลล์หกเหลี่ยมข้างเคียง พร้อมเสียงกระทบผลึกคริสตัล (`AMETHYST_BLOCK_HIT`)
-- **การแตกร้าวและการแตกสลายสมบูรณ์แบบ (Shatter & Disintegration FX)**:
-  - **ระยะแตกร้าว (Capacity < 40%)**: แผ่นหกเหลี่ยมเริ่มเกิดเส้นแตกร้าวเรืองแสง (Stress Cracks)
-  - **ระยะพังทลาย (Barrier Break / Depleted)**: เกิดเสียงแก้วแตกก้องกังวาน (`GLASS_BREAK`) แผ่นหกเหลี่ยมทุกแผ่นบนโดมจะ **หลุดลอยหมุนคว้างออกจากโครงสร้าง (Explosive Floating Hexagonal Shards)** แตกกระจายลอยขึ้นสู่อากาศ ก่อนจะระเหิดสลายกลายเป็นละอองเวทมนตร์ (Fade Out) อย่างนุ่มนวล
-
-#### ความเข้ากันได้กับ Shaders
-- รองรับการแสดงผลร่วมกับ Iris / Complementary Shaders 100% ด้วย Shader State ชนิด Translucent และ Additive ทำให้แผงรังผึ้งเรืองแสง Emissive Bloom สวยงามตระการตาในเวลากลางคืน
+- **จุดเด่นสำคัญ (Key Feature)**:
+  - **มือเป็นอิสระ 100%!** ผู้เล่นสามารถร่ายเวทโจมตีสวนกลับ หรือสวิงอาวุธทะลุม่านบาเรียของตนเองได้อย่างอิสระ
+  - **2 โหมดการใช้งาน**:
+    - **แผงป้องกันทิศทางเดียว (Directional Aegis - ร่ายปกติ)**: แผ่นหกเหลี่ยม 19 แผ่นหันตามมุมสายตา
+    - **โดมกลมสมบูรณ์แบบ 360 องศา (Full Spherical Dome - ร่ายขณะย่อตัว Sneak)**: แผ่นหกเหลี่ยม 92 แผ่นปกป้องรอบทิศทั้งเบื้องสูงและเบื้องต่ำ
+  - **Dynamic FX**: แสงแฟลร์สีขาว-ฟ้าเมื่อปะทะ, รอยแตกร้าวเมื่อ HP < 40%, และสะเก็ดเศษแก้วระเบิดกระจายสลายตัวเมื่อบาเรียแตก
 
 ---
 
-### 5. Flight Magic (飛行魔法 - Hikō Mahō) — เวทบินแห่งมนุษยชาติ (人類の魔法)
-หนึ่งในความสำเร็จสูงสุดของการวิจัยเวทมนตร์ของมนุษยชาติยุคปัจจุบัน โดยการถอดรหัสเวทบินของเผ่ามาร (Demonic Flight Magic) จนกลายเป็นเวทมนตร์มาตรฐานของจอมเวทสมัยใหม่ ช่วยให้ผู้ร่ายสามารถลอยตัว ร่อน และพุ่งทะยานในอากาศ 360 องศาได้อย่างอิสระสมบูรณ์แบบ
+### 6. Flight Magic: เวทบินแห่งมนุษยชาติ (飛行魔法)
+> *"หนึ่งในความสำเร็จสูงสุดของการวิจัยเวทมนตร์ โดยการถอดรหัสเวทบินของเผ่ามารจนกลายเป็นเวทมนตร์มาตรฐาน ช่วยให้ผู้ร่ายบินและพุ่งทะยานในอากาศ 360 องศาได้อย่างอิสระ"*
 
 - **Spell ID**: `zoltraak_cinematic:flight`
-- **สายเวท (Magic School)**: Ordinary Magic (`school.zoltraak_cinematic.ordinary_magic`)
 - **ประเภทการร่าย (Cast Type)**: ร่ายทันทีแบบเปิด/ปิดสลับสถานะ (`INSTANT`, Toggle On/Off)
 - **ความหายาก (Rarity)**: หายาก (`RARE`, เลเวล 1–5)
 - **คูลดาวน์ (Cooldown)**: 1.0 วินาที
 - **ค่าจุดชนวนเริ่มต้น (Ignition Cost)**: 25 มานา
 - **การควบคุม (Controls)**:
-  -  **ร่ายเวทปกติ**: คลิกขวาเพื่อเปิด/ปิดเวทบิน
-  -  **ปุ่มลัดเฉพาะ (Key 'V')**: กดปุ่ม **'V'** เพื่อเปิด/ปิดเวทบินได้ทันทีจากสมุดเวทที่สวมใส่ (Passive Spellbook Detection)
-  -  **การบังคับในอากาศ**: ใช้ปุ่มกระโดด (Space) เพื่อบินขึ้น, ย่อตัว (Shift) เพื่อลดระดับ, และวิ่ง (Ctrl+W) เพื่อพุ่งทะยานด้วยความเร็วสูง
-
-#### กลไกการเผาผลาญมานาแบบทวีคูณ (Massive Exponential Mana Drain)
-การลอยตัวต้านแรงโน้มถ่วงในอากาศจำเป็นต้องใช้กระแสมานาหล่อเลี้ยงอย่างเสถียรและต่อเนื่อง:
-- **1. อัตราเผาผลาญพื้นฐาน (Base Hover Drain)**:
-  - เลเวล 1: **50 มานา/วินาที** (2.5 มานา/Tick)
-  - เลเวล 2: **47.5 มานา/วินาที**
-  - เลเวล 3: **45 มานา/วินาที**
-  - เลเวล 4: **42.5 มานา/วินาที**
-  - เลเวล 5: **40 มานา/วินาที** (2.0 มานา/Tick)
-- **2. ยิ่งบินเร็วยิ่งผลาญมานาทวีคูณ (Speed Multiplier - Skyrocketing Drain)**:
-  - การลอยตัวนิ่งๆ หรือเคลื่อนที่ช้าๆ จะใช้อัตราปกติ (1.0x)
-  - การพุ่งทะยานด้วยความเร็วสูง (Sprint-Flying หรือทิ้งดิ่ง) จะเพิ่มอัตราการเผาผลาญขึ้นเป็น **2.5x – 6.0x+** (ผลาญสูงสุด 150 – 300+ มานา/วินาที!)
-- **3. ยิ่งบินสูงยิ่งผลาญมานาก้าวกระโดด (Altitude Multiplier - High Sky Penalty)**:
-  - บินเรี่ยพื้น (ความสูง < 3-4 บล็อก): อัตราปกติ (1.0x)
-  - บินขึ้นสู่ท้องฟ้าสูงเหนือยอดไม้ (15-20 บล็อก): เพิ่มเป็น **2.0x – 3.5x**
-  - ทะยานสู่ชั้นบรรยากาศระดับเมฆ (> 40-60 บล็อก): ความเบาบางของมานาในชั้นบรรยากาศทำให้อัตราเผาผลาญพุ่งสูงถึง **5.0x – 15.0x+**!
-- **4. ระบบชะลอการตกเมื่อมานาหมด (Mana Depletion Parachute)**:
-  - หากมานาหมดลงระหว่างบิน เวทบินจะพังทลายทันที พร้อมเสียงแจ้งเตือนและข้อความสีแดงเตือนบน Action Bar
-  - ตัวเวทจะกางม่านกระแสลมฉุกเฉิน (Slow Falling 3.5 วินาที) ช่วยชะลอความเร็วในการตกสู่พื้นอย่างนุ่มนวล ป้องกันการตกกระแทกพื้นเสียชีวิตกะทันหัน
-- **5. ป้องกันดาเมจตกจากที่สูง (Fall Damage Immunity)**:
-  - ผู้เล่นที่มีสถานะเวทบินจะไม่ได้รับดาเมจจากการตก (Fall Damage = 0) ทั้งขณะบินและเมื่อร่อนลงแตะพื้น
-- **6. หน้าจอแสดงผลมาตรวัดพลังงาน (Action Bar HUD Telemetry)**:
-  - ขณะบิน จะมีข้อความแสดงอัตราการเผาผลาญมานาแบบ Real-time, ระดับความสูงจากพื้นดิน และตัวคูณความเร็ว เช่น:
-    `✦ Flight Magic: 52 mana/s | Alt: 12m | Spd: 1.4x`
+  - **คลิกขวา**: เปิด/ปิดเวทบิน
+  - **ปุ่มลัด 'V'**: กดเปิด/ปิดได้ทันทีจากสมุดเวทที่สวมใส่
+  - **ปุ่มบังคับ**: Space (บินขึ้น), Shift (ลดระดับ), Ctrl+W (พุ่งทะยานความเร็วสูง)
+- **กลไกการเผาผลาญมานา (Mana Drain Mechanics)**:
+  - **อัตราลอยตัวพื้นฐาน**: 50 มานา/วินาที (Lv 1) ถึง 40 มานา/วินาที (Lv 5)
+  - **ตัวคูณความเร็ว (Speed Penalty)**: พุ่งบินความเร็วสูงเพิ่มอัตราผลาญขึ้น **2.5x – 6.0x+** (150–300+ มานา/วินาที)
+  - **ตัวคูณความสูง (High Sky Penalty)**: บินสู่ชั้นเมฆเพิ่มอัตราผลาญขึ้น **5.0x – 15.0x+**
+  - **ร่มชูชีพฉุกเฉิน**: หากมานาหมดกลางอากาศ จะมีบัฟ Slow Falling 3.5 วินาทีช่วยร่อนลงพื้นอย่างปลอดภัย
+  - **ภูมิคุ้มกันดาเมจตกจากที่สูง**: ไม่ได้รับ Fall Damage 100% ขณะเวทบินทำงาน
 
 ---
 
-## สารานุกรมไอเทม & อุปกรณ์ (Items & Equipment)
+## 3. มหาจอมเวทควาล (Boss: Qual, Elder Sage of Corruption)
 
-### 1. Frieren's Staff (คทาเวทมนตร์ของฟรีเรน)
-คทาเวทมนตร์ประจำกายของมหาจอมเวทเอลฟ์ฟรีเรน ผลิตจากโลหะเวทมนตร์ระดับสูงและทนทานต่อไฟ 100%
-
-- **Item ID**: `zoltraak_cinematic:frieren_staff`
-- **ประเภท**: อาวุธมือหลัก (Staff Weapon)
-- **ความหายาก**: มหากาพย์ (`EPIC`)
-- **คุณสมบัติสถานะ (Stats & Attributes)**:
-  - **Attack Damage**: +6.0
-  - **Attack Speed**: -3.0
-  - **Spell Power (พลังเวททั่วไป)**: **+45%** (`ADD_MULTIPLIED_BASE`)
-  - **Zoltraak Spell Power (พลังเวท Zoltraak)**: **+35%** (`ADD_MULTIPLIED_BASE`)
-  - **Max Mana (มานาสูงสุด)**: **+500** หน่วย
-  - **Cooldown Reduction (ลดคูลดาวน์เวท)**: **+20%**
-- **สูตรคราฟต์ (Crafting Recipe)**:
-  ```
-  [ ว่าง ]          [ Pyrium Ingot ]    [ Divine Pearl ]
-  [ ว่าง ]          [ Frosted Helve ]   [ Mithril Ingot ]
-  [ Frosted Helve ] [ ว่าง ]            [ ว่าง ]
-  ```
-  *(ใช้ไข่มุกเวทมนตร์ศักดิ์สิทธิ์ Divine Pearl จาก Iron's Spells เป็นแกนเวทบริสุทธิ์ ร่วมกับ Pyrium, Mithril, Frosted Helve)*
-
----
-
-### 2. Ring of the Mirror Lotus (แหวนดอกบัวกระจกเงา)
-แหวนเงินสลักลายดอกบัวกระจกเงาที่ฮิมเมลมอบให้แก่ฟรีเรน สัญลักษณ์แห่งความผูกพันชั่วนิรันดร์และจิตใจที่สงบนิ่ง
-
-- **Item ID**: `zoltraak_cinematic:mirror_lotus_ring`
-- **ประเภท**: เครื่องประดับ Curios (ช่องสวมใส่: `Ring`)
-- **ความหายาก**: มหากาพย์ (`EPIC`)
-- **คุณสมบัติสถานะ (Stats & Attributes)**:
-  - **Zoltraak Spell Power**: **+25%**
-  - **Cooldown Reduction**: **+15%**
-  - **Max Mana**: **+150** หน่วย
-  - **Mana Regen (ฟื้นฟูมานา)**: **+1.0** หน่วย/วินาที
-- **สูตรคราฟต์ (Crafting Recipe)**:
-  ```
-  [ ว่าง ]             [ Mana Ring ]                  [ ว่าง ]
-  [ Cast Time Ring ]   [ Saint Quartz of Corruption ] [ Silver Ring ]
-  [ ว่าง ]             [ Cooldown Ring ]              [ ว่าง ]
-  ```
-
----
-
-### 3. Mana Concealment Pendant (จี้มนตราซ่อนมานา)
-จี้สร้อยคอที่บรรจุเคล็ดวิชาของฟลามเม่และฟรีเรนในการบีบอัดและซ่อนเร้นออร่ามานาจนดูเหมือนมนุษย์ธรรมดา
-
-- **Item ID**: `zoltraak_cinematic:mana_concealment_pendant`
-- **ประเภท**: เครื่องประดับ Curios (ช่องสวมใส่: `Necklace`)
-- **ความหายาก**: มหากาพย์ (`EPIC`)
-- **คุณสมบัติสถานะ (Stats & Attributes)**:
-  - **Zoltraak Resistance**: **+20%** (ลดดาเมจ Zoltraak ที่ได้รับลง 20%)
-  - **Cast Time Reduction (ลดเวลาร่ายเวท)**: **+10%**
-  - **Max Mana**: **+200** หน่วย
-- **สูตรคราฟต์ (Crafting Recipe)**:
-  ```
-  [ ว่าง ]        [ Iron Nugget ]                [ ว่าง ]
-  [ Iron Nugget ] [ Shriving Stone ]             [ Iron Nugget ]
-  [ ว่าง ]        [ Saint Quartz of Corruption ] [ ว่าง ]
-  ```
-
----
-
-### 4. Grimoire of Ordinary Magic (บันทึกมหาเวทโจมตีสามัญ)
-คัมภีร์เวทโบราณที่ถอดรหัสทฤษฎีพื้นฐานของเวทมนตร์สังหาร ทำหน้าที่เป็นสมุดเวทมนตร์ (Spellbook) ระดับสูง
-
-- **Item ID**: `zoltraak_cinematic:ordinary_grimoire`
-- **ประเภท**: สมุดเวทมนตร์ (Spellbook - 10 ช่องใส่เวท)
-- **ความหายาก**: มหากาพย์ (`EPIC`)
-- **คุณสมบัติสถานะ (Stats & Attributes)**:
-  - **จำนวนช่องเวทมนตร์ (Spell Slots)**: **10 ช่อง**
-  - **Zoltraak Spell Power**: **+30%**
-  - **All Spell Power**: **+15%**
-  - **Max Mana**: **+300** หน่วย
-  - **Cooldown Reduction**: **+15%**
-- **สูตรคราฟต์ (Crafting Recipe)**:
-  ```
-  [ Amethyst Shard ] [ Gold Ingot ]  [ Amethyst Shard ]
-  [ Magic Cloth ]    [ Book ]        [ Magic Cloth ]
-  [ Amethyst Shard ] [ Gold Ingot ]  [ Amethyst Shard ]
-  ```
-
----
-
-## สรุปการเซ็ตอุปกรณ์สาย Zoltraak ขั้นสุดยอด (Endgame Build)
-
-เมื่อสวมใส่อุปกรณ์ครบเซ็ตของม็อด:
-1. **คทา Frieren's Staff** (มือหลัก): พลังเวททั่วไป +45%, พลัง Zoltraak +35%, มานา +500, ลดคูลดาวน์ 20%
-2. **สมุดเวท Ordinary Grimoire** (มือรอง): พลังเวททั่วไป +15%, พลัง Zoltraak +30%, มานา +300, ลดคูลดาวน์ 15%
-3. **แหวน Mirror Lotus Ring** (Curios Ring): พลัง Zoltraak +25%, ลดคูลดาวน์ 15%, มานา +150, ฟื้นมานา +1.0
-4. **จี้ Mana Concealment Pendant** (Curios Necklace): ต้านทาน Zoltraak +20%, ลดเวลาร่าย 10%, มานา +200
- **ผลรวมสเตตัสสุทธิ (Frieren Set)**:
-- **Zoltraak Spell Power รวม**: **+90%** (เกือบสองเท่าของพลังปกติ!)
-- **All Spell Power รวม**: **+60%**
-- **Max Mana เพิ่มขึ้น**: **+1,150** หน่วย
-- **Cooldown Reduction รวม**: **+50%** (ยิง Zoltraak ซ้ำได้ทุกๆ 2 วินาที และยิง Barrage ได้ทุกๆ 0.7 วินาที!)
-- **Zoltraak Resistance**: **+20%**
-
----
-
-## มหาจอมเวทควาล: ผู้คิดค้นเวทมนตร์สังหาร (Boss: Qual, Elder Sage of Corruption)
-
-> *"จอมเวทผู้ยิ่งใหญ่แห่งเผ่ามาร 'ควาลผู้เฒ่าเน่าเปื่อย' (腐敗の賢老 クヴァール) ผู้คิดค้นและวิจัยเวทมนตร์สังหาร (โซลทราค) จนสังหารเหล่าจอมเวทไปถึง 40% และเหล่านักผจญภัยไปถึง 70% ในยุคสงคราม ก่อนจะถูกผู้กล้าฮิมเมลและฟรีเรนผนึกไว้ด้วยศิลาสะกดมารนานกว่า 80 ปี"*
+> *"จอมเวทผู้ยิ่งใหญ่แห่งเผ่ามาร 'ควาลผู้เฒ่าเน่าเปื่อย' (腐敗の賢老 クヴァール) ผู้คิดค้นเวทมนตร์สังหาร (โซลทราค) จนสังหารเหล่าจอมเวทไปถึง 40% และนักผจญภัยถึง 70% ในยุคสงคราม ก่อนจะถูกผู้กล้าฮิมเมลและฟรีเรนผนึกไว้นานกว่า 80 ปี"*
 
 ### สถิติบอส (Boss Attributes)
-- **พลังชีวิตพื้นฐาน (Health)**: **1500.0 HP** (+200 HP ต่อผู้เล่นทุกคนในระยะ 48 บล็อก)
+- **พลังชีวิตพื้นฐาน (Health)**: **1,500 HP** (+200 HP ต่อผู้เล่นทุกคนในระยะ 48 บล็อก)
 - **เกราะ (Armor / Toughness)**: 30 Armor / 10 Toughness
-- **ความต้านทานเวทมนตร์ (Spell Resist)**: **+40%**
-- **ความต้านทานโซลทราค (Zoltraak Resist)**: **+40%**
-- **พลังโจมตีเวทมนตร์ (Spell Power / Zoltraak)**: +40% ทั่วไป / **+50% Zoltraak Power**
-- **ความเร็วในการบิน (Flying Speed)**: 0.35 (3D Omnidirectional Flight)
-- **ภูมิคุ้มกัน**: ไม่ตกจากที่สูง (`noFallDamage`), ภูมิคุ้มกันไฟ (`fireImmune`)
+- **ความต้านทานเวทมนตร์**: +40% เวททั่วไป / **+40% Zoltraak Resistance**
+- **พลังโจมตีเวทมนตร์**: +40% เวททั่วไป / **+50% Zoltraak Spell Power**
+- **ความเร็วบิน (Flying Speed)**: 0.35 (บิน 3 มิติ 360 องศา)
+- **ภูมิคุ้มกัน**: ไม่ตกจากที่สูง, ภูมิคุ้มกันไฟ
 
-### พฤติกรรมการต่อสู้ 4 เฟส (Combat State Machine)
-1. **Phase 1: Probing Stance (HP 100% – 75%)**
-   - ลอยตัวคุมเชิงเหนือพื้นดิน 5–12 บล็อก บินวนรอบตัวผู้เล่นที่ระยะ 14–22 บล็อก
-   - ยิง `Corrupted Zoltraak` ลำแสงเดี่ยวทะลวงเกราะ ทุกๆ 3.5 – 4.5 วินาที
-2. **Phase 2: Demonic Barrage Matrix (HP 75% – 40%)**
-   - ไต่ระดับความสูงขึ้นอย่างรวดเร็ว กางค่ายกลวงเวทย์หลุมดำ 24 วง
-   - ร่าย `Corrupted Barrage` ระดมยิงห่าฝนหนามมืด 96 นัด สลับกับ Corrupted Zoltraak
-3. **Phase 3: Tactical Adaptation (HP 40% – 20%)**
-   - เร่งจังหวะร่ายเวทมนตร์รวดเร็วขึ้นทุก 2.0 – 3.0 วินาที
-   - เปิดใช้งาน **Demonic Dispersion Shield**: มีโอกาส 35% สลายความเสียหายเวทและกระสุนลง 50%
-4. **Phase 4: Cataclysmic Overdrive (HP < 20%)**
-   - ชาร์จพลังงาน 3.0 วินาที ละอองความมืดดูดกลืนเข้าสู่จุดกึ่งกลาง
-   - ยิง **Original Cataclysmic Zoltraak** ลำแสงเส้นผ่านศูนย์กลาง 4 เมตร (`ZoltraakMode.LARGE`, ดาเมจ 95.0 หน่วย) ทะลวงแนวยาว 80 บล็อก พร้อมแรงระเบิด 20 บล็อก!
+### พฤติกรรมการต่อสู้ 4 เฟส
+1. **Phase 1: Probing Stance (100% – 75% HP)**: ลอยตัวคุมเชิง บินวนรอบตัวผู้เล่นที่ระยะ 16 บล็อก ยิง Corrupted Zoltraak ทุก 3.5 วินาที
+2. **Phase 2: Demonic Barrage Matrix (75% – 40% HP)**: ไต่ระดับความสูง กางวงเวทย์หลุมดำ 24 วง ระดมยิง Corrupted Barrage
+3. **Phase 3: Tactical Adaptation (40% – 20% HP)**: เปิดเกราะ Demonic Dispersion Shield (โอกาส 35% สลายดาเมจลง 50%) และเร่งความเร็วร่ายเวททุก 2.0 วินาที
+4. **Phase 4: Cataclysmic Overdrive (< 20% HP)**: ชาร์จพลังงาน 3.0 วินาที ยิง **Original Cataclysmic Zoltraak** (ลำแสงกว้าง 4 เมตร, 95 ดาเมจพื้นฐาน, ทะลวง 80 บล็อก, ระเบิด 20 บล็อก)
 
-### ระบบสติปัญญาต่อต้านบาเรีย (Anti-Barrier Intelligence)
-- **ตรวจจับโล่ทิศทางเดียว (Directional Aegis)**:
-  - ควาลจะใช้ทักษะ **Shadow Blink** สลายร่างกลายเป็นหมอกดำ เทเลพอร์ตข้ามไปข้างหลังผู้เล่น 8–10 บล็อกทันที เพื่อยิง Corrupted Zoltraak หรือ Barrage อัดเข้าแผ่นหลัง!
-- **ตรวจจับโดม 360 องศา (Full Dome)**:
-  - ควาลจะระดมยิง Corrupted Barrage และบีมความเข้มข้นสูงเจาะลงบนโดมเพื่อเผาผลาญหลอด Absorption Capacity ให้แตกสลายในพริบตา
+### ระบบสติปัญญาต่อต้านบาเรีย
+- หากผู้เล่นกางโล่ทิศทางเดียว ควาลจะใช้ **Shadow Blink** เทเลพอร์ตข้ามไปข้างหลังผู้เล่นทันที
+- หากผู้เล่นกางโดม 360 องศา ควาลจะระดมยิงบีมหนักเจาะลงบนโดมเพื่อเผาผลาญหลอด Absorption Capacity ให้แตกสลาย
+
+### ของดรอประดับตำนาน
+- `zoltraak_cinematic:corruption_core` × 1 (การันตี)
+- `zoltraak_cinematic:horn_of_corruption` × 2–4 ชิ้น
 
 ---
 
-## ศิลาสะกดมารของฟรีเรน (Qual's Sealing Monolith)
+## 4. ศิลาสะกดมาร (Qual's Sealing Monolith)
 
 - **Block ID**: `zoltraak_cinematic:qual_sealing_stone`
-- **ความทนทาน**: ไร้เทียมทาน (Indestructible) เปล่งแสงเรืองรองระดับ 6
-- **สูตรคราฟต์อัญเชิญบอส (Crafting Recipe)**:
+- **ความทนทาน**: ไร้เทียมทาน (Indestructible) เปล่งแสงระดับ 6
+- **สูตรคราฟต์อัญเชิญบอส**:
   ```
   [ Amethyst Shard ]  [ Crying Obsidian ]  [ Amethyst Shard ]
   [ Crying Obsidian ] [ Nether Star ]      [ Crying Obsidian ]
   [ Deepslate ]       [ Crying Obsidian ]  [ Deepslate ]
   ```
-  *(ใช้ Nether Star จากการปราบ Wither เป็นแกนพลังงาน ผสานกับ Crying Obsidian, Deepslate, Amethyst Shard)*
-- **พิธีกรรมปลดผนึก (5.0s Unsealing Ritual)**:
-  - เมื่อคลิกขวาที่ศิลา:
+- **พิธีกรรมปลดผนึก (5.0s Sequence)**:
+  - คลิกขวาเพื่อเริ่มพิธีกรรม:
     - **0.0s – 2.0s**: อักขระเวทสีฟ้าของฟรีเรนเปลี่ยนเป็นสีเลือด สั่นสะเทือนด้วยความถี่สูง
-    - **2.0s – 3.5s**: โซ่ตรวนเวทมนตร์ 4 ทิศแตกร้าวและระเบิดสลายออก
-    - **3.5s – 5.0s**: เสาพลังงานมืดพุ่งทะยานสู่ท้องฟ้า 24 บล็อกพร้อมเสียงคำรามและฟ้าร้อง
-    - **5.0s**: ศิลาแตกออก กลายเป็นหินแตกร้าว ควาลลอยตัวขึ้นสู่ท้องฟ้าพร้อมคลื่นกระแทกระเบิดกว้างและเริ่มการต่อสู้!
+    - **2.0s – 3.5s**: โซ่ตรวนเวทมนตร์ 4 ทิศแตกสลาย
+    - **3.5s – 5.0s**: เสาพลังงานมืดพุ่งทะยานสู่ท้องฟ้า 24 บล็อกพร้อมเสียงฟ้าร้อง
+    - **5.0s**: ศิลาแตกออก ควาลลอยตัวขึ้นสู่ท้องฟ้าและเริ่มการต่อสู้!
 
 ---
 
-## สมบัติและคัมภีร์เวทมนตร์ (Grimoires & Artifacts)
+## 5. สมบัติ คัมภีร์เวท และอาวุธระดับตำนาน
 
-### 1. Grimoire of Ordinary Magic (บันทึกมหาเวทโจมตีสามัญ)
-คัมภีร์เวทมนตร์มาตรฐานของจอมเวทยุคปัจจุบัน รวบรวมทฤษฎีและโครงสร้างการร่ายของมหาเวทสังหารที่มนุษยชาติและฟรีเรนร่วมกันพัฒนา อัปเกรดจากสมุดเวทมนตร์ระดับสูง Enchanted Spell Book (Diamond Tier) เพื่อก้าวสู่ระดับจอมเวทชั้นสูง 10 ช่อง
+### 1. Frieren's Staff (คทาของฟรีเรน — อาวุธระดับตำนาน End Game)
+คทาเวทมนตร์โบราณประจำตัวของฟรีเรนจอมเวทเอลฟ์ผู้มีอายุยืนยาวนับพันปี สร้างขึ้นเพื่อรองรับและขยายพลังมานามหาศาลโดยเฉพาะ
+
+- **Item ID**: `zoltraak_cinematic:frieren_staff`
+- **ประเภท**: อาวุธคทาเวทมนตร์ (Staff - ถือสองมือหรือมือหลัก)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟไม่ไหม้ลาวา)
+- **คุณสมบัติสถานะ**:
+  - **All Spell Power**: **+45%** (ขยายพลังเวททุกสายในเกม)
+  - **Zoltraak Spell Power**: **+35%** (โบนัสซ้อนทับเฉพาะสายโซลทราค รวมสูงถึง **+80%**)
+  - **Max Mana**: **+500** หน่วย
+  - **Cooldown Reduction**: **+20%**
+  - **Attack Damage**: 6.0
+- **สูตรคราฟต์ระดับตำนาน (Post-Qual Mythic End Game Recipe)**:
+  ```
+  [ Corruption Core ]   [ Nether Star ]      [ Horn of Corruption ]
+  [ Divine Pearl ]      [ Frosted Helve ]    [ Dragonskin ]
+  [ Frosted Helve ]     [ Netherite Ingot ]  [       -      ]
+  ```
+
+---
+
+### 2. Grimoire of Ordinary Magic (บันทึกมหาเวทโจมตีสามัญ)
+คัมภีร์เวทมนตร์มาตรฐานของจอมเวทยุคปัจจุบัน รวบรวมทฤษฎีและโครงสร้างการร่ายของมหาเวทสังหารที่มนุษยชาติและฟรีเรนร่วมกันพัฒนา อัปเกรดจากสมุดเวทมนตร์ Enchanted Spell Book (Diamond Tier) เพื่อก้าวสู่ระดับจอมเวทชั้นสูง 10 ช่อง
 
 - **Item ID**: `zoltraak_cinematic:ordinary_grimoire`
 - **ประเภท**: สมุดเวทมนตร์ (Spellbook - 10 ช่องใส่เวท)
@@ -342,76 +549,98 @@
   - **Cooldown Reduction**: **+15%**
 - **สูตรคราฟต์อัปเกรด (Diamond Tier Upgrade Recipe)**:
   ```
-  [ Amethyst Shard ] [ Arcane Rune ]       [ Amethyst Shard ]
-  [ Arcane Ingot ]   [ Diamond Spellbook ] [ Arcane Ingot ]
-  [ Amethyst Shard ] [ Arcane Cloth ]      [ Amethyst Shard ]
+  [ Amethyst Shard ]  [ Arcane Rune ]        [ Amethyst Shard ]
+  [ Arcane Ingot ]    [ Diamond Spellbook ]  [ Arcane Ingot ]
+  [ Amethyst Shard ]  [ Arcane Cloth ]       [ Amethyst Shard ]
   ```
 
-### 2. Grimoire of the Elder Sage (บันทึกมหาเวทของควาล)
+---
+
+### 3. Grimoire of the Elder Sage (บันทึกมหาเวทของควาล)
 คัมภีร์เวทต้องห้ามดั้งเดิมของควาล บันทึกสูตรโครงสร้างดั้งเดิมของมหาเวทสังหารมนุษย์ (อัปเกรดจาก Ordinary Grimoire ด้วยวัตถุดิบดรอปจากบอสควาล)
 
 - **Item ID**: `zoltraak_cinematic:elder_sage_grimoire`
 - **ประเภท**: สมุดเวทมนตร์ (Spellbook - 12 ช่องใส่เวท)
-- **ความหายาก**: มหากาพย์ (`EPIC`)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟ)
 - **คุณสมบัติสถานะ**:
   - **จำนวนช่องเวทมนตร์**: **12 ช่อง**
   - **Zoltraak Spell Power**: **+50%**
   - **All Spell Power**: **+20%**
-  - **Max Mana**: **+1000** หน่วย
+  - **Max Mana**: **+1,000** หน่วย
   - **Cooldown Reduction**: **+30%**
   - **Cast Time Reduction**: **+20%**
-- **สูตรคราฟต์อัปเกรด (Upgrade Recipe)**:
+- **สูตรคราฟต์อัปเกรด**:
   ```
-  [ Saint Quartz ] [ Netherite Ingot ]   [ Saint Quartz ]
-  [ Saint Quartz ] [ Ordinary Grimoire ] [ Saint Quartz ]
-  [ Saint Quartz ] [ Corruption Core ]   [ Saint Quartz ]
+  [ Horn of Corruption ] [ Netherite Ingot ]   [ Horn of Corruption ]
+  [ Horn of Corruption ] [ Ordinary Grimoire ] [ Horn of Corruption ]
+  [ Horn of Corruption ] [ Corruption Core ]   [ Horn of Corruption ]
   ```
 
-### 2. Saint Quartz of Corruption (ผลึกมารเรืองแสง)
-ผลึกแก้วปริซึม 7 สีที่ตกผลึกจากพลังเวทและเจตจำนงโบราณของมหาจอมเวทควาล เปล่งแสงประกายอัดแน่นไปด้วยมานาบริสุทธิ์ (ดรอปจากควาล 2–4 ชิ้น)
+---
 
-- **Item ID**: `zoltraak_cinematic:horn_of_corruption`
-- **ประเภท**: วัตถุดิบคราฟต์ระดับตำนาน (Crafting Catalyst)
-- **ความหายาก**: หายาก (`RARE`)
-- **การใช้งานหลักในม็อด**:
-  1.  **Elder Sage Grimoire**: ใช้อัปเกรดคัมภีร์เวทเป็นระดับสูงสุด 12 ช่อง (ใช้ 6 ชิ้น)
-  2.  **Ring of the Mirror Lotus**: ใช้เป็นแกนกลางหลอมแหวนเสริมพลัง
-  3.  **Mana Concealment Pendant**: ใช้เป็นผลึกดูดซับบีบอัดมานาในจี้สร้อยคอ
+### 4. Ring of the Mirror Lotus (แหวนดอกบัวกระจกเงา)
+แหวนเงินสลักลายดอกบัวกระจกเงาที่ฮิมเมลมอบให้แก่ฟรีเรน สัญลักษณ์แห่งความผูกพันชั่วนิรันดร์และจิตใจที่สงบนิ่ง
 
-### 3. Qual's Core of Corruption (แก่นแท้แห่งการเน่าเปื่อย)
+- **Item ID**: `zoltraak_cinematic:mirror_lotus_ring`
+- **ประเภท**: เครื่องประดับ Curios (ช่องสวมใส่: `Ring`)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟ)
+- **คุณสมบัติสถานะ**:
+  - **Zoltraak Spell Power**: **+25%**
+  - **Cooldown Reduction**: **+15%**
+  - **Max Mana**: **+150** หน่วย
+  - **Mana Regen**: **+1.0** หน่วย/วินาที
+- **สูตรคราฟต์**:
+  ```
+  [ - ]              [ Mana Ring ]          [ - ]
+  [ Cast Time Ring ] [ Horn of Corruption ] [ Silver Ring ]
+  [ - ]              [ Cooldown Ring ]      [ - ]
+  ```
+
+---
+
+### 5. Mana Concealment Pendant (จี้มนตราซ่อนมานา)
+จี้สร้อยคอที่บรรจุเคล็ดวิชาของฟลามเม่และฟรีเรนในการบีบอัดและซ่อนเร้นออร่ามานาจนดูเหมือนมนุษย์ธรรมดา
+
+- **Item ID**: `zoltraak_cinematic:mana_concealment_pendant`
+- **ประเภท**: เครื่องประดับ Curios (ช่องสวมใส่: `Necklace`)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟ)
+- **คุณสมบัติสถานะ**:
+  - **Zoltraak Resistance**: **+20%**
+  - **Cast Time Reduction**: **+10%**
+  - **Max Mana**: **+200** หน่วย
+- **สูตรคราฟต์**:
+  ```
+  [ - ]           [ Iron Nugget ]        [ - ]
+  [ Iron Nugget ] [ Shriving Stone ]     [ Iron Nugget ]
+  [ - ]           [ Horn of Corruption ] [ - ]
+  ```
+
+---
+
+### 6. Qual's Core of Corruption (แก่นแท้แห่งการเน่าเปื่อย)
 แก่นผลึกหลุมดำที่สกัดจากทรวงอกของควาล กักเก็บพลังเวทสังหารบริสุทธิ์
 
 - **Item ID**: `zoltraak_cinematic:corruption_core`
 - **ประเภท**: เครื่องประดับ Curios (ช่องสวมใส่: `Necklace`)
-- **ความหายาก**: มหากาพย์ (`EPIC`)
+- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟ)
 - **คุณสมบัติสถานะ**:
-  -  **Zoltraak Spell Power**: **+35%**
-  -  **Max Mana**: **+350** หน่วย
-  -  **Mana Regen (ฟื้นฟูมานา)**: **+2.5** หน่วย/วินาที
+  - **Zoltraak Spell Power**: **+35%**
+  - **Max Mana**: **+350** หน่วย
+  - **Mana Regen**: **+2.5** หน่วย/วินาที
 
 ---
 
-### 4. Frieren's Staff (คทาของฟรีเรน — อาวุธระดับตำนาน End Game)
-คทาเวทมนตร์โบราณประจำตัวของ "ฟรีเรนผู้พิชิตมาร" จอมเวทเอลฟ์ผู้มีอายุยืนยาวนับพันปีและเป็นหนึ่งในสมาชิกกลุ่มผู้กล้าที่ปราบราชาปิศาจ คทานี้ถูกสร้างขึ้นเพื่อรองรับและขยายพลังมานามหาศาลของฟรีเรนโดยเฉพาะ
+## 6. การจัดเซ็ตอุปกรณ์ขั้นสุดยอด (Endgame Build)
 
-- **Item ID**: `zoltraak_cinematic:frieren_staff`
-- **ประเภท**: อาวุธคทาเวทมนตร์ (Staff - ถือสองมือหรือมือหลัก)
-- **ความหายาก**: มหากาพย์ (`EPIC`, ทนไฟไม่ถูกเผาไหม้)
-- **คุณสมบัติสถานะ (Item Attributes)**:
-  - **All Spell Power**: **+45%** (ขยายพลังเวททุกสายในเกม)
-  - **Zoltraak Spell Power**: **+35%** (โบนัสซ้อนทับเฉพาะเวทสายโซลทราค รวมสูงถึง **+80%**)
-  - **Max Mana (ขยายหลอดมานา)**: **+500** หน่วย
-  - **Cooldown Reduction (ลดคูลดาวน์)**: **-20%**
-  - **Attack Damage**: 6.0
-- **สูตรคราฟต์ระดับตำนาน (Post-Qual Mythic End Game Recipe)**:
-  > *ต้องผ่านการปราบบอส Qual the Elder Sage, บอส Wither และพิชิต Ender Dragon เพื่อรวบรวมวัตถุดิบสูงสุดของทั้ง 3 มิติ*
+เมื่อสวมใส่อุปกรณ์ครบเซ็ตของฟรีเรน:
+1. **คทา Frieren's Staff** (มือหลัก): พลังเวททั่วไป +45%, พลัง Zoltraak +35%, มานา +500, ลดคูลดาวน์ 20%
+2. **สมุดเวท Ordinary Grimoire** (มือรอง/Curios): พลังเวททั่วไป +15%, พลัง Zoltraak +30%, มานา +300, ลดคูลดาวน์ 15%
+3. **แหวน Mirror Lotus Ring** (Curios Ring): พลัง Zoltraak +25%, ลดคูลดาวน์ 15%, มานา +150, ฟื้นมานา +1.0
+4. **จี้ Mana Concealment Pendant** (Curios Necklace): ต้านทาน Zoltraak +20%, ลดเวลาร่าย 10%, มานา +200
 
-  ```
-  [ Corruption Core ]   [ Nether Star ]      [ Horn of Corruption ]
-  [ Divine Pearl ]      [ Frosted Helve ]    [ Dragonskin ]
-  [ Frosted Helve ]     [ Netherite Ingot ]  [       -      ]
-  ```
-  - **Row 1 (ยอดคทา)**: `zoltraak_cinematic:corruption_core` + `minecraft:nether_star` + `zoltraak_cinematic:horn_of_corruption`
-  - **Row 2 (แกนกลาง)**: `irons_spellbooks:divine_pearl` + `irons_spellbooks:frosted_helve` + `irons_spellbooks:dragonskin`
-  - **Row 3 (ด้ามจับ)**: `irons_spellbooks:frosted_helve` + `minecraft:netherite_ingot`
-
+### สรุปผลรวมสเตตัสสุทธิ (Full Frieren Set):
+- **Zoltraak Spell Power รวม**: **+90%** (เกือบสองเท่าของพลังปกติ!)
+- **All Spell Power รวม**: **+60%**
+- **Max Mana เพิ่มขึ้น**: **+1,150** หน่วย
+- **Cooldown Reduction รวม**: **+50%** (ยิง Zoltraak ซ้ำได้ทุกๆ 2.0 วินาที และยิง Barrage ได้อย่างราบรื่นต่อเนื่อง!)
+- **Zoltraak Resistance**: **+20%**
