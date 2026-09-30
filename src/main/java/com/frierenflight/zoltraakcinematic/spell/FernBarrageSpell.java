@@ -131,11 +131,19 @@ public class FernBarrageSpell extends AbstractSpell {
     }
 
     @Override
-    public void onCast(Level level, int spellLevel, LivingEntity entity, CastSource castSource, MagicData playerMagicData) {
+    public void onServerPreCast(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData) {
+        super.onServerPreCast(level, spellLevel, entity, playerMagicData);
         if (!level.isClientSide) {
             entity.getPersistentData().putInt(NBT_SALVO_KEY, 0);
         }
-        super.onCast(level, spellLevel, entity, castSource, playerMagicData);
+    }
+
+    @Override
+    public void onServerCastComplete(Level level, int spellLevel, LivingEntity entity, MagicData playerMagicData, boolean cancelled) {
+        super.onServerCastComplete(level, spellLevel, entity, playerMagicData, cancelled);
+        if (!level.isClientSide) {
+            entity.getPersistentData().remove(NBT_SALVO_KEY);
+        }
     }
 
     @Override

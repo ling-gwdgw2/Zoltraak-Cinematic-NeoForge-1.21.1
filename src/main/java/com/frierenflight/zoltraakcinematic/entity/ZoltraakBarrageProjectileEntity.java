@@ -510,7 +510,7 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
         if (target == null || target == owner || !target.isAlive() || target.isSpectator()) {
             return false;
         }
-        if (target instanceof ArmorStand) {
+        if (target instanceof ArmorStand || target instanceof ZoltraakBarrageProjectileEntity) {
             return false;
         }
         if (target instanceof Player p && (p.isCreative() || (owner instanceof Player op && !op.canHarmPlayer(p)))) {
