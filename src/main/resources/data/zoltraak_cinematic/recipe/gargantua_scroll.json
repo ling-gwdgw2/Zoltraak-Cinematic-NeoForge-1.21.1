@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "E": {
+      "item": "irons_spellbooks:arcane_essence"
+    },
+    "R": {
+      "item": "irons_spellbooks:ender_rune"
+    },
+    "I": {
+      "item": "irons_spellbooks:legendary_ink"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "T": {
+      "item": "minecraft:crying_obsidian"
+    }
+  },
+  "pattern": [
+    "ERE",
+    "IPI",
+    "ETE"
+  ],
+  "result": {
+    "count": 1,
+    "id": "zoltraak_cinematic:gargantua_scroll"
+  }
+}

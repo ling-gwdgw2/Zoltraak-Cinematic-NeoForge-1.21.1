@@ -7,14 +7,14 @@
 ## 🌐 Language Navigation / สารบัญภาษา
 - [🇬🇧 English Documentation](#-english-documentation)
   - [Magic School & Attributes](#1-magic-school--custom-attributes)
-  - [Spell Compendium](#2-spell-compendium)
+  - [Spell Compendium (7 Spells)](#2-spell-compendium)
   - [Boss: Qual, the Elder Sage](#3-boss-qual-the-elder-sage-of-corruption)
   - [Sealing Monolith & Ritual](#4-quals-ancient-sealing-monolith)
   - [Equipment, Grimoires & Artifacts](#5-equipment-grimoires--artifacts)
   - [Endgame Frieren Build](#6-endgame-build-synergy)
 - [🇹🇭 คู่มือภาษาไทย (Thai Documentation)](#-คู่มือภาษาไทย-thai-documentation)
   - [สายเวทและคุณสมบัติพิเศษ](#1-สายเวทมนตร์-magic-school--คุณสมบัติพิเศษ)
-  - [สารานุกรมเวทมนตร์ 6 บท](#2-สารานุกรมเวทมนตร์-spells)
+  - [สารานุกรมเวทมนตร์ 7 บท](#2-สารานุกรมเวทมนตร์-spells)
   - [บอส: มหาจอมเวทควาล](#3-มหาจอมเวทควาล-qual-elder-sage-of-corruption)
   - [ศิลาสะกดมารและพิธีกรรมปลดผนึก](#4-ศิลาสะกดมาร-quals-sealing-monolith)
   - [สมบัติ คัมภีร์เวท และอาวุธระดับตำนาน](#5-สมบัติ-คัมภีร์เวท-และอาวุธระดับตำนาน)
@@ -148,6 +148,34 @@ Mankind's standardized magic system, reverse-engineered and perfected by humanit
   - **Altitude Multiplier**: Flying higher into the cloud layer increases drain exponentially up to **5.0x – 15.0x+**.
   - **Safety Parachute**: If mana depletes in midair, emergency Slow Falling (3.5s) activates automatically to prevent fatal impacts.
   - **Fall Damage Immunity**: Complete immunity to fall damage while flight is active.
+
+---
+
+### 7. Astral Singularity: Event Horizon (虚無の特異点 - イベントホライズン)
+> *"Manifests an abyssal gravitational singularity born from supreme mana compression. Bends the geometry of space-time, inexorably pulling all matter and spellcraft past the event horizon before detonating in a cataclysmic cosmic rupture."*
+
+- **Spell ID**: `zoltraak_cinematic:gargantua` (Alias / Display: `Astral Singularity`)
+- **School**: Ender (`SchoolRegistry.ENDER_RESOURCE`)
+- **Cast Type**: Long Cast (`LONG`, 3.0s / 60 ticks charge)
+- **Rarity**: Legendary (`LEGENDARY`, Level 1)
+- **Cooldown**: 300.0 seconds (5 minutes)
+- **Mana Cost**: 2,200 Mana
+- **Base Power**: 100 Base Spell Power (Tidal ripping & 120 explosion damage)
+- **Range**: 48 blocks
+- **Lifetime**: 400 ticks (20.0 seconds)
+- **General Relativistic Shader Architecture**:
+  - **Kerr Geodesic Raymarching**: Computes exact light deflection around a spinning black hole according to general relativity ($\frac{d^2u}{d\phi^2} + u = 3Mu^2$).
+  - **Volumetric Accretion Disk**: 3-octave rotating fractal plasma disk with relativistic Doppler beaming (approaching matter blueshifts brighter, receding redshifts dimmer).
+  - **Thorne Metric Radii**: Photon sphere radius at $2.6 r_g$, event horizon shadow at $1.8 r_g$, and innermost stable circular orbit (ISCO) at $3.83 r_g$.
+  - **Procedural Deep Celestial Starfield**: Seamlessly renders Kali's `starNest` celestial backdrop for lensed background rays.
+  - **Scene Depth Occlusion**: Reads vanilla depth buffer to accurately occlude the black hole behind terrain, blocks, and structures.
+- **4-Phase Singularity Lifecycle**:
+  1. **Phase 1: Spacetime Tear (Ticks 0–40 / 0–2.0s)**: A violently expanding dimensional rift opens with rising chromatic aberration, high-pitch spacetime tearing acoustics, and camera shudder.
+  2. **Phase 2: Relativistic Accretion & Gravitational Infall (Ticks 40–260 / 2.0–13.0s)**: High-gravity suction exerts inward acceleration ($0.065 \text{ m/t}^2$) on all entities within 28 blocks. Projectiles and items crossing the 7.2-block event horizon are completely vaporized. Living entities suffer catastrophic tidal ripping damage (15% max HP / 0.4s).
+  3. **Phase 3: Criticality & Ergosphere Flare (Ticks 260–290 / 13.0–14.5s)**: The accretion disk spins frantically, overheating into blinding white-violet plasma as the core destabilizes.
+  4. **Phase 4: Catastrophic Collapse Detonation (Tick 290 / 14.5s)**: An apocalyptic gamma-ray blast detonates, dealing **120 void explosion damage** in a 24-block radius, triggering a full-screen acoustic tinnitus flash and violent multi-frequency camera rumble before the singularity dissolves into quantum vapor.
+- **Testing Commands**:
+  - `/singularity` or `/zoltraak singularity` (Admin/Cheats required) spawns the singularity 24 blocks ahead of the player.
 
 ---
 
@@ -316,6 +344,21 @@ Black hole singularity core harvested directly from Qual's chest cavity.
 
 ---
 
+### 7. Scroll of Astral Singularity (คัมภีร์มหาเวทเอกภาวะหลุมดำ)
+A mythic, gold-embossed Ender scroll bound to the ultimate gravitational void magic Astral Singularity. Inscribable into any Legendary-tier spellbook via the Inscription Table.
+
+- **Item ID**: `zoltraak_cinematic:gargantua_scroll`
+- **Rarity**: Epic / Legendary (`EPIC`, Fire Resistant)
+- **Stack Size**: 16
+- **Crafting Recipe (Shaped)**:
+  ```
+  [ Arcane Essence ] [ Ender Rune ]     [ Arcane Essence ]
+  [ Legendary Ink ]  [ Paper ]          [ Legendary Ink ]
+  [ Arcane Essence ] [ Crying Obsidian ][ Arcane Essence ]
+  ```
+
+---
+
 ## 6. Endgame Build Synergy
 
 When fully equipped with the complete Frieren Artifact Set:
@@ -462,6 +505,34 @@ When fully equipped with the complete Frieren Artifact Set:
   - **ตัวคูณความสูง (High Sky Penalty)**: บินสู่ชั้นเมฆเพิ่มอัตราผลาญขึ้น **5.0x – 15.0x+**
   - **ร่มชูชีพฉุกเฉิน**: หากมานาหมดกลางอากาศ จะมีบัฟ Slow Falling 3.5 วินาทีช่วยร่อนลงพื้นอย่างปลอดภัย
   - **ภูมิคุ้มกันดาเมจตกจากที่สูง**: ไม่ได้รับ Fall Damage 100% ขณะเวทบินทำงาน
+
+---
+
+### 7. Astral Singularity: เอกภาวะหลุมดำ ขอบฟ้าเหตุการณ์ (虚無の特異点)
+> *"มหาเวทมนตร์โบราณที่บีบอัดมวลพลังเวทจนถึงจุดวิกฤต ก่อกำเนิดเอกภาวะแรงโน้มถ่วงมหาศาลที่บิดเบือนกาลอวกาศ ดูดกลืนสสาร กระสุนเวท และศัตรูเข้าสู่ขอบฟ้าเหตุการณ์ ก่อนจะระเบิดแตกดับปลดปล่อยคลื่นกระแทกทำลายล้างจักรวาล"*
+
+- **Spell ID**: `zoltraak_cinematic:gargantua` (ชื่อแสดง: `เอกภาวะหลุมดำ: ขอบฟ้าเหตุการณ์`)
+- **สายเวท**: Ender (`SchoolRegistry.ENDER_RESOURCE`)
+- **ประเภทการร่าย (Cast Type)**: ร่ายนาน (`LONG`, ชาร์จ 3.0 วินาที / 60 ticks)
+- **ความหายาก (Rarity)**: ระดับตำนาน (`LEGENDARY`, เลเวล 1)
+- **คูลดาวน์ (Cooldown)**: 300.0 วินาที (5 นาที)
+- **ค่าร่ายมานา (Mana Cost)**: 2,200 มานา
+- **พลังทำลาย (Base Power)**: 100 ดาเมจพื้นฐาน (ดาเมจฉีกกระชากไทดัล 15% Max HP + ดาเมจระเบิดมิติมหึมา 120 ดาเมจ)
+- **ระยะการร่าย**: 48 บล็อก
+- **ระยะเวลาการคงอยู่**: 400 ticks (20 วินาที)
+- **ระบบกราฟิกสัมพัทธภาพทั่วไป (General Relativistic Shader FX)**:
+  - **Kerr Geodesic Raymarching**: คำนวณวิถีการโค้งงอของเส้นทางแสงรอบหลุมดำหมุนอย่างแม่นยำตามสมการสัมพัทธภาพทั่วไป ($\frac{d^2u}{d\phi^2} + u = 3Mu^2$)
+  - **Volumetric Accretion Disk**: จานพอกพูนมวลพลาสมาหมุนวน 3 มิติ 3 อ็อกเทฟ พร้อมปรากฏการณ์ Doppler Beaming (ด้านที่หมุนเข้าหาตาจะสว่างจ้าและเปลี่ยนสีน้ำเงิน ส่วนด้านที่หมุนออกจะมืดลง)
+  - **รัศมีทางฟิสิกส์ดาราศาสตร์**: วงแหวนโฟตอน (Photon Sphere) ที่ $2.6 r_g$, ขอบฟ้าเหตุการณ์ (Event Horizon Shadow) ที่ $1.8 r_g$, และวงโคจรเสถียรชั้นในสุด (ISCO) ที่ $3.83 r_g$
+  - **ห้วงอวกาศดวงดาวลึก**: คำนวณฉากหลังจักรวาลด้วยอัลกอริทึม StarNest ของ Kali แบบเรียลไทม์
+  - **Depth Buffer Occlusion**: ตรวจสอบความลึกของฉากในเกม ทำให้หลุมดำถูกสิ่งปลูกสร้าง บล็อก และภูมิประเทศบดบังได้อย่างสมจริง
+- **วัฏจักรการทำงาน 4 เฟสของหลุมดำ**:
+  1. **เฟส 1: รอยแยกมิติเวลา (Ticks 0–40 / 0–2.0 วิ)**: ประตูดำมืดเปิดออกพร้อมเสียงฉีกกระชากความถี่สูงและเอฟเฟกต์เลนส์บิดเบี้ยว
+  2. **เฟส 2: การดึงดูดและฉีกกระชากแรงโน้มถ่วง (Ticks 40–260 / 2.0–13.0 วิ)**: ก่อแรงโน้มถ่วงมหาศาลดึงดูดศัตรูในระยะ 28 บล็อกเข้าสู่ศูนย์กลาง กระสุนและไอเทมที่หลุดเข้าสู่ขอบฟ้าเหตุการณ์ (7.2 บล็อก) จะถูกทำลายล้างทันที สิ่งมีชีวิตจะโดนดาเมจ Tidal Disruption 15% Max HP ต่อ 0.4 วินาที
+  3. **เฟส 3: ภาวะวิกฤตความไม่เสถียร (Ticks 260–290 / 13.0–14.5 วิ)**: จานพอกพูนมวลหมุนเร็วขึ้นจนกลายเป็นพลาสมาสีขาวสว่างจ้า
+  4. **เฟส 4: การระเบิดยุบตัวครั้งหายนะ (Tick 290 / 14.5 วิ)**: ปลดปล่อยคลื่นกระแทกทำลายล้าง **120 ดาเมจ** ในรัศมี 24 บล็อก พร้อมเสียงวิ้งในหู (Tinnitus) และหน้าจอสั่นสะเทือนอย่างรุนแรง ก่อนที่หลุมดำจะสลายตัวไปอย่างเงียบสงบ
+- **คำสั่งทดสอบ**:
+  - `/singularity` หรือ `/zoltraak singularity` (ต้องเปิดสูตร Cheats/Admin) เสกหลุมดำออกมาด้านหน้าผู้เล่น 24 บล็อกทันที
 
 ---
 
@@ -627,6 +698,21 @@ When fully equipped with the complete Frieren Artifact Set:
   - **Zoltraak Spell Power**: **+35%**
   - **Max Mana**: **+350** หน่วย
   - **Mana Regen**: **+2.5** หน่วย/วินาที
+
+---
+
+### 7. คัมภีร์มหาเวทเอกภาวะหลุมดำ (Scroll of Astral Singularity)
+ม้วนคัมภีร์เวทสายเอนเดอร์ขอบทองระดับตำนาน ผนึกมนตรามหาเวทเอกภาวะหลุมดำ สามารถใช้คลิกขวาเพื่อร่ายโดยตรง หรือนำไปสลักลงในสมุดเวทระดับตำนาน (Legendary Tier) ผ่านโต๊ะ Inscription Table
+
+- **Item ID**: `zoltraak_cinematic:gargantua_scroll`
+- **ระดับความหายาก**: Epic / Legendary (`EPIC`, ทนไฟ)
+- **จำนวนซ้อนทับ**: 16 ชิ้น
+- **สูตรคราฟต์บนโต๊ะประดิษฐ์**:
+  ```
+  [ Arcane Essence ] [ Ender Rune ]     [ Arcane Essence ]
+  [ Legendary Ink ]  [ Paper ]          [ Legendary Ink ]
+  [ Arcane Essence ] [ Crying Obsidian ][ Arcane Essence ]
+  ```
 
 ---
 

@@ -13,12 +13,18 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
+import com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig;
+
 @Mod(ZoltraakCinematicMod.MODID)
 public class ZoltraakCinematicMod {
     public static final String MODID = "zoltraak_cinematic";
     public static final String MOD_NAME = "Zoltraak: Cinematic Edition";
 
-    public ZoltraakCinematicMod(IEventBus modEventBus) {
+    public ZoltraakCinematicMod(IEventBus modEventBus, ModContainer container) {
+        container.registerConfig(ModConfig.Type.COMMON, ZoltraakCinematicConfig.SPEC, "zoltraak_cinematic-common.toml");
+
         com.frierenflight.zoltraakcinematic.registry.ModCinematicAttributes.register(modEventBus);
         com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.register(modEventBus);
         com.frierenflight.zoltraakcinematic.registry.ModCinematicBlocks.register(modEventBus);
@@ -29,6 +35,7 @@ public class ZoltraakCinematicMod {
         ModCinematicSpells.register(modEventBus);
         com.frierenflight.zoltraakcinematic.event.DefenseEvents.register();
         com.frierenflight.zoltraakcinematic.event.FlightEvents.register();
+        com.frierenflight.zoltraakcinematic.command.GargantuaCommands.register();
         modEventBus.addListener(com.frierenflight.zoltraakcinematic.network.ModCinematicNetworking::register);
 
         modEventBus.addListener(this::buildCreativeModeTabContents);
@@ -47,6 +54,7 @@ public class ZoltraakCinematicMod {
             event.accept(ModCinematicItems.ELDER_SAGE_GRIMOIRE.get());
             event.accept(ModCinematicItems.HORN_OF_CORRUPTION.get());
             event.accept(ModCinematicItems.CORRUPTION_CORE.get());
+            event.accept(ModCinematicItems.GARGANTUA_SCROLL.get());
             event.accept(ModCinematicItems.QUAL_SEALING_STONE.get());
             event.accept(ModCinematicItems.QUAL_SPAWN_EGG.get());
         }

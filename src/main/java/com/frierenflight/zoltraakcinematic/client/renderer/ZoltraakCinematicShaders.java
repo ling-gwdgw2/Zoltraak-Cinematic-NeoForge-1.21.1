@@ -26,6 +26,7 @@ public final class ZoltraakCinematicShaders {
    public static ShaderInstance unsealingFireColumn;
    public static ShaderInstance cinematicFlare;
    public static ShaderInstance barrageFx;
+   public static ShaderInstance gargantua;
 
    @SubscribeEvent
    public static void onRegisterShaders(RegisterShadersEvent e) {
@@ -44,6 +45,7 @@ public final class ZoltraakCinematicShaders {
       registerSafe(e, "unsealing_fire_column", s -> unsealingFireColumn = s);
       registerSafe(e, "cinematic_flare", s -> cinematicFlare = s);
       registerSafe(e, "barrage_fx", s -> barrageFx = s);
+      registerSafe(e, "gargantua", DefaultVertexFormat.POSITION_TEX, s -> gargantua = s);
    }
 
    private static void registerSafe(RegisterShadersEvent e, String name, java.util.function.Consumer<ShaderInstance> onLoaded) {

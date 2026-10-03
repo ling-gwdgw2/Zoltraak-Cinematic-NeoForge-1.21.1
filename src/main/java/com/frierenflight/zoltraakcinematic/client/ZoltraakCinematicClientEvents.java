@@ -61,6 +61,21 @@ public class ZoltraakCinematicClientEvents {
         NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onLevelUnload);
         NeoForge.EVENT_BUS.addListener(com.frierenflight.zoltraakcinematic.client.renderer.ZoltraakBarrageArrayRenderer::renderArray);
+        NeoForge.EVENT_BUS.addListener(com.frierenflight.zoltraakcinematic.client.renderer.GargantuaPostProcessor::onRenderLevelStage);
+        NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onEntityJoinLevel);
+        NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onEntityLeaveLevel);
+    }
+
+    public static void onEntityJoinLevel(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+        if (event.getLevel().isClientSide() && event.getEntity() instanceof com.frierenflight.zoltraakcinematic.entity.GargantuaEntity g) {
+            com.frierenflight.zoltraakcinematic.client.renderer.GargantuaPostProcessor.registerClientInstance(g);
+        }
+    }
+
+    public static void onEntityLeaveLevel(net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent event) {
+        if (event.getLevel().isClientSide() && event.getEntity() instanceof com.frierenflight.zoltraakcinematic.entity.GargantuaEntity g) {
+            com.frierenflight.zoltraakcinematic.client.renderer.GargantuaPostProcessor.unregisterClientInstance(g);
+        }
     }
 
     public static void onRegisterKeyMappings(net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent event) {
@@ -82,6 +97,7 @@ public class ZoltraakCinematicClientEvents {
             forcedThirdPerson = false;
             cameraRestoreDelay = 0;
             com.frierenflight.zoltraakcinematic.client.renderer.SceneLens.release();
+            com.frierenflight.zoltraakcinematic.client.renderer.GargantuaPostProcessor.release();
         }
     }
 
@@ -91,6 +107,7 @@ public class ZoltraakCinematicClientEvents {
         event.registerEntityRenderer(ModCinematicEntities.ZOLTRAAK_BARRAGE_PROJECTILE.get(), com.frierenflight.zoltraakcinematic.client.renderer.ZoltraakBarrageProjectileRenderer::new);
         event.registerEntityRenderer(ModCinematicEntities.DEFENSE_BARRIER.get(), com.frierenflight.zoltraakcinematic.client.renderer.DefenseBarrierRenderer::new);
         event.registerEntityRenderer(ModCinematicEntities.QUAL_BOSS.get(), com.frierenflight.zoltraakcinematic.client.renderer.QualBossRenderer::new);
+        event.registerEntityRenderer(ModCinematicEntities.GARGANTUA.get(), com.frierenflight.zoltraakcinematic.client.renderer.GargantuaRenderer::new);
         event.registerBlockEntityRenderer(ModCinematicBlocks.QUAL_SEALING_STONE_BE.get(), QualSealingStoneRenderer::new);
     }
 
@@ -154,6 +171,18 @@ public class ZoltraakCinematicClientEvents {
             event.setPitch(event.getPitch() + rumblePitch);
             event.setYaw(event.getYaw() + rumbleYaw);
             event.setRoll(event.getRoll() + rumbleRoll);
+        }
+
+        float gShake = com.frierenflight.zoltraakcinematic.client.renderer.GargantuaShake.currentShake((float) event.getPartialTick());
+        if (gShake > 0.001f) {
+            long now = System.currentTimeMillis();
+            long step = now / 16L;
+            float r1 = (float) ((step * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
+            float r2 = (float) (((step + 127L) * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
+            float pitchJitter = (r1 * 2.0f - 1.0f) * gShake * 0.6f;
+            float yawJitter   = (r2 * 2.0f - 1.0f) * gShake * 0.8f;
+            event.setPitch(event.getPitch() + net.minecraft.util.Mth.clamp(pitchJitter, -8.0f, 8.0f));
+            event.setYaw(event.getYaw() + net.minecraft.util.Mth.clamp(yawJitter, -8.0f, 8.0f));
         }
     }
 

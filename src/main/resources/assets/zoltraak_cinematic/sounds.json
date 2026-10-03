@@ -97,5 +97,38 @@
         "attenuation_distance": 32
       }
     ]
+  },
+  "singularity_charge": {
+    "subtitle": "subtitles.zoltraak_cinematic.singularity_charge",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:astral_singularity_charge",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "singularity_active": {
+    "subtitle": "subtitles.zoltraak_cinematic.singularity_active",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:astral_singularity_active",
+        "attenuation_distance": 64
+      }
+    ]
+  },
+  "singularity_explode": {
+    "subtitle": "subtitles.zoltraak_cinematic.singularity_explode",
+    "sounds": [
+      {
+        "name": "zoltraak_cinematic:astral_singularity_collapse",
+        "attenuation_distance": 128
+      }
+    ]
+  },
+  "tinnitus": {
+    "subtitle": "subtitles.zoltraak_cinematic.tinnitus",
+    "sounds": [
+      "zoltraak_cinematic:astral_singularity_tinnitus"
+    ]
   }
 }

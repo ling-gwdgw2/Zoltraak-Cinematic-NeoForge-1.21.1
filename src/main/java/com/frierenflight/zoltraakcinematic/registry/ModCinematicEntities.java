@@ -46,6 +46,15 @@ public class ModCinematicEntities {
                     .fireImmune()
                     .build(ZoltraakCinematicMod.MODID + ":qual_boss"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<com.frierenflight.zoltraakcinematic.entity.GargantuaEntity>> GARGANTUA =
+            ENTITIES.register("gargantua", () -> EntityType.Builder.<com.frierenflight.zoltraakcinematic.entity.GargantuaEntity>of(
+                            com.frierenflight.zoltraakcinematic.entity.GargantuaEntity::new, MobCategory.MISC)
+                    .sized(16.0f, 16.0f)
+                    .clientTrackingRange(256)
+                    .updateInterval(1)
+                    .noSave()
+                    .build(ZoltraakCinematicMod.MODID + ":gargantua"));
+
     public static void register(IEventBus eventBus) {
         ENTITIES.register(eventBus);
         eventBus.addListener(ModCinematicEntities::onEntityAttributeCreation);

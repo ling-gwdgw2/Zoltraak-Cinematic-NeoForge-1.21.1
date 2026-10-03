@@ -65,5 +65,15 @@
   "item.zoltraak_cinematic.horn_of_corruption.desc": "A radiant seven-pointed prismatic crystal condensed from the ancient mana of the Elder Sage Qual. Used as a supreme catalyst for crafting mythic artifacts.",
   "item.zoltraak_cinematic.corruption_core": "Qual's Core of Corruption",
   "item.zoltraak_cinematic.corruption_core.desc": "Singularity talisman torn from the Elder Sage. Grants massive Zoltraak power and rapid mana recovery.",
-  "message.zoltraak_cinematic.unsealing_started": "§c⚠ The ancient seal begins to crack! Frieren's runes turn blood-red! ⚠"
+  "message.zoltraak_cinematic.unsealing_started": "§c⚠ The ancient seal begins to crack! Frieren's runes turn blood-red! ⚠",
+  "item.zoltraak_cinematic.gargantua_scroll": "Scroll of Astral Singularity",
+  "spell.zoltraak_cinematic.gargantua": "Astral Singularity: Event Horizon",
+  "spell.zoltraak_cinematic.gargantua.desc": "Manifests an abyssal gravitational singularity born from supreme mana compression. Bends the geometry of space-time, inexorably pulling all matter and spellcraft past the event horizon before detonating in a cataclysmic cosmic rupture.",
+  "entity.zoltraak_cinematic.gargantua": "Astral Singularity",
+  "death.attack.gargantua": "%1$s was crushed across the Event Horizon of the Astral Singularity.",
+  "death.attack.gargantua.player": "%1$s was consumed by the Astral Singularity manifested by %2$s.",
+  "subtitles.zoltraak_cinematic.singularity_charge": "Spacetime fractures and compresses",
+  "subtitles.zoltraak_cinematic.singularity_active": "Singularity hums with gravitational waves",
+  "subtitles.zoltraak_cinematic.singularity_explode": "Astral Singularity detonates in cosmic collapse",
+  "subtitles.zoltraak_cinematic.tinnitus": "Acoustic shockwave rings in ears"
 }

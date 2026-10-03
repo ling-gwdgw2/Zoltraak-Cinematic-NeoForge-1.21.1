@@ -41,6 +41,9 @@ public class ModCinematicItems {
     public static final DeferredItem<Item> CORRUPTION_CORE =
             ITEMS.register("corruption_core", com.frierenflight.zoltraakcinematic.item.CorruptionCoreItem::new);
 
+    public static final DeferredItem<Item> GARGANTUA_SCROLL =
+            ITEMS.register("gargantua_scroll", com.frierenflight.zoltraakcinematic.item.GargantuaScrollItem::new);
+
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }

@@ -21,52 +21,10 @@
 
 ## Overview / ภาพรวมม็อด
 
-**Zoltraak: Cinematic Edition** is a premier visual addon for **Iron's Spells 'n Spellbooks (NeoForge 1.21.1)** that recreates the iconic "Ordinary Offensive Magic" (Zoltraak / ゾルトラーク) used by Frieren and Fern with cinema-grade fidelity.
-
-Built with a complete 19-layer visual stack, the spell delivers high-speed projectile mechanics, pre-cast piercing needles, tapered photonic beams, anamorphic lens flares, dynamic camera tracking, and devastating terminal shockwaves.
-
-**Zoltraak: Cinematic Edition** คือม็อด Addon คุณภาพสูงระดับ Cinematic สำหรับ **Iron's Spells 'n Spellbooks (Minecraft 1.21.1 NeoForge)** ที่ถอดแบบมหาเวทโจมตีสามัญ **"โซลทราค (Zoltraak / ゾルトラーク)"** จากอนิเมะ *คำอธิษฐานในวันที่จากลา (Frieren: Beyond Journey's End)* ให้มีความสมจริงระดับภาพยนตร์ 1:1 ตามสถาปัตยกรรม Unity VFX 19 เลเยอร์ พร้อมระบบเสียงกระหึ่มรอบทิศทาง และคทา 3D ประจำตัวของฟรีเรน
 
 ---
 
-## Features / จุดเด่นของม็อด
-
-### 1. 19-Layer Cinematic VFX Stack (ถอดแบบเอฟเฟกต์ 19 เลเยอร์)
-- **Zero Black Smoke**: ปราศจากควันดำหรือสะเก็ดดินปืน เป็นพลังงานแสงไอออนไนซ์พลาสมาและละอองดาวโบราณ 100%
-- **Single Magic Circle ($R = 0.8\text{m}$)**: วงเวทเดี่ยวระนาบเดียว อักขระสีขาวขอบทองสว่างเรืองรอง หมุนวนอย่างนุ่มนวล
-- **4-Point Center Aperture Cross Flare**: แสงประกายกากบาท 4 แฉกที่รูเปิดแกนกลางวงเวท
-- **Pre-Cast Piercing Spindle Needle ($3.5\text{m}$)**: เข็มแสงเรียวแหลมพุ่งแทงทะลุผ่านรูวงเวทออกไปข้างหน้า $3.5$ เมตรในเฟรมที่ $5$ ถึง $8$ ก่อนลำแสงหลักจะระเบิดออก
-- **Tapered Photonic Beam ($64\text{m}$)**: ลำแสงทรงกรวยเรียว 64 เมตร โคนลำแสงแคบกว่าปลายลำแสง ($1 : 1.46$) เสริมมิติความลึก (Perspective Depth)
-- **Pure White HDR Emissive Core**: แกนพลังงานสีขาวบริสุทธิ์เรืองรองขีดสุด
-- **Cyan-Violet Soft Sheath**: ม่านพลังงานสีฟ้าอมม่วงสะบัดหมุนวนรอบแกนแสง
-- **Terminal 10-Block Impact Detonation**:
-  - **10m Radial Starburst**: แสงดาวระเบิดหมุนวน 3 ระนาบ
-  - **17m Anamorphic Lens Flare Blade**: เส้นแสงสีขาวจ้าพาดขวางแนวนอนกว้าง 17 เมตร สไตล์เลนส์ภาพยนตร์ Hollywood
-  - **12m Vertical Spike Needle**: เสาแสงเข็มแนวตั้งพุ่งสูง 12 เมตร
-  - **13m Sparkling Particle Shockwave Halo**: วงแหวนคลื่นกระแทกขยายตัวรัศมีกว้างพร้อมประกายดาว
-  - **2.5m Over-Penetration Spike**: เข็มแสงทะลุทะลวงหลังเป้าหมาย $2.5$ เมตร
-
----
-
-### 2. Frieren's Staff (คทาของฟรีเรน)
-- **Custom 3D Voxel Model**: โมเดล 3 มิติความละเอียดสูง ออกแบบมุมมองและตำแหน่งมือจับอย่างแม่นยำ (First-Person, Third-Person, Ground, และ Inventory GUI)
-- **Iron's Spells Attribute Modifiers**:
-  - **Spell Power**: `+45%`
-  - **Max Mana**: `+500`
-  - **Cooldown Reduction**: `+20%`
-  - **Base Attack Damage**: `6.0`
-
----
-
-### 3. Combat Mechanics & Environment (ระบบต่อสู้และสิ่งแวดล้อม)
-- **Shield Breaker**: ทำลายและปลดการป้องกันของโล่ทันทีเมื่อสัมผัสลำแสง
-- **Distance-Based Blast Damage**: ความเสียหายของแรงระเบิดจะรุนแรงที่สุดที่จุดกึ่งกลางและลดหลั่นตามระยะทาง
-- **Crater Carving**: เจาะทะลวงบล็อกในรัศมี 3 บล็อก (ทำงานภายใต้ GameRule `mobGriefing` โดยไม่ทำลายบล็อกแข็งอย่าง Obsidian และ Bedrock)
-- **Real-Time Staff Tracking**: ซิงค์ตำแหน่งปลายคทาแบบ Real-Time ระหว่าง Server และ Client ทำให้มุมเล็งไม่ดีเลย์ขณะผู้เล่นหันเมาส์
-
----
-
-### 4. Self-Contained Procedural Geometry & Core GLSL Shaders
+### Self-Contained Procedural Geometry & Core GLSL Shaders
 (ระบบคำนวณเรขาคณิตสามมิติ และ Core Shader ประจำม็อดแบบ Standalone 100%)
 เดิมทีระบบเคยพึ่งพาโมดูลภายนอกอย่าง Photon และ KilaGraph แต่ในสถาปัตยกรรมปัจจุบัน ม็อดได้รับการพัฒนาสู่ **Pure Procedural Geometry & Dedicated GLSL 150 Shader Architecture**:
 - **Procedural Vector Mesh Engine (Blaze3D & JOML)**: คำนวณโครงสร้าง Mesh สดแบบ Real-Time ด้วยหลักคณิตศาสตร์เรขาคณิต (Dynamic Ribbons, Arcs, Spiral Rings, Tapered Cylinders) จึงให้ความลื่นไหลระดับภาพยนตร์โดยไม่ต้องพึ่งโมเดลภายนอก

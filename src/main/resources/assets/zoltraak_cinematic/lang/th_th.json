@@ -66,5 +66,15 @@
   "item.zoltraak_cinematic.horn_of_corruption.desc": "ผลึกแก้วปริซึม 7 สีที่ตกผลึกจากพลังเวทและเจตจำนงโบราณของมหาจอมเวทควาล เปล่งแสงประกายอัดแน่นไปด้วยมานาบริสุทธิ์ ใช้เป็นวัตถุดิบหลอมสร้างอุปกรณ์เวทระดับตำนาน",
   "item.zoltraak_cinematic.corruption_core": "แก่นแท้แห่งการเน่าเปื่อย (Qual's Core of Corruption)",
   "item.zoltraak_cinematic.corruption_core.desc": "แก่นผลึกหลุมดำที่สกัดจากทรวงอกของควาล เพิ่มพลังเวทโซลทราคมหาศาลและฟื้นฟูมานาอย่างรวดเร็ว",
-  "message.zoltraak_cinematic.unsealing_started": "§c⚠ รอยผนึกโบราณเริ่มปริแตก! อักขระเวทของฟรีเรนกำลังเปลี่ยนเป็นสีเลือด! ⚠"
+  "message.zoltraak_cinematic.unsealing_started": "§c⚠ รอยผนึกโบราณเริ่มปริแตก! อักขระเวทของฟรีเรนกำลังเปลี่ยนเป็นสีเลือด! ⚠",
+  "item.zoltraak_cinematic.gargantua_scroll": "คัมภีร์มหาเวทเอกภาวะหลุมดำ (Scroll of Astral Singularity)",
+  "spell.zoltraak_cinematic.gargantua": "เอกภาวะหลุมดำ: ขอบฟ้าเหตุการณ์ (Astral Singularity)",
+  "spell.zoltraak_cinematic.gargantua.desc": "มหาเวทมนตร์โบราณที่บีบอัดมวลพลังเวทจนถึงจุดวิกฤต ก่อกำเนิดเอกภาวะแรงโน้มถ่วงมหาศาลที่บิดเบือนกาลอวกาศ ดูดกลืนสสาร กระสุนเวท และศัตรูเข้าสู่ขอบฟ้าเหตุการณ์ ก่อนจะระเบิดแตกดับปลดปล่อยคลื่นกระแทกทำลายล้างจักรวาล",
+  "entity.zoltraak_cinematic.gargantua": "เอกภาวะหลุมดำมหาเวท",
+  "death.attack.gargantua": "%1$s ถูกบดขยี้ข้ามขอบฟ้าเหตุการณ์ของเอกภาวะหลุมดำ",
+  "death.attack.gargantua.player": "%1$s ถูกกลืนกินเข้าสู่เอกภาวะหลุมดำที่ร่ายโดย %2$s",
+  "subtitles.zoltraak_cinematic.singularity_charge": "กาลอวกาศบิดเบี้ยวและบีบอัดอย่างรุนแรง",
+  "subtitles.zoltraak_cinematic.singularity_active": "คลื่นความโน้มถ่วงของหลุมดำส่งเสียงกึกก้อง",
+  "subtitles.zoltraak_cinematic.singularity_explode": "เอกภาวะหลุมดำระเบิดยุบตัวทำลายล้าง",
+  "subtitles.zoltraak_cinematic.tinnitus": "เสียงคลื่นกระแทกสะท้อนก้องในหู"
 }

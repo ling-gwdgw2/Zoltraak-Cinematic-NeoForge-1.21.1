@@ -57,6 +57,23 @@ public class ModCinematicSounds {
             SOUND_EVENTS.register("qual_teleport", () ->
                     SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "qual_teleport")));
 
+    // --- Gargantua Singularity Sound Events ---
+    public static final DeferredHolder<SoundEvent, SoundEvent> SINGULARITY_CHARGE =
+            SOUND_EVENTS.register("singularity_charge", () ->
+                    SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "singularity_charge")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> SINGULARITY_ACTIVE =
+            SOUND_EVENTS.register("singularity_active", () ->
+                    SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "singularity_active")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> SINGULARITY_EXPLODE =
+            SOUND_EVENTS.register("singularity_explode", () ->
+                    SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "singularity_explode")));
+
+    public static final DeferredHolder<SoundEvent, SoundEvent> TINNITUS =
+            SOUND_EVENTS.register("tinnitus", () ->
+                    SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "tinnitus")));
+
     public static void register(IEventBus eventBus) {
         SOUND_EVENTS.register(eventBus);
     }

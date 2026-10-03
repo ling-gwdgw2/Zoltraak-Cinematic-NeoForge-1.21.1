@@ -30,6 +30,9 @@ public class ModCinematicSpells {
     public static final DeferredHolder<AbstractSpell, AbstractSpell> FLIGHT =
             SPELLS.register("flight", com.frierenflight.zoltraakcinematic.spell.FlightMagicSpell::new);
 
+    public static final DeferredHolder<AbstractSpell, AbstractSpell> GARGANTUA =
+            SPELLS.register("gargantua", com.frierenflight.zoltraakcinematic.spell.GargantuaSpell::new);
+
     public static void register(IEventBus eventBus) {
         SPELLS.register(eventBus);
     }
