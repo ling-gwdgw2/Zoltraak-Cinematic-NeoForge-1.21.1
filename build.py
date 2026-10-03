@@ -77,15 +77,24 @@ def build():
     except Exception as e:
         print(f"[WARNING] Could not copy to parent: {e}")
 
-    # Copy to Curseforge test instance mods folder
-    cf_mods = r"C:\Users\vivo9\curseforge\minecraft\Instances\LING Horizons2.0test\mods"
-    if os.path.exists(cf_mods):
-        try:
-            cf_target = os.path.join(cf_mods, os.path.basename(out_jar))
-            shutil.copy2(out_jar, cf_target)
-            print(f"[SUCCESS] Copied to Curseforge test instance: {cf_target}")
-        except Exception as e:
-            print(f"[WARNING] Could not copy to Curseforge instance: {e}")
+    # Copy to Curseforge test instances
+    target_instances = [
+        r"C:\Users\vivo9\curseforge\minecraft\Instances\LING Horizons2.0test\mods",
+        r"C:\Users\vivo9\curseforge\minecraft\Instances\G&D (1)\mods"
+    ]
+    for target_dir in target_instances:
+        if os.path.exists(target_dir):
+            try:
+                dest = os.path.join(target_dir, os.path.basename(out_jar))
+                shutil.copy2(out_jar, dest)
+                print(f"[SUCCESS] Copied to instance: {dest}")
+                # Also overwrite beta2 filename if it exists in target_dir
+                beta2 = os.path.join(target_dir, "zoltraak_cinematic-neoforge-1.21.1-1.0.0beta2.jar")
+                if os.path.exists(beta2):
+                    shutil.copy2(out_jar, beta2)
+                    print(f"[SUCCESS] Updated beta2 file in instance: {beta2}")
+            except Exception as e:
+                print(f"[WARNING] Could not copy to instance {target_dir}: {e}")
 
     # 4. Verify contents
     with zipfile.ZipFile(out_jar, 'r') as z:

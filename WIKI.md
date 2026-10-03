@@ -151,29 +151,30 @@ Mankind's standardized magic system, reverse-engineered and perfected by humanit
 
 ---
 
-### 7. Astral Singularity: Event Horizon (虚無の特異点 - イベントホライズン)
-> *"Manifests an abyssal gravitational singularity born from supreme mana compression. Bends the geometry of space-time, inexorably pulling all matter and spellcraft past the event horizon before detonating in a cataclysmic cosmic rupture."*
+### 7. Astral Singularity: Gargantua (アストラル・シンギュラリティ - ガルガンチュア)
+> *"Manifests an abyssal gravitational singularity born from supreme mana compression and dragonic cosmic essence. Bends the geometry of space-time, pulling matter and spellcraft into a relativistic accretion vortex before detonating in an apocalyptic supernova."*
 
 - **Spell ID**: `zoltraak_cinematic:gargantua` (Alias / Display: `Astral Singularity`)
-- **School**: Ender (`SchoolRegistry.ENDER_RESOURCE`)
-- **Cast Type**: Long Cast (`LONG`, 3.0s / 60 ticks charge)
+- **School**: Black Hole Magic (`ModCinematicSchools.BLACK_HOLE`)
+- **Cast Type**: Long Cast (`LONG`, 4.0s / 80 ticks charge)
 - **Rarity**: Legendary (`LEGENDARY`, Level 1)
-- **Cooldown**: 300.0 seconds (5 minutes)
-- **Mana Cost**: 2,200 Mana
-- **Base Power**: 100 Base Spell Power (Tidal ripping & 120 explosion damage)
-- **Range**: 48 blocks
-- **Lifetime**: 400 ticks (20.0 seconds)
-- **General Relativistic Shader Architecture**:
-  - **Kerr Geodesic Raymarching**: Computes exact light deflection around a spinning black hole according to general relativity ($\frac{d^2u}{d\phi^2} + u = 3Mu^2$).
-  - **Volumetric Accretion Disk**: 3-octave rotating fractal plasma disk with relativistic Doppler beaming (approaching matter blueshifts brighter, receding redshifts dimmer).
-  - **Thorne Metric Radii**: Photon sphere radius at $2.6 r_g$, event horizon shadow at $1.8 r_g$, and innermost stable circular orbit (ISCO) at $3.83 r_g$.
-  - **Procedural Deep Celestial Starfield**: Seamlessly renders Kali's `starNest` celestial backdrop for lensed background rays.
-  - **Scene Depth Occlusion**: Reads vanilla depth buffer to accurately occlude the black hole behind terrain, blocks, and structures.
-- **4-Phase Singularity Lifecycle**:
-  1. **Phase 1: Spacetime Tear (Ticks 0–40 / 0–2.0s)**: A violently expanding dimensional rift opens with rising chromatic aberration, high-pitch spacetime tearing acoustics, and camera shudder.
-  2. **Phase 2: Relativistic Accretion & Gravitational Infall (Ticks 40–260 / 2.0–13.0s)**: High-gravity suction exerts inward acceleration ($0.065 \text{ m/t}^2$) on all entities within 28 blocks. Projectiles and items crossing the 7.2-block event horizon are completely vaporized. Living entities suffer catastrophic tidal ripping damage (15% max HP / 0.4s).
-  3. **Phase 3: Criticality & Ergosphere Flare (Ticks 260–290 / 13.0–14.5s)**: The accretion disk spins frantically, overheating into blinding white-violet plasma as the core destabilizes.
-  4. **Phase 4: Catastrophic Collapse Detonation (Tick 290 / 14.5s)**: An apocalyptic gamma-ray blast detonates, dealing **120 void explosion damage** in a 24-block radius, triggering a full-screen acoustic tinnitus flash and violent multi-frequency camera rumble before the singularity dissolves into quantum vapor.
+- **Cooldown**: 600.0 seconds (10 minutes)
+- **Mana Cost**: 2,500 Mana
+- **Crafting Ingredient**: Ender Dragon Egg (`minecraft:dragon_egg`) + Nether Star + Crying Obsidian + Echo Shard
+- **Scaling Attribute**: Black Hole Spell Power (`ModCinematicAttributes.BLACK_HOLE_SPELL_POWER`)
+- **Damage Tags**:
+  - `#minecraft:bypasses_shield` (Unblockable by shields)
+  - `#minecraft:bypasses_armor` (Ignores armor and damage reduction)
+  - `#minecraft:is_magic` / `#neoforge:is_magic` / `#c:is_magic` (Pure magic damage)
+  - `#minecraft:always_hurts_ender_dragons` (Penetrates dragon boss damage immunity)
+- **Combat & Damage Mechanics**:
+  - **Accretion Disk Continuous Damage (0 – 32 blocks)**:
+    - **Event Horizon Core ($\le 7.2$ blocks)**: Maximum gravitational tidal crushing (**20% Max HP / 0.4s**).
+    - **Accretion Disk Relativistic Plasma ($7.2 < d \le 32.0$ blocks)**: Continuous plasma shear (**6% – 20% Max HP / 0.4s**, scaling with proximity).
+  - **Boss Anti-Cheese Immunity**: Boss anti-snipe mechanics are completely bypassed because damage is attributed to the singularity entity situated right next to the boss, while player kill credit, loot, and XP are 100% preserved.
+  - **Multi-Part Boss Support**: Full multi-part hit detection and damage forwarding (Ender Dragon, Cataclysm Netherite Monstrosity, Ignis, Leviathan).
+  - **Zero Item Deletion**: Items and drops are **never deleted or swallowed** into the void; they swirl safely and remain completely intact for player retrieval.
+  - **Final Supernova Detonation (Tick 1100 / 55.0s)**: Cataclysmic void explosion dealing base 200+ void damage (scaled by Black Hole Spell Power) + swallowed mass bonus across a 32-block radius.
 - **Testing Commands**:
   - `/singularity` or `/zoltraak singularity` (Admin/Cheats required) spawns the singularity 24 blocks ahead of the player.
 
@@ -389,6 +390,8 @@ When fully equipped with the complete Frieren Artifact Set:
 | :--- | :--- | :--- |
 | **Zoltraak Spell Power** | `zoltraak_cinematic:zoltraak_spell_power` | เพิ่มพลังโจมตีเวทมนตร์ตระกูล Zoltraak โดยเฉพาะ ทวีคูณความเสียหายทั้งลำแสงปกติและห่าฝนกระสุน |
 | **Zoltraak Resistance** | `zoltraak_cinematic:zoltraak_magic_resist` | ลดทอนความเสียหายที่ได้รับจากเวทมนตร์ Zoltraak ป้องกันการถูกโจมตีแบบ One-Shot จากเวทมนตร์ประเภทเดียวกัน |
+| **Black Hole Spell Power** | `zoltraak_cinematic:black_hole_spell_power` | เพิ่มพลังโจมตีเวทมนตร์สายหลุมดำ ทวีคูณดาเมจการดึงดูดและการระเบิดซูเปอร์โนวา |
+| **Black Hole Resistance** | `zoltraak_cinematic:black_hole_magic_resist` | เพิ่มความต้านทานต่อคลื่นแรงโน้มถ่วงและดาเมจของเวทมนตร์หลุมดำ |
 
 ---
 
@@ -512,25 +515,40 @@ When fully equipped with the complete Frieren Artifact Set:
 > *"มหาเวทมนตร์โบราณที่บีบอัดมวลพลังเวทจนถึงจุดวิกฤต ก่อกำเนิดเอกภาวะแรงโน้มถ่วงมหาศาลที่บิดเบือนกาลอวกาศ ดูดกลืนสสาร กระสุนเวท และศัตรูเข้าสู่ขอบฟ้าเหตุการณ์ ก่อนจะระเบิดแตกดับปลดปล่อยคลื่นกระแทกทำลายล้างจักรวาล"*
 
 - **Spell ID**: `zoltraak_cinematic:gargantua` (ชื่อแสดง: `เอกภาวะหลุมดำ: ขอบฟ้าเหตุการณ์`)
-- **สายเวท**: Ender (`SchoolRegistry.ENDER_RESOURCE`)
-- **ประเภทการร่าย (Cast Type)**: ร่ายนาน (`LONG`, ชาร์จ 3.0 วินาที / 60 ticks)
+- **สายเวท (School)**: หลุมดำ (`zoltraak_cinematic:black_hole`) — ใช้ไข่ของเอนเดอร์ดราก้อน (`minecraft:dragon_egg`) เป็นสื่อนำประจำสาย (School Focus)
+- **ประเภทการร่าย (Cast Type)**: ร่ายนาน (`LONG`, ชาร์จ **4.0 วินาที** / 80 ticks)
 - **ความหายาก (Rarity)**: ระดับตำนาน (`LEGENDARY`, เลเวล 1)
-- **คูลดาวน์ (Cooldown)**: 300.0 วินาที (5 นาที)
-- **ค่าร่ายมานา (Mana Cost)**: 2,200 มานา
-- **พลังทำลาย (Base Power)**: 100 ดาเมจพื้นฐาน (ดาเมจฉีกกระชากไทดัล 15% Max HP + ดาเมจระเบิดมิติมหึมา 120 ดาเมจ)
+- **คูลดาวน์ (Cooldown)**: **600.0 วินาที (10 นาที)**
+- **ค่าร่ายมานา (Mana Cost)**: 3000 มานา
+- **การสร้างและคราฟต์ (Crafting & Scroll Forge)**:
+  - **Crafting Table**: วาง **Dragon Egg (ไข่มังกร)** ไว้ตรงกลาง ล้อมด้วย Legendary Ink (บน), Paper (ล่าง), Arcane Essence (ซ้าย/ขวา) และ Ender Rune (4 มุม) เพื่อคราฟต์คัมภีร์ `gargantua_scroll`
+  - **Scroll Forge (แท่นหลอมคัมภีร์)**: ใช้ **Dragon Egg** เป็น School Focus Item ประจำสายเวทหลุมดำ ร่วมกับ Legendary Ink และ Blank Scroll
+- **พลังทำลาย (Base Power)**: 500 พลังเวท (ดาเมจฉีกกระชากไทดัล 20% Max HP + คลื่นกระแทกซูเปอร์โนวา 800 ดาเมจพื้นฐาน ซึ่งสเกลตาม **Black Hole Spell Power** ของชุดและไอเทมที่สวมใส่)
+- **ประเภทดาเมจและแท็ก (Damage Type & Tags)**: `zoltraak_cinematic:gargantua` บรรจุแท็ก `#minecraft:bypasses_shield` (ไม่สามารถยกโล่บล็อกได้), `#minecraft:bypasses_armor` (ทะลุชุดเกราะและการป้องกัน), `#minecraft:is_magic` / `#neoforge:is_magic` (ดาเมจเวทมนตร์), และ `#minecraft:always_hurts_ender_dragons`
+- **ระบบ Boss Anti-Cheese Bypass**: รองรับบอสทุกประเภท (รวมถึงบอส Cataclysm และ Ender Dragon) โดยหากผู้ร่ายถอยห่างเกินระยะจำกัด (> 45-60 บล็อก) หลุมดำจะส่งดาเมจในฐานะแหล่งกำเนิดวัตถุอิสระทันที ทำให้บอสไม่สามารถใช้กลไก Anti-Cheese ปัดดาเมจเป็น 0 ได้ และผู้ร่ายยังคงได้รับเครดิตการสังหาร 100% ผ่าน `TraceableEntity`
 - **ระยะการร่าย**: 48 บล็อก
-- **ระยะเวลาการคงอยู่**: 400 ticks (20 วินาที)
+- **ระยะเวลาการคงอยู่**: 1,200 ticks (60.0 วินาที / 1 นาทีเต็ม)
 - **ระบบกราฟิกสัมพัทธภาพทั่วไป (General Relativistic Shader FX)**:
   - **Kerr Geodesic Raymarching**: คำนวณวิถีการโค้งงอของเส้นทางแสงรอบหลุมดำหมุนอย่างแม่นยำตามสมการสัมพัทธภาพทั่วไป ($\frac{d^2u}{d\phi^2} + u = 3Mu^2$)
   - **Volumetric Accretion Disk**: จานพอกพูนมวลพลาสมาหมุนวน 3 มิติ 3 อ็อกเทฟ พร้อมปรากฏการณ์ Doppler Beaming (ด้านที่หมุนเข้าหาตาจะสว่างจ้าและเปลี่ยนสีน้ำเงิน ส่วนด้านที่หมุนออกจะมืดลง)
   - **รัศมีทางฟิสิกส์ดาราศาสตร์**: วงแหวนโฟตอน (Photon Sphere) ที่ $2.6 r_g$, ขอบฟ้าเหตุการณ์ (Event Horizon Shadow) ที่ $1.8 r_g$, และวงโคจรเสถียรชั้นในสุด (ISCO) ที่ $3.83 r_g$
   - **ห้วงอวกาศดวงดาวลึก**: คำนวณฉากหลังจักรวาลด้วยอัลกอริทึม StarNest ของ Kali แบบเรียลไทม์
   - **Depth Buffer Occlusion**: ตรวจสอบความลึกของฉากในเกม ทำให้หลุมดำถูกสิ่งปลูกสร้าง บล็อก และภูมิประเทศบดบังได้อย่างสมจริง
-- **วัฏจักรการทำงาน 4 เฟสของหลุมดำ**:
-  1. **เฟส 1: รอยแยกมิติเวลา (Ticks 0–40 / 0–2.0 วิ)**: ประตูดำมืดเปิดออกพร้อมเสียงฉีกกระชากความถี่สูงและเอฟเฟกต์เลนส์บิดเบี้ยว
-  2. **เฟส 2: การดึงดูดและฉีกกระชากแรงโน้มถ่วง (Ticks 40–260 / 2.0–13.0 วิ)**: ก่อแรงโน้มถ่วงมหาศาลดึงดูดศัตรูในระยะ 28 บล็อกเข้าสู่ศูนย์กลาง กระสุนและไอเทมที่หลุดเข้าสู่ขอบฟ้าเหตุการณ์ (7.2 บล็อก) จะถูกทำลายล้างทันที สิ่งมีชีวิตจะโดนดาเมจ Tidal Disruption 15% Max HP ต่อ 0.4 วินาที
-  3. **เฟส 3: ภาวะวิกฤตความไม่เสถียร (Ticks 260–290 / 13.0–14.5 วิ)**: จานพอกพูนมวลหมุนเร็วขึ้นจนกลายเป็นพลาสมาสีขาวสว่างจ้า
-  4. **เฟส 4: การระเบิดยุบตัวครั้งหายนะ (Tick 290 / 14.5 วิ)**: ปลดปล่อยคลื่นกระแทกทำลายล้าง **120 ดาเมจ** ในรัศมี 24 บล็อก พร้อมเสียงวิ้งในหู (Tinnitus) และหน้าจอสั่นสะเทือนอย่างรุนแรง ก่อนที่หลุมดำจะสลายตัวไปอย่างเงียบสงบ
+- **วัฏจักรการทำงาน 5 เฟสของหลุมดำ**:
+  1. **เฟส 1: รอยแยกมิติเวลาก่อกำเนิด (Ticks 0–60 / 0–3.0 วิ)**: กาลอวกาศฉีกขาด ประตูดำมืดขยายตัวพร้อมคลื่นเสียงความถี่ต่ำสะเทือนเลื่อนลั่น
+  2. **เฟส 2: การพอกพูนมวล ดึงดูดแรงโน้มถ่วงมหาศาล และฉีกกระชากผิวโลก (Ticks 60–1060 / 3.0–53.0 วิ)**: ก่อกำเนิดสนามแรงโน้มถ่วงมหาศาลดึงดูดศัตรู กระสุน และเศษซากในรัศมีไกลถึง **100 บล็อก** (ปรับแต่งได้ใน config) เข้าสู่ศูนย์กลาง พร้อมฉีกเศษบล็อกจากพื้นผิวลอยขึ้นวนรอบจานพอกพูนมวล สิ่งมีชีวิตที่ถูกดึงดูดหลุดเข้าไปในขอบฟ้าเหตุการณ์จะได้รับดาเมจ Tidal Disruption **20% Max HP** (ขั้นต่ำ 35 DMG) ทุกๆ 0.4 วินาที (ข้าม I-Frames, ทะลุโล่และเกราะ)
+  3. **เฟส 3: ภาวะวิกฤตการยุบตัวแรงโน้มถ่วง (Ticks 1060–1100 / 53.0–55.0 วิ)**: จานพอกพูนมวลหมุนเร็วจัดและบีบอัดมวลพลังงานจนกลายเป็นสีขาวสว่างจ้าถึงขีดสุด
+  4. **เฟส 4: มหาคลื่นกระแทกซูเปอร์โนวาแตกดับ (Tick 1100 / 55.0 วิ)**: ปลดปล่อยคลื่นกระแทกทำลายล้างมหาศาล **800 ดาเมจพื้นฐาน × ตัวคูณ Black Hole Spell Power** (+โบนัสดาเมจสูงสุด 200 จากเศษบล็อก/สสารที่ถูกกลืน) ในรัศมี 32 บล็อก พร้อมแสงวาบเต็มหน้าจอและเสียงหูอื้อวิ้ง (Tinnitus)
+  5. **เฟส 5: การฟื้นฟูโลกสมบูรณ์แบบ (Pristine World Auto-Reconstruction, Ticks 1108–1200 / 55.4–60.0 วิ)**: บล็อกทั้งหมดที่ถูกกลืนจะค่อยๆ ลอยลงมาก่อตัวประกอบคืนตำแหน่งเดิมจากล่างขึ้นบนจนภูมิประเทศกลับมาสมบูรณ์ 100% ไร้ร่องรอยความเสียหาย
+- **การตั้งค่าระบบผ่านไฟล์ Config (`config/zoltraak_cinematic-common.toml`)**:
+  - `gargantua.pullRadius`: รัศมีสนามแรงโน้มถ่วงดึงดูด (ค่าเริ่มต้น: `100.0`, ปรับได้ตั้งแต่ `10.0` ถึง `300.0` บล็อก)
+  - `gargantua.tidalDamagePercent`: ดาเมจฉีกกระชากไทดัลตาม % Max HP ของเป้าหมาย (ค่าเริ่มต้น: `0.20` = 20% Max HP ทุก 0.4 วินาที)
+  - `gargantua.blastDamage`: ดาเมจพื้นฐานของการระเบิดซูเปอร์โนวา (ค่าเริ่มต้น: `800.0`, ปรับได้ถึง `10000.0`)
+  - `gargantua.blastRadius`: รัศมีการระเบิดซูเปอร์โนวา (ค่าเริ่มต้น: `32.0` บล็อก)
+  - `gargantua.pullAcceleration`: อัตราเร่งแรงโน้มถ่วงดึงดูดพื้นฐาน (ค่าเริ่มต้น: `0.12`, ปรับได้ตั้งแต่ `0.01` ถึง `2.0`)
+  - `gargantua.autoReconstructBlocks`: ซ่อมแซมบล็อกคืนโลก 100% หลังระเบิดจบ (`true` / `false`)
+  - `gargantua.tearBlocks`: เปิด/ปิดการฉีกบล็อกจากพื้นผิว (`true` / `false`)
+  - `gargantua.respectMobGriefing`: ปฏิบัติตามกฎ `mobGriefing` ของเซิร์ฟเวอร์หรือไม่ (`true` / `false`)
 - **คำสั่งทดสอบ**:
   - `/singularity` หรือ `/zoltraak singularity` (ต้องเปิดสูตร Cheats/Admin) เสกหลุมดำออกมาด้านหน้าผู้เล่น 24 บล็อกทันที
 

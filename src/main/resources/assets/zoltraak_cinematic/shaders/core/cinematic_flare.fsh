@@ -2,7 +2,6 @@
 
 uniform sampler2D Sampler0;
 uniform vec4 ColorModulator;
-uniform float GameTime;
 
 in vec2 uv;
 in vec4 vertexColor;

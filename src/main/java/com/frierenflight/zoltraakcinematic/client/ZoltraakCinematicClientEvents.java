@@ -28,6 +28,7 @@ public class ZoltraakCinematicClientEvents {
     private static float shakeIntensity = 0.0f;
 
     private static int flashDuration = 0;
+    private static int maxFlashDuration = 0;
     private static float flashIntensity = 0.0f;
 
     private static int barrageRumbleTicks = 0;
@@ -176,34 +177,40 @@ public class ZoltraakCinematicClientEvents {
         float gShake = com.frierenflight.zoltraakcinematic.client.renderer.GargantuaShake.currentShake((float) event.getPartialTick());
         if (gShake > 0.001f) {
             long now = System.currentTimeMillis();
-            long step = now / 16L;
+            long step = now / 14L;
             float r1 = (float) ((step * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
             float r2 = (float) (((step + 127L) * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
-            float pitchJitter = (r1 * 2.0f - 1.0f) * gShake * 0.6f;
-            float yawJitter   = (r2 * 2.0f - 1.0f) * gShake * 0.8f;
-            event.setPitch(event.getPitch() + net.minecraft.util.Mth.clamp(pitchJitter, -8.0f, 8.0f));
-            event.setYaw(event.getYaw() + net.minecraft.util.Mth.clamp(yawJitter, -8.0f, 8.0f));
+            float pitchJitter = (r1 * 2.0f - 1.0f) * gShake * 0.85f;
+            float yawJitter   = (r2 * 2.0f - 1.0f) * gShake * 1.15f;
+            event.setPitch(event.getPitch() + net.minecraft.util.Mth.clamp(pitchJitter, -12.0f, 12.0f));
+            event.setYaw(event.getYaw() + net.minecraft.util.Mth.clamp(yawJitter, -12.0f, 12.0f));
         }
+    }
+
+    public static void triggerFlash(int duration, float intensity) {
+        flashDuration = duration;
+        maxFlashDuration = duration;
+        flashIntensity = intensity;
     }
 
     /**
      * Renders a brief high-exposure blinding white flash and chromatic edge fringe in First-Person.
      */
     public static void onRenderGui(RenderGuiEvent.Post event) {
-        if (flashDuration > 0) {
+        if (flashDuration > 0 && maxFlashDuration > 0) {
             float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
-            float progress = Math.max(0.0f, (flashDuration - partial) / 3.0f) * flashIntensity;
-            int alpha = (int) (progress * 135);
+            float progress = Math.max(0.0f, (float) flashDuration - partial) / (float) maxFlashDuration * flashIntensity;
+            int alpha = (int) (net.minecraft.util.Mth.clamp(progress, 0.0f, 1.0f) * 230.0f);
             if (alpha > 0) {
                 int w = event.getGuiGraphics().guiWidth();
                 int h = event.getGuiGraphics().guiHeight();
 
                 // High-exposure blinding white/cyan flash overlay
-                int flashColor = (alpha << 24) | 0xE8F8FF;
+                int flashColor = (alpha << 24) | 0xFFFFFF;
                 event.getGuiGraphics().fill(0, 0, w, h, flashColor);
 
                 // Subtle chromatic fringe at screen borders (cyan left, violet right)
-                int borderAlpha = (int) (progress * 75);
+                int borderAlpha = (int) (progress * 90.0f);
                 if (borderAlpha > 0) {
                     int cyanEdge = (borderAlpha << 24) | 0x00E5FF;
                     int violetEdge = (borderAlpha << 24) | 0xC040FF;
@@ -224,7 +231,10 @@ public class ZoltraakCinematicClientEvents {
         }
         if (flashDuration > 0) {
             flashDuration--;
-            if (flashDuration == 0) flashIntensity = 0.0f;
+            if (flashDuration == 0) {
+                flashIntensity = 0.0f;
+                maxFlashDuration = 0;
+            }
         }
         if (barrageRumbleTicks > 0) {
             barrageRumbleTicks--;

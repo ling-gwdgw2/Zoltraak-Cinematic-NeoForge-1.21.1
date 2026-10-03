@@ -39,6 +39,25 @@ public class ModCinematicSchools {
             )
     );
 
+    public static final ResourceLocation BLACK_HOLE_RESOURCE =
+            ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "black_hole");
+
+    public static final TagKey<Item> BLACK_HOLE_FOCUS =
+            ItemTags.create(ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "black_hole_focus"));
+
+    public static final DeferredHolder<SchoolType, SchoolType> BLACK_HOLE = SCHOOLS.register("black_hole", () ->
+            new SchoolType(
+                    BLACK_HOLE_RESOURCE,
+                    BLACK_HOLE_FOCUS,
+                    Component.translatable("school.zoltraak_cinematic.black_hole")
+                            .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0x8A2BE2))),
+                    ModCinematicAttributes.BLACK_HOLE_SPELL_POWER,
+                    ModCinematicAttributes.BLACK_HOLE_MAGIC_RESIST,
+                    ModCinematicSounds.SINGULARITY_ACTIVE,
+                    DamageTypes.MAGIC
+            )
+    );
+
     public static void register(IEventBus modEventBus) {
         SCHOOLS.register(modEventBus);
     }

@@ -1,8 +1,13 @@
 {
   "itemGroup.zoltraak_cinematic.tab": "Zoltraak Cinematic Edition",
   "school.zoltraak_cinematic.ordinary_magic": "Ordinary Magic",
+  "school.zoltraak_cinematic.black_hole": "Black Hole Magic",
   "attribute.zoltraak_cinematic.zoltraak_spell_power": "Zoltraak Spell Power",
   "attribute.zoltraak_cinematic.zoltraak_magic_resist": "Zoltraak Resistance",
+  "attribute.zoltraak_cinematic.black_hole_spell_power": "Black Hole Spell Power",
+  "attribute.zoltraak_cinematic.black_hole_magic_resist": "Black Hole Resistance",
+  "item.zoltraak_cinematic.affinity_ring_black_hole": "Ring of Black Hole Affinity",
+  "item.zoltraak_cinematic.affinity_ring_ordinary_magic": "Ring of Ordinary Magic Affinity",
   "spell.zoltraak_cinematic.zoltraak": "Zoltraak: Frieren Blast",
   "spell.zoltraak_cinematic.zoltraak.desc": "Ordinary Offensive Magic (人類の魔法). Unleashes an ultra-realistic, hypersonic piercing photonic beam with devastating 10-block terminal shockwave and HDR bloom.",
   "spell.zoltraak_cinematic.corrupted_zoltraak": "Corrupted Zoltraak: Qual",

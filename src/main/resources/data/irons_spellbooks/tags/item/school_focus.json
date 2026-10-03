@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "#zoltraak_cinematic:ordinary_magic_focus"
+    "#zoltraak_cinematic:ordinary_magic_focus",
+    "#zoltraak_cinematic:black_hole_focus"
   ]
 }

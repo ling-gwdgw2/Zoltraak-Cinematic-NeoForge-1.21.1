@@ -10,20 +10,6 @@ out vec4 fragColor;
 #define SL_SKY_DEPTH 0.99999
 
 // Volumetric star field: Kali's "Star Nest", from Shadertoy.
-//
-// NOT original to this mod or to ArcaneVortex, which is where it was found. It is Kali's
-// work, reproduced here with the constants unchanged โ€” iterations 17, formuparam 0.53,
-// volsteps 20, tile 0.85, darkmatter 0.10, distfading 0.73 โ€” and credited in CREDITS.txt.
-// The mod author confirmed on 2026-08-28 that Shadertoy use is permitted here; the
-// attribution is kept regardless, since that is the one obligation every plausible
-// licence shares.
-//
-// Adapted in one way only: the original derives its ray direction from screen coordinates
-// and a camera rotation, because it is a full-screen backdrop. Here a world-space
-// direction is passed in instead, so it can be sampled along a light ray that gravity has
-// already bent. That makes it a real celestial sphere โ€” the same direction always returns
-// the same stars, which is what stops it sliding about as the camera turns.
-
 #ifndef STAR_NEST_GLSL
 #define STAR_NEST_GLSL
 
@@ -37,12 +23,6 @@ out vec4 fragColor;
 #define SN_DISTFADING 0.730
 #define SN_SATURATION 0.850
 
-/**
- * The field along a unit world direction.
- *
- * @param dir   unit direction to look along
- * @param drift how far to have travelled through the field, for slow parallax
- */
 vec3 starNest(vec3 dir, float drift) {
     vec3 from = vec3(1.0, 0.5, 0.5) + vec3(drift * 2.0, drift, -2.0);
 
@@ -113,7 +93,6 @@ vec3 starNest(vec3 dir, float drift) {
 // looked like a painted ring.
 
 uniform mat4 InverseProjectionMat;
-uniform mat4 ProjectionMat;
 // xyz = hole centre in OpenGL eye space (-Z forward), w = r_g in blocks
 uniform vec4 HoleCentre;
 // xyz = spin axis in eye space, unit length; w = spin a/M
@@ -123,25 +102,18 @@ uniform vec4 HoleState;
 // x = disk inner radius, y = outer radius, both in r_g; z = h/r; w = brightness
 uniform vec4 DiskShape;
 
-const int GARG_STEPS_MAX = 96;
+const int GARG_STEPS_MAX = 112;
 const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 60.0;
 const float GARG_TAU = 6.2831853;
-// Half-thickness at the inner and outer edge, in r_g. The real disk is nearer
-// h/r = 1e-3 -- Thorne calls it a sheet of paper -- but at that scale it is thinner
-// than a pixel and vanishes, so this is thickened to roughly 0.03 of the radius.
-const float GARG_THICK_INNER = 0.46;
-const float GARG_THICK_OUTER = 0.26;
+// Half-thickness at the inner and outer edge, in r_g. Slender, sleek proportions matching Interstellar
+const float GARG_THICK_INNER = 0.38;
+const float GARG_THICK_OUTER = 0.20;
 
 /**
- * Disk colour by radius: pale white-yellow at the inner edge grading to amber and
- * then orange, with no blue anywhere.
- *
- * That absence is the physics, not a style choice. Gargantua has not been fed in
- * millions of years, so its accretion rate is tiny and the disk sits around 4500 K --
- * about the Sun's photosphere. A normally-fed disk would be blue-white, would emit
- * X-rays, and would have sterilised every planet near it.
+ * Disk colour by radius: pale white-yellow at the inner edge grading to radiant champagne gold,
+ * glowing amber and interstellar bronze-orange, matching authentic Gargantua.
  */
 vec3 gargDiskColour(float t) {
     vec3 c0 = vec3(1.000, 0.973, 0.902);
@@ -165,12 +137,6 @@ float gargWhiteNoise(vec2 uv) {
 /**
  * Entry and exit distance along a ray for a sphere at the origin, or (-1,-1) on a
  * miss. Entry is clamped to zero so a camera inside the sphere starts where it is.
- *
- * From ArcaneVortex: confining the march to a bounding sphere is the single biggest
- * saving in the whole pass. Marching from the camera means most steps are spent
- * crossing empty space before the ray is anywhere near the hole, which is why the
- * step budget had to be spread thin. Starting at the sphere puts every step where
- * something can actually happen.
  */
 vec2 gargSphereHit(vec3 origin, vec3 dir, float radius) {
     float b = dot(origin, dir);
@@ -200,6 +166,7 @@ void main() {
     float along = dot(centre, rayDir);
     float impact = length(centre - rayDir * along);
     float holeDistance = length(centre);
+    float shadowEdge = rg * GARG_SHADOW;
     float reach = rg * DiskShape.y * 1.35;
 
     // Everything below is in units of r_g, in the hole's own frame.
@@ -208,18 +175,6 @@ void main() {
     vec3 d = rayDir;
     float h = length(cross(p, d));
 
-    // The bounding sphere is the only gate, and it has to be the only gate.
-    //
-    // There were two more in front of it -- one rejecting rays whose dot product with
-    // the hole direction was negative, one rejecting rays whose perpendicular distance
-    // to the hole's infinite line exceeded the reach. Both are correct only while the
-    // camera is outside the sphere. Walk inside it and they start throwing away rays
-    // that begin within the volume and legitimately pass through it: the first cuts
-    // along the plane through the camera perpendicular to the hole, which projects to a
-    // perfectly straight line on screen, and the effect appeared sliced in half by it.
-    //
-    // gargSphereHit already clamps its entry distance to zero, so a camera inside the
-    // sphere simply starts marching from where it stands.
     vec2 span = gargSphereHit(p, d, DiskShape.y * 1.35);
     if (span.y < 0.0) {
         fragColor = vec4(sceneColour, 1.0);
@@ -227,12 +182,9 @@ void main() {
     }
 
     // How far along this ray the solid world is, in blocks. Sky reads as infinity.
-    // Needed per sample rather than once for the whole hole: standing on the ground,
-    // terrain cuts across the disk, and a single whole-object test cannot tell an
-    // occluded sample from a visible one.
     float sceneDistance = 1.0e9;
     float depth = texture(DepthSampler, vUv).r;
-    if (depth < SL_SKY_DEPTH) {
+    if (depth > 0.0001 && depth < SL_SKY_DEPTH) {
         vec4 sceneClip = vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
         vec4 sceneEye = InverseProjectionMat * sceneClip;
         if (abs(sceneEye.w) > 0.000001 && (sceneEye.z / sceneEye.w) < 0.0) {
@@ -247,12 +199,14 @@ void main() {
         return;
     }
 
-    // A stable pair of axes spanning the disk plane, for the noise lookup.
+    // Distance along ray where it enters the shadow sphere (if ray aims at the hole)
+    bool rayHitsShadowCone = along > 0.0 && impact < shadowEdge;
+    float frontHoleDist = rayHitsShadowCone ? (along - sqrt(max(shadowEdge * shadowEdge - impact * impact, 0.0))) : 1.0e9;
+    bool isInsideShadow = rayHitsShadowCone && sceneDistance >= frontHoleDist;
+
     vec3 diskU = normalize(cross(axis, vec3(0.0, 0.0, 1.0)) + vec3(1.0e-4));
     vec3 diskV = cross(axis, diskU);
 
-    // Jitter the start along the ray so the fixed march does not band. A tenth of a
-    // step is enough to turn contouring into noise the eye reads as grain.
     p += d * (gargWhiteNoise(vUv * 512.0) * 0.1);
 
     int steps = int(mix(48.0, float(GARG_STEPS_MAX),
@@ -272,22 +226,13 @@ void main() {
         }
         float radius = length(p);
         float height = dot(p, axis);
-        // Step size has to shrink near the disk plane as well as near the hole. A
-        // step scaled only by radius reaches 1.4 out at the disk's rim, which strides
-        // straight over a body a third of a unit thick and leaves it in dashes.
-        //
-        // The radius term in the floor is not decoration. Without it, a viewer whose
-        // eye lands in the disk's own plane sees height stay near zero along the whole
-        // ray, the step pins at its minimum, and ninety-six steps cover four units of
-        // a fifteen-unit journey -- the march never reaches the hole at all.
         float nearPlane = max(abs(height) * 0.55, radius * 0.02);
-        float dt = clamp(min(radius * 0.13, nearPlane), 0.03, 1.4);
+        float dt = clamp(min(radius * 0.12, nearPlane), 0.03, 1.4);
 
         p += d * dt;
         travelledBlocks += dt * rg;
         float travelled = length(p);
-        // The photon equation in leapfrog form. Renormalising d keeps the affine
-        // parameter consistent, which the first-order update does not preserve.
+        // Geodesic leapfrog integration
         d = normalize(d + (-1.5 * h * h * p / pow(travelled, 5.0)) * dt);
 
         if (travelled < GARG_HORIZON) {
@@ -295,8 +240,10 @@ void main() {
             break;
         }
         if (travelledBlocks >= sceneDistance) {
-            hitSolid = true;
-            break;
+            if (sceneDistance < frontHoleDist) {
+                hitSolid = true;
+                break;
+            }
         }
         if (travelled > GARG_ESCAPE) {
             break;
@@ -309,55 +256,14 @@ void main() {
             continue;
         }
 
-        // Noise UV, following how ArcaneVortex does it, because the physically correct
-        // version does not read as motion at all.
-        //
-        // The phase splits into two parts. Radius contributes a STATIC twist, which
-        // makes the pattern a spiral; time contributes a UNIFORM rotation, the same rate
-        // at every radius. A spiral turning rigidly is what the eye reads as a disk
-        // rotating, because it tracks the arms sweeping past.
-        //
-        // Three earlier attempts used the real orbital law instead, omega proportional
-        // to r^-1.5, and all three looked frozen. Two reasons. At the inner edge that
-        // law gives 166 degrees a second, so consecutive frames of a fine noise pattern
-        // are essentially uncorrelated -- it becomes temporal noise, which reads as
-        // static grain rather than movement -- while the part slow enough to follow is
-        // the dim outer rim. And with time running to 600 seconds the phase reached
-        // 1740 radians, where sin and cos lose most of their precision on some drivers.
-        // Wrapping to a turn keeps the trig honest.
         vec2 flat2 = vec2(dot(planar, diskU), dot(planar, diskV));
-        // Static twist, which is what makes the pattern a spiral, and a separate
-        // uniform rotation in time.
-        //
-        // The coefficient is the whole ballgame and it has to be expressed per disk
-        // WIDTH, not copied as a raw number. ArcaneVortex uses 4.27 on a disk spanning
-        // 0.195 to 1.5, so its spiral makes about 0.89 of a turn from inner edge to
-        // outer. Reusing 4.27 here, where the disk spans 3.83 to 13.5 gravitational
-        // radii, wound the same spiral 6.6 times instead โ€” and a tightly wound spiral
-        // rotating rigidly does not look like rotation at all, it looks like radial
-        // drift, because turning a fine spiral through an angle is geometrically almost
-        // the same as sliding it outward. That is exactly what it looked like: gas
-        // spreading outward, no spin. 0.58 reproduces the same 0.89 of a turn across
-        // this disk's actual width.
-        float twist = radial * 0.58;
-        // Not wrapped here. mod(x, TAU) * 1.35 is not congruent to x * 1.35 mod TAU, so
-        // wrapping before the octave factor below made layers 1 and 2 snap from
-        // 1.35*TAU back to 0 every 11.4 seconds -- a visible flick, not rotation. The
-        // wrap happens once, after the multiply. Age runs to about 20 seconds, so the
-        // phase stays under 19 radians and the trig keeps its precision anyway.
+        float twist = radial * 0.45;
         float spin = time * 0.55;
 
-        // Three layers at different scales, each turning slightly faster than the last
-        // so they shear against one another. A single layer only ever translates, so
-        // however fast it moves the pattern itself never changes.
         float noise = 0.0;
         float weight = 0.0;
         for (int octave = 0; octave < 3; ++octave) {
-            float scale = 0.17 * pow(2.1, float(octave));
-            // The octave factor multiplies only the time term. Applying it to the whole
-            // phase, twist included, made each successive layer's spiral tighter โ€” and
-            // tighter spirals read as radial drift, so the layers that were supposed to
-            // add turbulence were pulling the eye the wrong way instead.
+            float scale = 0.18 * pow(2.0, float(octave));
             float drift = mod(twist + spin * (1.0 + float(octave) * 0.35), GARG_TAU);
             float cs = cos(drift);
             float sn = sin(drift);
@@ -371,11 +277,6 @@ void main() {
         noise /= max(weight, 0.001);
 
         float t = (radial - inner) / max(outer - inner, 0.001);
-        // Noise drives thickness, which is what gives torn wispy edges rather than a
-        // hard rim. Low noise thins the disk rather than discarding the sample: an
-        // earlier version skipped samples below a cutoff, so when the noise texture
-        // failed to bind every sample was discarded and the disk rendered as literally
-        // nothing โ€” a silent, total failure.
         float thickness = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t)
                 * mix(0.10, 1.35, noise);
         float coverage = smoothstep(thickness, 0.0, abs(height));
@@ -383,32 +284,17 @@ void main() {
             continue;
         }
 
-        // Emission falls steeply outward, as a thin disk's temperature does, with
-        // both edges eased so the disk does not terminate on a hard line.
-        float profile = pow(1.0 - t, 1.6)
-                * smoothstep(0.0, 0.08, t) * smoothstep(1.0, 0.90, t);
-        // Every spell light it has eaten feeds the disk. This is the visual payoff for
-        // the swallowing mechanic: a hole that has drained a crowded battlefield burns
-        // visibly hotter than one opened over empty ground, and the detonation that
-        // follows is stronger by the same count.
+        // Seamless inner emission connecting smoothly right to the shadow boundary
+        float profile = pow(1.0 - t, 1.4)
+                * smoothstep(0.0, 0.015, t) * smoothstep(1.0, 0.90, t);
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
-        // Noise modulates brightness as well as thickness. Thickness alone is enough
-        // when the disk is seen face-on, because the eye is looking through it โ€” but
-        // near edge-on a ray crosses so much material that thickness variation
-        // integrates away to a smooth average, and the disk goes featureless. Without
-        // a brightness term there is nothing left to see moving.
         float grain = 0.35 + 0.65 * noise;
         vec3 emission = gargDiskColour(t) * profile * max(DiskShape.w, 0.0)
                 * 9.0 * fed * grain;
 
-        // Front to back, so the near side of the disk correctly hides the far side.
-        //
-        // Deliberately small. At the previous 2.2 a single sample clamped to fully
-        // opaque, so the ray stopped at the first thing it touched and the final colour
-        // came from exactly one sample: every bit of noise, shear and inflow was
-        // discarded before it could accumulate, and the disk rendered as a smooth
-        // saturated bar with no texture and therefore no visible motion. Building up
-        // over a dozen or more samples is what makes the structure appear at all.
+        // Front to back accumulation
+        // Deliberately small (0.22) so ray builds up over a dozen or more samples,
+        // giving deep volumetric structure and preventing opaque shell blowouts.
         float local = clamp(coverage * profile * 0.22, 0.0, 1.0);
         accum += emission * (1.0 - alpha) * local;
         alpha += (1.0 - alpha) * local;
@@ -417,42 +303,28 @@ void main() {
         }
     }
 
-    // The background, read along the ray's new direction. This is the half of the
-    // effect ArcaneVortex leaves out, and it is what bends terrain, sky and other
-    // spells' light around the hole.
-    //
-    // A ray deflected off the edge of the screen has no data to read -- that is the
-    // unavoidable limit of doing this in screen space. Falling back to a flat fraction
-    // of the undeflected colour, as an earlier version did, painted a hard-edged grey
-    // dome above the shadow. Clamping to the screen edge and then fading back toward
-    // the undeflected colour by how far off it went keeps it continuous: rays that
-    // just miss read the edge pixel, rays that miss badly quietly stop contributing.
+    // The background, read along the ray's new direction.
+    // Restores the deep space Interstellar cosmic starfield with smooth radial boundary feathering.
     vec3 background = sceneColour;
     if (!captured && !hitSolid) {
-        // How much this ray actually got bent. Rays that barely deflected have to come
-        // out exactly equal to the untouched scene.
+        float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
+        float edgeFeather = smoothstep(1.0, 0.45, normDist);
         float bent = 1.0 - dot(d, rayDir);
-        float lensed = clamp(bent * 20.0, 0.0, 1.0);
+        float lensed = clamp(bent * 20.0, 0.0, 1.0) * edgeFeather;
         if (lensed > 0.001) {
             vec3 stars = starNest(d, time * 0.01);
             background = mix(sceneColour, stars, lensed);
         }
     }
 
-    // The photon ring: a stack of images on the critical curve, within a percent of
-    // the shadow's edge. Two orders are enough -- each successive one is demagnified
-    // by exp(-2*pi), roughly 1/535, so the third is already invisible.
-    float shadowEdge = rg * GARG_SHADOW;
-    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.17, 0.001), 2.0));
-    float second = exp(-pow((impact - shadowEdge * 1.05) / max(rg * 0.11, 0.001), 2.0))
+    // The photon ring: hugging the outer edge of the apparent shadow (critical curve)
+    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.14, 0.001), 2.0));
+    float second = exp(-pow((impact - shadowEdge * 1.035) / max(rg * 0.08, 0.001), 2.0))
             / 535.0;
-    // impact is the distance to the hole's infinite line, so it is only meaningful
-    // ahead of the camera. Behind, it would place a ring where there is nothing.
     float ahead = step(0.0, along);
-    float ringGain = 0.26 * ahead * max(DiskShape.w, 0.0) * (0.25 + 0.75 * alpha)
-            * (1.0 + HoleState.y * 3.0);
-    // If the ray hit solid terrain closer than the black hole, suppress the photon ring
-    if (hitSolid && sceneDistance < holeDistance) {
+    float ringGain = 0.32 * ahead * max(DiskShape.w, 0.0) * (0.30 + 0.70 * alpha)
+            * (1.0 + HoleState.y * 1.8);
+    if (hitSolid && sceneDistance < frontHoleDist) {
         ringGain = 0.0;
     }
     vec3 ring = gargDiskColour(0.0) * (first + second) * ringGain;
@@ -461,32 +333,49 @@ void main() {
     float openFactor = clamp(HoleState.x, 0.0, 1.0);
     float critBoost = 1.0 + HoleState.y * 1.8;
 
-    // Emissive disk & photon ring (scales with openFactor, boosted by criticality)
+    // Emissive disk & photon ring
     vec3 diskEmission = (accum + ring) * critBoost * openFactor;
 
-    // Background behind the disk:
-    // If captured: the event horizon absorbs all light (pitch black) when fully open.
-    // If hitSolid: solid terrain in front of or inside the volume stops the ray (sceneColour).
-    // If escaped: the background is lensed by gravitational curvature.
+    // Background behind the disk
+    float blast = clamp(HoleState.w, 0.0, 1.0);
     vec3 behindEffect = sceneColour;
-    if (captured) {
-        behindEffect = vec3(0.0);
+    if (captured || isInsideShadow) {
+        // Supernova core detonation at tick 1100: singularity detonates into brilliant white-gold!
+        vec3 supernovaCore = mix(vec3(0.0), vec3(3.2, 2.9, 2.4), blast);
+        behindEffect = supernovaCore;
     } else if (!hitSolid) {
         behindEffect = background;
+    }
+
+    // --- SUPERNOVA DETONATION & EXPANDING COSMIC FIREBALL ---
+    vec3 supernovaVfx = vec3(0.0);
+    if (blast > 0.001 && along > 0.0 && (!hitSolid || sceneDistance > holeDistance)) {
+        // A. Expanding Incandescent Core Fireball: expands rapidly from 1.5 rg up to 6.0 rg
+        float coreRadius = rg * (1.5 + (1.0 - blast) * 4.5);
+        float coreNorm = impact / max(coreRadius, 0.1);
+        float coreShape = exp(-coreNorm * coreNorm * 3.0);
+        vec3 coreCol = mix(vec3(1.0, 0.75, 0.4), vec3(1.0, 0.98, 1.0), blast);
+        supernovaVfx += coreCol * (coreShape * blast * 6.0);
+
+        // B. Relativistic 3D Shockwave Blast Shell Ring: expands outward from 3.0 rg to 16.0 rg
+        float shockRadius = rg * (2.8 + (1.0 - blast) * 13.5);
+        float shockDist = abs(impact - shockRadius) / max(rg * 0.7, 0.15);
+        float shockShape = exp(-shockDist * shockDist * 5.5);
+        vec3 shockCol = mix(vec3(0.5, 0.85, 1.0), vec3(1.0, 0.9, 0.7), blast);
+        supernovaVfx += shockCol * (shockShape * blast * 4.5);
+
+        // C. Supernova Cosmic Ray Flash when looking near the blast
+        float viewProximity = clamp(1.0 - impact / max(rg * 20.0, 1.0), 0.0, 1.0);
+        supernovaVfx += vec3(1.0, 0.96, 0.9) * (blast * blast * viewProximity * 2.2);
     }
 
     // Smoothly blend the background between the untouched scene and the relativistic distortion
     vec3 blendedBg = mix(sceneColour, behindEffect, openFactor);
 
-    // Final composite: disk emission layered over the background
-    vec3 result = diskEmission + blendedBg * (1.0 - alpha * openFactor);
+    // Final composite: disk emission layered over the background + supernova
+    vec3 result = diskEmission + blendedBg * (1.0 - alpha * openFactor) + supernovaVfx;
 
-    // No feather. The bounding sphere already provides one: at grazing incidence the
-    // marched path through it approaches zero length, so the disk it can gather and the
-    // deflection it can pick up both approach zero and the result converges on the
-    // untouched scene by itself. The previous feather was keyed on the distance to the
-    // hole's infinite line, which stops meaning anything once the camera is inside the
-    // sphere -- there it faded the effect out from the wrong direction.
     fragColor = vec4(result, 1.0);
 }
+
 

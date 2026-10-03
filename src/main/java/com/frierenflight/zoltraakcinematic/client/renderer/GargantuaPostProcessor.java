@@ -85,6 +85,10 @@ public final class GargantuaPostProcessor {
         }
 
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_LEVEL) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null) return;
+
+            Camera camera = event.getCamera() != null ? event.getCamera() : (mc.gameRenderer != null ? mc.gameRenderer.getMainCamera() : null);
             Matrix4f view = event.getModelViewMatrix();
             if (view == null) {
                 view = levelViewMatrix;
@@ -92,21 +96,20 @@ public final class GargantuaPostProcessor {
             if (view == null && event.getPoseStack() != null) {
                 view = event.getPoseStack().last().pose();
             }
+            if (view == null && camera != null) {
+                view = new Matrix4f().rotation(camera.rotation().conjugate());
+            }
             if (view == null) {
                 view = RenderSystem.getModelViewMatrix();
             }
             if (view == null) return;
             levelViewMatrix = null;
 
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level == null) return;
-
             List<GargantuaEntity> active = getActiveClientEntities(mc);
 
             if (!active.isEmpty()) {
                 float partial = event.getPartialTick().getGameTimeDeltaPartialTick(false);
                 Matrix4f projection = event.getProjectionMatrix() != null ? event.getProjectionMatrix() : RenderSystem.getProjectionMatrix();
-                Camera camera = event.getCamera() != null ? event.getCamera() : mc.gameRenderer.getMainCamera();
                 renderGargantua(active, projection, view, camera, partial);
             }
         }
@@ -138,14 +141,22 @@ public final class GargantuaPostProcessor {
             ensureTargets(main.width, main.height);
 
             // Copy color buffer for scene sampling
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, main.frameBufferId);
+            int readSourceFbo = (prevDrawFbo != 0 && ShaderCompatibility.useFullDetailPass()) ? prevDrawFbo : main.frameBufferId;
+            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readSourceFbo);
             GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
             GlStateManager._glBlitFrameBuffer(0, 0, main.width, main.height, 0, 0, sceneCopy.width, sceneCopy.height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
 
-            // Copy depth buffer for physical world occlusion testing
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, main.frameBufferId);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, currentDepth.frameBufferId);
-            GlStateManager._glBlitFrameBuffer(0, 0, main.width, main.height, 0, 0, currentDepth.width, currentDepth.height, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+            // Copy depth buffer for physical world occlusion testing (or use Iris depth texture directly)
+            int irisDepthTex = ShaderCompatibility.getShaderDepthTexture();
+            int depthSamplerId;
+            if (irisDepthTex > 0) {
+                depthSamplerId = irisDepthTex;
+            } else {
+                GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readSourceFbo);
+                GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, currentDepth.frameBufferId);
+                GlStateManager._glBlitFrameBuffer(0, 0, main.width, main.height, 0, 0, currentDepth.width, currentDepth.height, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+                depthSamplerId = currentDepth.getDepthTextureId();
+            }
 
             // Switch to main framebuffer for drawing
             main.bindWrite(true);
@@ -183,7 +194,7 @@ public final class GargantuaPostProcessor {
                 ).normalize();
 
                 shader.setSampler("SceneSampler", sceneCopy.getColorTextureId());
-                shader.setSampler("DepthSampler", currentDepth.getDepthTextureId());
+                shader.setSampler("DepthSampler", depthSamplerId);
                 shader.setSampler("NoiseSampler", noiseId);
 
                 shader.safeGetUniform("HoleCentre").set(eyeCenter.x, eyeCenter.y, eyeCenter.z, rg);
@@ -192,12 +203,11 @@ public final class GargantuaPostProcessor {
                 float opened = entity.opened(partialTicks);
                 float crit = entity.criticality(partialTicks);
                 float timeSec = (entity.level().getGameTime() + partialTicks) / 20.0f;
-                float swallowed = (float) entity.getSwallowedCount();
-                shader.safeGetUniform("HoleState").set(opened, crit, timeSec, swallowed);
+                float blast = entity.blastFlash(partialTicks);
+                shader.safeGetUniform("HoleState").set(opened, crit, timeSec, blast);
 
-                shader.safeGetUniform("DiskShape").set(3.83f, 13.5f, 0.004f, brightness);
+                shader.safeGetUniform("DiskShape").set(2.20f, 22.5f, 0.004f, brightness);
                 shader.safeGetUniform("InverseProjectionMat").set(invProj);
-                shader.safeGetUniform("ProjectionMat").set(projection);
 
                 RenderSystem.setShader(() -> shader);
                 drawFullscreenQuad();

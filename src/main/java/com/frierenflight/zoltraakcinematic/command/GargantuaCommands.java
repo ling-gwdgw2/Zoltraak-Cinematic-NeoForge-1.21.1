@@ -56,7 +56,15 @@ public class GargantuaCommands {
             pos = source.getPosition().add(0, 5, 0);
         }
 
-        GargantuaEntity blackHole = new GargantuaEntity(serverLevel, caster, pos, new Vec3(0, 1, 0));
+        float spellPower = 500.0f;
+        if (caster != null) {
+            var schoolHolder = com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.BLACK_HOLE;
+            if (schoolHolder != null && schoolHolder.isBound()) {
+                spellPower = (float) (500.0 * schoolHolder.get().getPowerFor(caster));
+            }
+        }
+
+        GargantuaEntity blackHole = new GargantuaEntity(serverLevel, caster, pos, new Vec3(0, 1, 0), spellPower);
         serverLevel.addFreshEntity(blackHole);
 
         source.sendSuccess(() -> Component.literal("§d[Zoltraak Cinematic] §fManifested Astral Singularity!"), true);

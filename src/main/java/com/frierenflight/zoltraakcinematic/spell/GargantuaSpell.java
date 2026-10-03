@@ -32,18 +32,18 @@ public class GargantuaSpell extends AbstractSpell {
 
     private final DefaultConfig defaultConfig = new DefaultConfig()
             .setMinRarity(SpellRarity.LEGENDARY)
-            .setSchoolResource(SchoolRegistry.ENDER_RESOURCE)
+            .setSchoolResource(com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.BLACK_HOLE_RESOURCE)
             .setMaxLevel(1)
-            .setCooldownSeconds(300.0)
+            .setCooldownSeconds(600.0) // 10 minutes
             .setAllowCrafting(true)
             .build();
 
     public GargantuaSpell() {
-        this.baseManaCost = 2200;
+        this.baseManaCost = 3000;
         this.manaCostPerLevel = 0;
-        this.baseSpellPower = 100;
+        this.baseSpellPower = 500;
         this.spellPowerPerLevel = 0;
-        this.castTime = 60; // 3.0 seconds
+        this.castTime = 80; // 4.0 seconds (80 ticks)
     }
 
     @Override
@@ -92,9 +92,10 @@ public class GargantuaSpell extends AbstractSpell {
                 targetPos = eyePos.add(lookVec.scale(28.0d));
             }
 
-            // Spawn Gargantua singularity entity
+            // Spawn Gargantua singularity entity with scaled Black Hole Spell Power
             Vec3 spinAxis = new Vec3(0, 1, 0);
-            GargantuaEntity blackHole = new GargantuaEntity(serverLevel, entity, targetPos, spinAxis);
+            float spellPower = getSpellPower(spellLevel, entity);
+            GargantuaEntity blackHole = new GargantuaEntity(serverLevel, entity, targetPos, spinAxis, spellPower);
             serverLevel.addFreshEntity(blackHole);
         }
         super.onCast(level, spellLevel, entity, castSource, playerMagicData);
@@ -102,10 +103,13 @@ public class GargantuaSpell extends AbstractSpell {
 
     @Override
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
+        float power = getSpellPower(spellLevel, caster);
+        float powerMult = power / Math.max(1.0f, (float) this.baseSpellPower);
+        float blastDamage = (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBlastDamage() * powerMult;
         return List.of(
                 Component.translatable("spell.zoltraak_cinematic.gargantua.desc"),
-                Component.translatable("ui.irons_spellbooks.radius", GargantuaEntity.PULL_RADIUS),
-                Component.translatable("ui.irons_spellbooks.damage", 95.0f)
+                Component.translatable("ui.irons_spellbooks.radius", (int) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getPullRadius()),
+                Component.translatable("ui.irons_spellbooks.damage", io.redspace.ironsspellbooks.api.util.Utils.stringTruncation(blastDamage, 1))
         );
     }
 }

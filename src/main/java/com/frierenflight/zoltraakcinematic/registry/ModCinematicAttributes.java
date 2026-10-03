@@ -24,6 +24,16 @@ public class ModCinematicAttributes {
             () -> new MagicPercentAttribute("attribute.zoltraak_cinematic.zoltraak_magic_resist", 1.0D, -100.0D, 100.0D).setSyncable(true)
     );
 
+    public static final DeferredHolder<Attribute, Attribute> BLACK_HOLE_SPELL_POWER = ATTRIBUTES.register(
+            "black_hole_spell_power",
+            () -> new MagicPercentAttribute("attribute.zoltraak_cinematic.black_hole_spell_power", 1.0D, -100.0D, 100.0D).setSyncable(true)
+    );
+
+    public static final DeferredHolder<Attribute, Attribute> BLACK_HOLE_MAGIC_RESIST = ATTRIBUTES.register(
+            "black_hole_magic_resist",
+            () -> new MagicPercentAttribute("attribute.zoltraak_cinematic.black_hole_magic_resist", 1.0D, -100.0D, 100.0D).setSyncable(true)
+    );
+
     public static void register(IEventBus modEventBus) {
         ATTRIBUTES.register(modEventBus);
         modEventBus.addListener(ModCinematicAttributes::modifyEntityAttributes);
@@ -32,5 +42,7 @@ public class ModCinematicAttributes {
     public static void modifyEntityAttributes(EntityAttributeModificationEvent event) {
         event.add(EntityType.PLAYER, ZOLTRAAK_SPELL_POWER);
         event.add(EntityType.PLAYER, ZOLTRAAK_MAGIC_RESIST);
+        event.add(EntityType.PLAYER, BLACK_HOLE_SPELL_POWER);
+        event.add(EntityType.PLAYER, BLACK_HOLE_MAGIC_RESIST);
     }
 }

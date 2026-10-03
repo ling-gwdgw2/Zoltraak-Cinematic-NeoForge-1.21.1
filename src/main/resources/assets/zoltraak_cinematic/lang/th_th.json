@@ -1,8 +1,13 @@
 {
   "itemGroup.zoltraak_cinematic.tab": "โซลทราค ซีเนมาติก เอดิชัน",
   "school.zoltraak_cinematic.ordinary_magic": "เวทมนตร์โจมตีสามัญ",
+  "school.zoltraak_cinematic.black_hole": "เวทมนตร์หลุมดำ",
   "attribute.zoltraak_cinematic.zoltraak_spell_power": "พลังเวทมนตร์โจมตีสามัญ",
   "attribute.zoltraak_cinematic.zoltraak_magic_resist": "ความต้านทานเวทมนตร์โจมตีสามัญ",
+  "attribute.zoltraak_cinematic.black_hole_spell_power": "พลังเวทมนตร์หลุมดำ",
+  "attribute.zoltraak_cinematic.black_hole_magic_resist": "ความต้านทานเวทมนตร์หลุมดำ",
+  "item.zoltraak_cinematic.affinity_ring_black_hole": "แหวนมนตราแห่งหลุมดำ",
+  "item.zoltraak_cinematic.affinity_ring_ordinary_magic": "แหวนมนตราโจมตีสามัญ",
   "spell.zoltraak_cinematic.zoltraak": "โซลทราค: ลำแสงสังหารปีศาจ (ฟรีเรน)",
   "spell.zoltraak_cinematic.zoltraak.desc": "เวทมนตร์โจมตีสามัญ (人類の魔法) ปลดปล่อยลำแสงทะลวงความเร็วเหนือเสียงระดับภาพยนตร์ พร้อมคลื่นกระแทกทำลายล้างรัศมี 10 บล็อกและแสงเรืองรอง HDR Bloom",
   "spell.zoltraak_cinematic.corrupted_zoltraak": "โซลทราคทมิฬ: มหาเวทสังหารมนุษย์ (ควอลล์)",
