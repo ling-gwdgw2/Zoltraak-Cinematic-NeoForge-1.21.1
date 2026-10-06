@@ -213,11 +213,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
                Vec3 iv = iu.cross(normal).normalize();
 
-               for (int k = 0; k < 3; k++) {
-                  double r = (0.2 + dt * (0.23 + k * 0.09)) * (e.mode() == ZoltraakMode.LARGE ? 2 : 1) * e.scale();
-                  float a = fade * (float)Math.exp(-dt * 0.07) * (0.7F - k * 0.12F);
-                  arc(lines, mat, center.add(normal.scale(k * 0.05)), iu, iv, r, 0.018F * e.scale(), a, 0.67F, 0.88F, 1.0F, Math.PI * 2);
-               }
 
                for (int k = 0; k < 48; k++) {
                   double a = k * 2.399;
@@ -235,6 +230,13 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                quad(glow, mat, center, iu.scale((5.0 + dt * 0.2) * e.scale()), iv.scale(0.13 * e.scale()), 0.8F, 0.95F, 1.0F, burst);
                quad(glow, mat, center, iu.scale(0.08 * e.scale()), iv.scale(3.0 * e.scale()), 1.0F, 1.0F, 1.0F, burst);
                flush(buffers, ZoltraakRenderTypes.ZOL_GLOW);
+
+               float progress = Mth.clamp(dt / 26.0F, 0.0F, 1.0F);
+               VertexConsumer impact = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+               double sparkSize   = (3.0 + dt * 0.28) * (e.mode() == ZoltraakMode.LARGE ? 2.4 : 1.2) * e.scale();
+               Vec3 sphereCenter = center.add(normal.scale(sparkSize * 0.35));
+               quad(impact, mat, sphereCenter, camRight.scale(sparkSize), camUp.scale(sparkSize), progress, e.black() ? 1.0F : 0.0F, 0.0F, fade);
+               flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
             } else {
                flush(buffers, ZoltraakRenderTypes.LIGHT);
             }

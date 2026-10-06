@@ -254,12 +254,13 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
 
     @Override
     public boolean impact() {
-        return false;
+        return isImpactStopped();
     }
 
     @Override
     public float impactAge() {
-        return 12.0f;
+        float done = getDoneAge();
+        return done >= 0.0f ? done : 0.0f;
     }
 
     @Override
@@ -392,23 +393,6 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
         this.yRotO = getYRot();
         this.xRotO = getXRot();
 
-        // Trail particles on client
-        if (level().isClientSide) {
-            boolean isPurple = getColorTheme() == 1;
-            for (int i = 0; i < 2; i++) {
-                double px = getX() - movement.x * (i * 0.4);
-                double py = getY() - movement.y * (i * 0.4);
-                double pz = getZ() - movement.z * (i * 0.4);
-                if (isPurple) {
-                    level().addParticle(ParticleTypes.WITCH, px, py, pz, 0, 0, 0);
-                } else {
-                    level().addParticle(ParticleTypes.ELECTRIC_SPARK, px, py, pz, 0, 0, 0);
-                    if (i == 0) {
-                        level().addParticle(ParticleTypes.END_ROD, px, py, pz, 0, 0, 0);
-                    }
-                }
-            }
-        }
     }
 
     @Override
@@ -423,19 +407,6 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
             stopOnImpact(hitPos);
 
             if (level() instanceof ServerLevel serverLevel) {
-                // Authentic frierenvoid rapid impact particles:
-                serverLevel.sendParticles(
-                    isPurple ? ParticleTypes.SMOKE : ParticleTypes.END_ROD,
-                    hitPos.x, hitPos.y, hitPos.z,
-                    9, 0.18, 0.18, 0.18, 0.15
-                );
-
-                if (isPurple) {
-                    serverLevel.sendParticles(ParticleTypes.WITCH, hitPos.x, hitPos.y, hitPos.z, 10, 0.2, 0.2, 0.2, 0.05);
-                } else {
-                    serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, hitPos.x, hitPos.y, hitPos.z, 12, 0.22, 0.22, 0.22, 0.08);
-                }
-
                 if (hitResult instanceof BlockHitResult blockHit) {
                     BlockState state = serverLevel.getBlockState(blockHit.getBlockPos());
                     if (!state.isAir()) {

@@ -134,6 +134,23 @@ public final class ZoltraakRenderTypes extends RenderType {
          .createCompositeState(false)
    );
 
+   public static final RenderType ZOL_IMPACT = create(
+      "zol_impact",
+      DefaultVertexFormat.POSITION_TEX_COLOR,
+      Mode.QUADS,
+      16384,
+      false,
+      false,
+      CompositeState.builder()
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.zoltraakImpact))
+         .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
+         .setTransparencyState(ADD)
+         .setCullState(NO_CULL)
+         .setDepthTestState(LEQUAL_DEPTH_TEST)
+         .setWriteMaskState(COLOR_WRITE)
+         .createCompositeState(false)
+   );
+
    public static final RenderType ZOL_BEAM = create(
       "zol_beam",
       DefaultVertexFormat.POSITION_TEX_COLOR,

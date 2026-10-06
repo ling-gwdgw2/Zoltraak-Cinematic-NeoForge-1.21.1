@@ -278,17 +278,8 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
         if (level().isClientSide) {
             if (tickCount >= fireTick && tickCount <= fireTick + mode().pulse) {
                 float len = getBeamLength();
-                boolean isPurple = black();
 
-                // Air ionization sparks along beam core
-                for (float d = 2.0f; d < len; d += 2.8f) {
-                    double jitter = (random.nextDouble() - 0.5) * 0.45;
-                    Vec3 pt = start.add(look.scale(d + random.nextDouble() * 1.5));
-                    level().addParticle(isPurple ? ParticleTypes.WITCH : ParticleTypes.ELECTRIC_SPARK,
-                            pt.x + jitter, pt.y + jitter, pt.z + jitter, 0, 0.02, 0);
-                }
-
-                // Ground debris tracer
+                // Ground physical debris tracer
                 for (float d = 2.5f; d < len; d += 1.8f) {
                     Vec3 bpWorld = start.add(look.scale(d));
                     for (double dy = 0.2; dy >= -2.4; dy -= 0.6) {
@@ -307,15 +298,6 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
                                             (random.nextDouble() - 0.5) * 0.32,
                                             0.22 + random.nextDouble() * 0.30,
                                             (random.nextDouble() - 0.5) * 0.32);
-                                }
-                                if (random.nextFloat() < 0.60f) {
-                                    level().addParticle(isPurple ? ParticleTypes.WITCH : ParticleTypes.ELECTRIC_SPARK,
-                                            bpWorld.x + (random.nextDouble() - 0.5) * 0.5,
-                                            groundY + 0.08,
-                                            bpWorld.z + (random.nextDouble() - 0.5) * 0.5,
-                                            (random.nextDouble() - 0.5) * 0.22,
-                                            0.03,
-                                            (random.nextDouble() - 0.5) * 0.22);
                                 }
                             }
                             break;
@@ -362,15 +344,6 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
                 }
 
                 if (level() instanceof ServerLevel serverLevel) {
-                    if (black()) {
-                        serverLevel.sendParticles(ParticleTypes.FLASH, end.x, end.y, end.z, 6, 0.6, 0.6, 0.6, 0.0);
-                        serverLevel.sendParticles(ParticleTypes.WITCH, end.x, end.y, end.z, 90, 4.0, 4.0, 4.0, 0.5);
-                        serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH, end.x, end.y, end.z, 50, 3.5, 3.5, 3.5, 0.15);
-                    } else {
-                        serverLevel.sendParticles(ParticleTypes.FLASH, end.x, end.y, end.z, 6, 0.6, 0.6, 0.6, 0.0);
-                        serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, end.x, end.y, end.z, 80, 4.0, 4.0, 4.0, 0.5);
-                        serverLevel.sendParticles(ParticleTypes.END_ROD, end.x, end.y, end.z, 40, 3.0, 3.0, 3.0, 0.2);
-                    }
 
                     double blastRadius = mode() == ZoltraakMode.LARGE ? 21.0 : 12.0;
                     AABB blastBox = new AABB(end.x - blastRadius, end.y - blastRadius, end.z - blastRadius,

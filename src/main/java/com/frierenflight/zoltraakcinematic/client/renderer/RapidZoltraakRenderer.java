@@ -99,6 +99,33 @@ public final class RapidZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
                quad(glow, m, tip, right.scale(0.55), up.scale(0.55), 0.6F, 0.88F, 1.0F, fade * 0.8F);
             }
             flush(buffers, ZoltraakRenderTypes.ZOL_GLOW);
+
+            // Procedural Mathematical Shaders for Barrage Bullets (Replacing Vanilla Particles)
+            float isBlack = e.black() ? 1.0F : 0.0F;
+            if (e.impact()) {
+               float dt = Math.max(0.0F, raw - e.impactAge());
+               if (dt < 12.0F) {
+                  float impactFade = (1.0F - (dt / 12.0F)) * fade;
+                  float impactProgress = Mth.clamp(dt / 12.0F, 0.0F, 1.0F);
+
+                  Vec3 norm = e.normal();
+
+                  VertexConsumer impact = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+                  double sparkSize = (1.10 + dt * 0.14) * e.scale();
+
+                  // Camera-facing 3D Spherical Relativistic Mana Explosion
+                  Vec3 sphereCenter = tip.add(norm.scale(sparkSize * 0.35));
+                  quad(impact, m, sphereCenter, right.scale(sparkSize), up.scale(sparkSize), impactProgress, isBlack, 0.0F, impactFade);
+                  flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
+               }
+            } else {
+               // In-flight Procedural Core Flare & Dielectric Sparks
+               VertexConsumer impact = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+               float flyingProgress = ((raw * 0.28F) % 1.0F) * 0.35F;
+               double flyingSparkSize = 0.55 * e.scale();
+               quad(impact, m, tip, right.scale(flyingSparkSize), up.scale(flyingSparkSize), flyingProgress, isBlack, 0.0F, fade * 0.75F);
+               flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
+            }
          }
 
          if (this.renderSeal) {

@@ -25,6 +25,7 @@ public final class ZoltraakCinematicShaders {
    public static ShaderInstance unsealingMagicCircle;
    public static ShaderInstance unsealingFireColumn;
    public static ShaderInstance cinematicFlare;
+   public static ShaderInstance zoltraakImpact;
    public static ShaderInstance barrageFx;
    public static ShaderInstance gargantua;
 
@@ -44,6 +45,7 @@ public final class ZoltraakCinematicShaders {
       registerSafe(e, "unsealing_magic_circle", s -> unsealingMagicCircle = s);
       registerSafe(e, "unsealing_fire_column", s -> unsealingFireColumn = s);
       registerSafe(e, "cinematic_flare", s -> cinematicFlare = s);
+      registerSafe(e, "zoltraak_impact", s -> zoltraakImpact = s);
       registerSafe(e, "barrage_fx", s -> barrageFx = s);
       registerSafe(e, "gargantua", DefaultVertexFormat.POSITION_TEX, s -> gargantua = s);
    }

@@ -12,12 +12,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierEntity> {
     private static final ResourceLocation TEX_GROUND_CIRCLE =
             ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/spell/defense_ground_circle.png");
-    private static final ResourceLocation TEX_GLOW =
-            ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/spell/zoltraak_glow.png");
 
     public DefenseBarrierRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -52,14 +51,17 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
         );
         Vec3 offset = pose.center().subtract(currentPos);
 
+        Vec3 camRight = new Vec3(new Vector3f(1.0F, 0.0F, 0.0F).rotate(this.entityRenderDispatcher.cameraOrientation()));
+        Vec3 camUp = new Vec3(new Vector3f(0.0F, 1.0F, 0.0F).rotate(this.entityRenderDispatcher.cameraOrientation()));
+
         stack.pushPose();
         stack.translate(offset.x, offset.y, offset.z);
         Matrix4f matrix = stack.last().pose();
 
         if (entity.mode() == DefenseBarrierEntity.MODE_DOME) {
-            renderDome(entity, matrix, buffers, age, fade, life, partial, pose, hit);
+            renderDome(entity, matrix, buffers, age, fade, life, partial, pose, hit, camRight, camUp);
         } else {
-            renderDirectional(entity, matrix, buffers, age, fade, life, partial, pose, hit, u, v, normal);
+            renderDirectional(entity, matrix, buffers, age, fade, life, partial, pose, hit, u, v, normal, camRight, camUp);
         }
 
         stack.popPose();
@@ -71,7 +73,8 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
 
     private void renderDome(DefenseBarrierEntity entity, Matrix4f m, MultiBufferSource buffers,
                             float age, float fade, float life, float partial,
-                            DefenseBarrierEntity.VisualPose pose, Vec3 hit) {
+                            DefenseBarrierEntity.VisualPose pose, Vec3 hit,
+                            Vec3 camRight, Vec3 camUp) {
         double R = DefenseBarrierEntity.DOME_RADIUS;
 
         // --- Layer A: Translucent Energy Dome Shell (Smooth 360° Sphere Body) ---
@@ -87,14 +90,40 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
             renderElectricArc(m, buffers, R, age, fade);
         }
 
-        // --- Layer D: Impact Overdrive Flash Glow ---
+        // --- Layer D: Procedural Mathematical Mana Deflection Flash & Dielectric Sparks ---
         float impact = entity.hitAge(partial);
         if (impact < 14.0F) {
-            VertexConsumer glow = buffers.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
-            double size = 0.8 + impact * 0.18;
-            quad(glow, m, hit.add(hit.normalize().scale(0.08)), new Vec3(size, 0, 0), new Vec3(0, size, 0),
-                    (float) Math.exp(-impact * 0.28) * fade * 0.95F);
-            flush(buffers, ZoltraakRenderTypes.ZOL_GLOW);
+            float impactProgress = Mth.clamp(impact / 14.0F, 0.0F, 1.0F);
+            float impactFade = (float) Math.exp(-impact * 0.25) * fade * 0.95F;
+            double sparkSize = 0.95 + impact * 0.16;
+
+            VertexConsumer impactConsumer = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+            Vec3 hitNormal = hit.lengthSqr() > 1.0E-4 ? hit.normalize() : new Vec3(0, 1, 0);
+            Vec3 sparkCenter = hit.add(hitNormal.scale(0.12));
+
+            // Camera-facing 3D Spherical Relativistic Mana Deflection & Dielectric Sparks (Pure Math Shader)
+            quadImpact(impactConsumer, m, sparkCenter, camRight.scale(sparkSize), camUp.scale(sparkSize),
+                    impactProgress, false, false, impactFade);
+            flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
+        }
+
+        // --- Layer E: Catastrophic Mana Rupture on Shatter ---
+        if (life == 0.0F && fade > 0.03F) {
+            float shatterProgress = Mth.clamp(1.0F - fade, 0.0F, 1.0F);
+            float shatterFade = fade * 0.90F;
+            double centerBurst = 2.4 + shatterProgress * 1.6;
+
+            VertexConsumer impactConsumer = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+            // Rupture burst at center
+            quadImpact(impactConsumer, m, Vec3.ZERO, camRight.scale(centerBurst), camUp.scale(centerBurst),
+                    shatterProgress, false, false, shatterFade);
+            // Rupture spark at contact point
+            if (hit.lengthSqr() > 1.0E-4) {
+                double breachSize = 1.6 + shatterProgress * 1.2;
+                quadImpact(impactConsumer, m, hit, camRight.scale(breachSize), camUp.scale(breachSize),
+                        shatterProgress, false, false, shatterFade * 0.85F);
+            }
+            flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
         }
     }
 
@@ -283,7 +312,8 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
     private void renderDirectional(DefenseBarrierEntity entity, Matrix4f m, MultiBufferSource buffers,
                                    float age, float fade, float life, float partial,
                                    DefenseBarrierEntity.VisualPose pose, Vec3 hit,
-                                   Vec3 u, Vec3 v, Vec3 normal) {
+                                   Vec3 u, Vec3 v, Vec3 normal,
+                                   Vec3 camRight, Vec3 camUp) {
         VertexConsumer surface = buffers.getBuffer(ZoltraakRenderTypes.DEFENSE_SURFACE);
         VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
         int index = 0;
@@ -353,14 +383,39 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
         flush(buffers, ZoltraakRenderTypes.DEFENSE_SURFACE);
         flush(buffers, ZoltraakRenderTypes.LIGHT);
 
-        // Impact flash
+        // Procedural Mathematical Mana Deflection Flash & Dielectric Sparks
         float impact = entity.hitAge(partial);
-        if (impact < 12.0F) {
-            VertexConsumer glow = buffers.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
-            double size = 0.55 + impact * 0.14;
-            Vec3 at = hit.add(normal.scale(0.04));
-            quad(glow, m, at, u.scale(size), v.scale(size), (float) Math.exp(-impact * 0.32) * fade * 0.9F);
-            flush(buffers, ZoltraakRenderTypes.ZOL_GLOW);
+        if (impact < 14.0F) {
+            float impactProgress = Mth.clamp(impact / 14.0F, 0.0F, 1.0F);
+            float impactFade = (float) Math.exp(-impact * 0.28) * fade * 0.95F;
+            double sparkSize = 0.85 + impact * 0.15;
+
+            VertexConsumer impactConsumer = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+            Vec3 sparkCenter = hit.add(normal.scale(0.10));
+
+            // Camera-facing 3D Spherical Relativistic Mana Deflection & Dielectric Sparks (Pure Math Shader)
+            quadImpact(impactConsumer, m, sparkCenter, camRight.scale(sparkSize), camUp.scale(sparkSize),
+                    impactProgress, false, false, impactFade);
+            flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
+        }
+
+        // Catastrophic Mana Rupture on Shatter
+        if (life == 0.0F && fade > 0.03F) {
+            float shatterProgress = Mth.clamp(1.0F - fade, 0.0F, 1.0F);
+            float shatterFade = fade * 0.90F;
+            double centerBurst = 2.0 + shatterProgress * 1.5;
+
+            VertexConsumer impactConsumer = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
+            // Rupture at aegis center
+            quadImpact(impactConsumer, m, Vec3.ZERO, camRight.scale(centerBurst), camUp.scale(centerBurst),
+                    shatterProgress, false, false, shatterFade);
+            // Rupture at breach point
+            if (hit.lengthSqr() > 1.0E-4) {
+                double breachSize = 1.4 + shatterProgress * 1.1;
+                quadImpact(impactConsumer, m, hit, camRight.scale(breachSize), camUp.scale(breachSize),
+                        shatterProgress, false, false, shatterFade * 0.85F);
+            }
+            flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
         }
     }
 
@@ -385,18 +440,20 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
         }
     }
 
-    private static void quad(VertexConsumer b, Matrix4f m, Vec3 c, Vec3 u, Vec3 v, float alpha) {
-        Vec3[] p = new Vec3[]{
-                c.subtract(u).subtract(v),
-                c.add(u).subtract(v),
-                c.add(u).add(v),
-                c.subtract(u).add(v)
-        };
-        float[][] uv = new float[][]{{0.0F, 1.0F}, {1.0F, 1.0F}, {1.0F, 0.0F}, {0.0F, 0.0F}};
+    private static void quadImpact(VertexConsumer b, Matrix4f m, Vec3 c, Vec3 u, Vec3 v,
+                                   float progress, boolean isBlack, boolean isSurface, float alpha) {
+        float r = progress;
+        float g = isBlack ? 1.0F : 0.0F;
+        float bl = isSurface ? 1.0F : 0.0F;
 
-        for (int i = 0; i < 4; i++) {
-            b.addVertex(m, (float) p[i].x, (float) p[i].y, (float) p[i].z).setUv(uv[i][0], uv[i][1]).setColor(0.40F, 0.85F, 1.0F, alpha);
-        }
+        b.addVertex(m, (float)(c.x - u.x - v.x), (float)(c.y - u.y - v.y), (float)(c.z - u.z - v.z))
+                .setUv(0.0F, 1.0F).setColor(r, g, bl, alpha);
+        b.addVertex(m, (float)(c.x + u.x - v.x), (float)(c.y + u.y - v.y), (float)(c.z + u.z - v.z))
+                .setUv(1.0F, 1.0F).setColor(r, g, bl, alpha);
+        b.addVertex(m, (float)(c.x + u.x + v.x), (float)(c.y + u.y + v.y), (float)(c.z + u.z + v.z))
+                .setUv(1.0F, 0.0F).setColor(r, g, bl, alpha);
+        b.addVertex(m, (float)(c.x - u.x + v.x), (float)(c.y - u.y + v.y), (float)(c.z - u.z + v.z))
+                .setUv(0.0F, 0.0F).setColor(r, g, bl, alpha);
     }
 
     private static void flush(MultiBufferSource b, RenderType t) {

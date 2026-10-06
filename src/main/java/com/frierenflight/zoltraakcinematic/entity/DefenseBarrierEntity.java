@@ -3,7 +3,6 @@ package com.frierenflight.zoltraakcinematic.entity;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicEntities;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import io.redspace.ironsspellbooks.entity.spells.AbstractMagicProjectile;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -337,8 +336,6 @@ public final class DefenseBarrierEntity extends Entity {
         this.entityData.set(STATE, t);
 
         if (this.level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.END_ROD, point.x, point.y, point.z, broken ? 35 : 10, 0.4, 0.4, 0.4, 0.08);
-            serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, point.x, point.y, point.z, broken ? 25 : 8, 0.3, 0.3, 0.3, 0.1);
             serverLevel.playSound(
                     null,
                     point.x, point.y, point.z,

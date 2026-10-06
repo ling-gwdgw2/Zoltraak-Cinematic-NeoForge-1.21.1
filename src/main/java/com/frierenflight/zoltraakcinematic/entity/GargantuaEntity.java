@@ -212,22 +212,31 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         if (age <= (float) CRITICAL_END_TICK) {
             // Critical gravitational implosion: compresses inward before detonating
             float p = smoothstep((age - (float) HOLD_END_TICK) / ((float) CRITICAL_END_TICK - (float) HOLD_END_TICK));
-            return Mth.clamp(GRAVITATIONAL_RADIUS - 1.8f * p, 1.8f, GRAVITATIONAL_RADIUS);
+            return Mth.clamp(GRAVITATIONAL_RADIUS - 2.2f * p, 1.8f, GRAVITATIONAL_RADIUS);
         }
-        if (age <= (float) BLAST_TICK + 60.0f) {
-            // Supernova shock expansion: core rapidly blows open into supernova
-            float blast = blastFlash(partialTicks);
-            return Mth.clamp(1.8f + (GRAVITATIONAL_RADIUS * 1.5f - 1.8f) * (1.0f - blast), 1.8f, GRAVITATIONAL_RADIUS * 1.5f);
-        }
-        return GRAVITATIONAL_RADIUS;
+        // Supernova shock expansion: core rapidly blows open into expanding cosmic remnant
+        float postBlast = age - (float) BLAST_TICK;
+        float expand = Mth.clamp(postBlast / 85.0f, 0.0f, 1.0f);
+        float easeExpand = 1.0f - (1.0f - expand) * (1.0f - expand);
+        return 1.8f + (GRAVITATIONAL_RADIUS * 2.2f - 1.8f) * easeExpand;
     }
 
     public float opened(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks);
         if (age <= 0.0f) return 0.0f;
-        if (age >= (float) TEAR_END_TICK) return 1.0f;
-        float progress = age / (float) TEAR_END_TICK;
-        return Mth.clamp(smoothstep(progress), 0.0f, 1.0f);
+        if (age < (float) TEAR_END_TICK) {
+            float progress = age / (float) TEAR_END_TICK;
+            return Mth.clamp(smoothstep(progress), 0.0f, 1.0f);
+        }
+        if (age <= (float) BLAST_TICK + 15.0f) {
+            return 1.0f; // Stays fully open through peak detonation
+        }
+        if (age >= (float) LIFETIME_TICKS) {
+            return 0.0f; // Completely closed and healed
+        }
+        // Seamless spacetime healing & dissolution from tick 1115 to 1200
+        float dissolveProgress = (age - ((float) BLAST_TICK + 15.0f)) / ((float) LIFETIME_TICKS - ((float) BLAST_TICK + 15.0f));
+        return Mth.clamp(1.0f - smoothstep(dissolveProgress), 0.0f, 1.0f);
     }
 
     public float criticality(float partialTicks) {
@@ -239,8 +248,8 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
     public float blastFlash(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks) - (float) BLAST_TICK;
-        if (age < 0.0f || age > 60.0f) return 0.0f;
-        float p = age / 60.0f;
+        if (age < 0.0f || age > 75.0f) return 0.0f;
+        float p = age / 75.0f;
         return (1.0f - p) * (1.0f - p);
     }
 
@@ -259,13 +268,14 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
             return 1.0f;
         }
         if (age <= (float) CRITICAL_END_TICK) {
-            return 1.0f + 2.5f * criticality(partialTicks);
+            return 1.0f + 3.0f * criticality(partialTicks);
         }
-        if (age <= (float) BLAST_TICK + 60.0f) {
+        if (age <= (float) LIFETIME_TICKS) {
             float blast = blastFlash(partialTicks);
-            return 1.0f + 2.5f * blast;
+            float open = opened(partialTicks);
+            return (1.0f + 3.5f * blast) * open;
         }
-        return Math.max(0.0f, 1.0f - fade(partialTicks));
+        return 0.0f;
     }
 
     private static float smoothstep(float x) {

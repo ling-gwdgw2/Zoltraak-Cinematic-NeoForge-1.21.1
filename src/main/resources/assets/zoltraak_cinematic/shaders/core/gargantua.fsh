@@ -9,56 +9,53 @@ out vec4 fragColor;
 
 #define SL_SKY_DEPTH 0.99999
 
-// Volumetric star field: Kali's "Star Nest", from Shadertoy.
-#ifndef STAR_NEST_GLSL
-#define STAR_NEST_GLSL
+/**
+ * Luminous Interstellar Deep Space: Multi-layered Diamond Starfield & Glowing Cosmic Nebula
+ */
+vec3 gargCosmicSky(vec3 dir, float time, float sceneLum) {
+    // Spherical celestial coordinates
+    vec2 skyUv = vec2(atan(dir.z, dir.x) / 6.2831853 + 0.5, asin(clamp(dir.y, -1.0, 1.0)) / 3.14159265 + 0.5);
 
-#define SN_ITERATIONS 17
-#define SN_FORMUPARAM 0.53
-#define SN_VOLSTEPS 20
-#define SN_STEPSIZE 0.1
-#define SN_TILE 0.850
-#define SN_BRIGHTNESS 0.0015
-#define SN_DARKMATTER 0.300
-#define SN_DISTFADING 0.730
-#define SN_SATURATION 0.850
+    // 1. Organic Interstellar Nebula Dust Lanes (using NoiseSampler hardware texture)
+    vec2 nebUv = skyUv * vec2(2.4, 1.2) + vec2(time * 0.003, time * 0.001);
+    float n1 = dot(texture(NoiseSampler, nebUv).rgb, vec3(0.333));
+    float n2 = dot(texture(NoiseSampler, nebUv * 2.3 + vec2(0.35, 0.72)).rgb, vec3(0.333));
+    float n3 = dot(texture(NoiseSampler, nebUv * 5.2 - vec2(0.48, 0.22)).rgb, vec3(0.333));
+    float nebDensity = pow(clamp(n1 * 0.55 + n2 * 0.32 + n3 * 0.18 - 0.20, 0.0, 1.0), 1.5);
 
-vec3 starNest(vec3 dir, float drift) {
-    vec3 from = vec3(1.0, 0.5, 0.5) + vec3(drift * 2.0, drift, -2.0);
+    // Cosmic color palette: deep indigo, celestial violet, radiant stardust gold
+    vec3 nebBase = vec3(0.06, 0.12, 0.36);
+    vec3 nebMid = vec3(0.46, 0.18, 0.62);
+    vec3 nebHighlight = vec3(1.0, 0.82, 0.45);
+    vec3 nebCol = mix(nebBase, nebMid, clamp(n2 * 1.6, 0.0, 1.0));
+    nebCol = mix(nebCol, nebHighlight, pow(n3, 2.2));
+    vec3 nebulaLight = nebCol * (nebDensity * 2.6);
 
-    float s = 0.1;
-    float fade = 1.0;
-    vec3 v = vec3(0.0);
+    // 2. Multi-scale Procedural Diamond Starfield
+    // A. Dense distant stellar field
+    vec3 pStar1 = dir * 140.0;
+    vec3 id1 = floor(pStar1);
+    vec3 f1 = fract(pStar1) - 0.5;
+    float hash1 = fract(sin(dot(id1, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+    float star1 = smoothstep(0.965, 1.0, hash1) * exp(-dot(f1, f1) * 75.0);
 
-    for (int r = 0; r < SN_VOLSTEPS; r++) {
-        vec3 p = from + s * dir * 0.5;
-        p = abs(vec3(SN_TILE) - mod(p, vec3(SN_TILE * 2.0)));
+    // B. Bright sparkling stellar giants with twinkling & spectral colors
+    vec3 pStar2 = dir * 42.0;
+    vec3 id2 = floor(pStar2);
+    vec3 f2 = fract(pStar2) - 0.5;
+    float hash2 = fract(sin(dot(id2, vec3(269.5, 183.3, 419.2))) * 37584.2341);
+    float star2 = smoothstep(0.975, 1.0, hash2) * exp(-dot(f2, f2) * 55.0);
+    float twinkle = 0.72 + 0.28 * sin(time * 2.8 + hash2 * 18.0);
+    vec3 starCol2 = (hash2 > 0.99) ? vec3(0.65, 0.88, 1.0) : ((hash2 > 0.982) ? vec3(1.0, 0.88, 0.6) : vec3(1.0));
+    vec3 starsLight = vec3(star1 * 1.8) + (starCol2 * star2 * twinkle * 4.2);
 
-        float pa = 0.0;
-        float a = 0.0;
-        for (int i = 0; i < SN_ITERATIONS; i++) {
-            p = abs(p) / dot(p, p) - SN_FORMUPARAM;
-            a += abs(length(p) - pa);
-            pa = length(p);
-        }
+    vec3 cosmicVoid = nebulaLight + starsLight;
 
-        float dm = max(0.0, SN_DARKMATTER - a * a * 0.001);
-        a *= a * a;
-        if (r > 6) {
-            fade *= 1.0 - dm;
-        }
-
-        v += fade;
-        v += vec3(s, s * s, s * s * s * s) * a * SN_BRIGHTNESS * fade;
-        fade *= SN_DISTFADING;
-        s += SN_STEPSIZE;
-    }
-
-    v = mix(vec3(length(v)), v, SN_SATURATION);
-    return v * 0.01;
+    // 3. Day / Night Smart Harmonization (No dirty black bruises in daylight!)
+    vec3 daySky = nebulaLight * 0.45 + starsLight * 1.5;
+    vec3 nightSky = cosmicVoid;
+    return mix(nightSky, daySky, clamp(sceneLum * 1.8, 0.0, 1.0));
 }
-
-#endif
 
 // Gargantua: a black hole whose accretion disk is lensed by its own gravity.
 //
@@ -239,11 +236,9 @@ void main() {
             captured = true;
             break;
         }
-        if (travelledBlocks >= sceneDistance) {
-            if (sceneDistance < frontHoleDist) {
-                hitSolid = true;
-                break;
-            }
+        if (sceneDistance < holeDistance && travelledBlocks >= sceneDistance) {
+            hitSolid = true;
+            break;
         }
         if (travelled > GARG_ESCAPE) {
             break;
@@ -304,16 +299,18 @@ void main() {
     }
 
     // The background, read along the ray's new direction.
-    // Restores the deep space Interstellar cosmic starfield with smooth radial boundary feathering.
+    // Luminous cosmic starfield & interstellar nebula lensed by the black hole.
     vec3 background = sceneColour;
     if (!captured && !hitSolid) {
         float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
-        float edgeFeather = smoothstep(1.0, 0.45, normDist);
+        float edgeFeather = smoothstep(1.0, 0.35, normDist);
         float bent = 1.0 - dot(d, rayDir);
-        float lensed = clamp(bent * 20.0, 0.0, 1.0) * edgeFeather;
+        float lensed = clamp(bent * 12.0, 0.0, 1.0) * edgeFeather;
+
         if (lensed > 0.001) {
-            vec3 stars = starNest(d, time * 0.01);
-            background = mix(sceneColour, stars, lensed);
+            float sceneLum = dot(sceneColour, vec3(0.299, 0.587, 0.114));
+            vec3 cosmicSky = gargCosmicSky(d, time, sceneLum);
+            background = sceneColour + cosmicSky * (lensed * edgeFeather);
         }
     }
 
@@ -331,42 +328,77 @@ void main() {
 
     // Open transition: 0.0 = untouched scene, 1.0 = fully active black hole
     float openFactor = clamp(HoleState.x, 0.0, 1.0);
-    float critBoost = 1.0 + HoleState.y * 1.8;
+    float crit = clamp(HoleState.y, 0.0, 1.0);
+    float critBoost = 1.0 + crit * 1.8;
+    float blast = clamp(HoleState.w, 0.0, 1.0);
 
-    // Emissive disk & photon ring
-    vec3 diskEmission = (accum + ring) * critBoost * openFactor;
+    // Emissive disk & photon ring (superheated and energized during detonation)
+    float blastDiskEnergize = 1.0 + blast * 3.5;
+    vec3 diskEmission = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
 
     // Background behind the disk
-    float blast = clamp(HoleState.w, 0.0, 1.0);
+    vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? sceneColour : background;
     vec3 behindEffect = sceneColour;
+
     if (captured || isInsideShadow) {
-        // Supernova core detonation at tick 1100: singularity detonates into brilliant white-gold!
-        vec3 supernovaCore = mix(vec3(0.0), vec3(3.2, 2.9, 2.4), blast);
-        behindEffect = supernovaCore;
+        if (crit >= 0.99) {
+            // Singularity has detonated! Core blazes into brilliant white-gold supernova light
+            // and dissolves gracefully into the background scene as spacetime heals.
+            vec3 coreBurst = mix(vec3(1.4, 1.0, 0.6), vec3(4.5, 4.0, 3.2), blast);
+            behindEffect = mix(sceneOrCosmic, coreBurst, clamp(blast * 1.6 + openFactor * 0.45, 0.0, 1.0));
+        } else {
+            // Active event horizon shadow
+            behindEffect = vec3(0.0);
+        }
     } else if (!hitSolid) {
-        behindEffect = background;
+        behindEffect = sceneOrCosmic;
     }
 
-    // --- SUPERNOVA DETONATION & EXPANDING COSMIC FIREBALL ---
+    // --- APOCALYPTIC SUPERNOVA DETONATION & COSMIC SHOCKWAVE VFX ---
     vec3 supernovaVfx = vec3(0.0);
     if (blast > 0.001 && along > 0.0 && (!hitSolid || sceneDistance > holeDistance)) {
-        // A. Expanding Incandescent Core Fireball: expands rapidly from 1.5 rg up to 6.0 rg
-        float coreRadius = rg * (1.5 + (1.0 - blast) * 4.5);
+        float progress = 1.0 - blast; // 0.0 at moment of detonation -> 1.0 as blast expands
+
+        // A. Incandescent Supernova Core Fireball: expands rapidly from 1.2 rg to 7.0 rg
+        float coreRadius = rg * (1.2 + progress * 6.5);
         float coreNorm = impact / max(coreRadius, 0.1);
-        float coreShape = exp(-coreNorm * coreNorm * 3.0);
-        vec3 coreCol = mix(vec3(1.0, 0.75, 0.4), vec3(1.0, 0.98, 1.0), blast);
-        supernovaVfx += coreCol * (coreShape * blast * 6.0);
+        float coreShape = exp(-coreNorm * coreNorm * 3.5);
+        vec3 coreCol = mix(vec3(1.0, 0.65, 0.25), vec3(1.0, 0.98, 1.0), blast);
+        supernovaVfx += coreCol * (coreShape * blast * 7.5);
 
-        // B. Relativistic 3D Shockwave Blast Shell Ring: expands outward from 3.0 rg to 16.0 rg
-        float shockRadius = rg * (2.8 + (1.0 - blast) * 13.5);
-        float shockDist = abs(impact - shockRadius) / max(rg * 0.7, 0.15);
-        float shockShape = exp(-shockDist * shockDist * 5.5);
-        vec3 shockCol = mix(vec3(0.5, 0.85, 1.0), vec3(1.0, 0.9, 0.7), blast);
-        supernovaVfx += shockCol * (shockShape * blast * 4.5);
+        // B. Primary Relativistic 3D Shockwave Shell with Chromatic Edge:
+        float shockRadius = rg * (2.2 + progress * 24.0);
+        float shockWidth = rg * (0.45 + progress * 1.1);
+        float shockDist = abs(impact - shockRadius) / max(shockWidth, 0.1);
+        float shockShape = exp(-shockDist * shockDist * 6.0);
+        // Chromatic dispersion: cyan leading front, gold radiant body, violet trailing wake
+        vec3 shockLead = vec3(0.4, 0.9, 1.0);
+        vec3 shockBody = vec3(1.0, 0.88, 0.6);
+        vec3 shockTrail = vec3(0.85, 0.45, 1.0);
+        vec3 shockCol = mix(shockTrail, shockBody, clamp(blast * 1.4, 0.0, 1.0));
+        if (impact > shockRadius) {
+            shockCol = mix(shockBody, shockLead, clamp((impact - shockRadius) / max(shockWidth * 0.8, 0.05), 0.0, 1.0));
+        }
+        supernovaVfx += shockCol * (shockShape * blast * 6.0);
 
-        // C. Supernova Cosmic Ray Flash when looking near the blast
-        float viewProximity = clamp(1.0 - impact / max(rg * 20.0, 1.0), 0.0, 1.0);
-        supernovaVfx += vec3(1.0, 0.96, 0.9) * (blast * blast * viewProximity * 2.2);
+        // C. Secondary Harmonic Compression Wave (echo shockwave):
+        float subShockRadius = shockRadius * 0.62;
+        float subDist = abs(impact - subShockRadius) / max(shockWidth * 0.75, 0.1);
+        float subShape = exp(-subDist * subDist * 5.0);
+        supernovaVfx += vec3(0.95, 0.6, 0.2) * (subShape * blast * 2.8);
+
+        // D. Relativistic Starburst Rays (Godrays piercing through spacetime):
+        vec3 rayVec = (rayDir * along - centre) / max(rg, 0.01);
+        float rayAngle = atan(dot(rayVec, diskU), dot(rayVec, diskV));
+        float rayHarmonics = sin(rayAngle * 14.0 + time * 1.2) * cos(rayAngle * 9.0 - time * 0.8);
+        float raySpikes = pow(abs(rayHarmonics), 2.5);
+        float rayFalloff = exp(-impact / max(rg * 16.0, 1.0));
+        vec3 rayColor = mix(vec3(1.0, 0.85, 0.5), vec3(1.0, 0.98, 1.0), blast);
+        supernovaVfx += rayColor * (raySpikes * rayFalloff * blast * 5.0);
+
+        // E. Cosmic Ray Flash on camera proximity
+        float viewProximity = clamp(1.0 - impact / max(rg * 25.0, 1.0), 0.0, 1.0);
+        supernovaVfx += vec3(1.0, 0.95, 0.88) * (blast * blast * viewProximity * 2.8);
     }
 
     // Smoothly blend the background between the untouched scene and the relativistic distortion

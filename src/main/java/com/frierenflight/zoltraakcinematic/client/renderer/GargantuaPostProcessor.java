@@ -43,7 +43,7 @@ public final class GargantuaPostProcessor {
             Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private static TextureTarget sceneCopy;
-    private static TextureTarget currentDepth;
+    private static TextureTarget postTarget;
     private static Matrix4f levelViewMatrix;
 
     public static void registerClientInstance(GargantuaEntity entity) {
@@ -140,26 +140,32 @@ public final class GargantuaPostProcessor {
         try {
             ensureTargets(main.width, main.height);
 
-            // Copy color buffer for scene sampling
-            int readSourceFbo = (prevDrawFbo != 0 && ShaderCompatibility.useFullDetailPass()) ? prevDrawFbo : main.frameBufferId;
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readSourceFbo);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
-            GlStateManager._glBlitFrameBuffer(0, 0, main.width, main.height, 0, 0, sceneCopy.width, sceneCopy.height, GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
-
-            // Copy depth buffer for physical world occlusion testing (or use Iris depth texture directly)
+            boolean isShaderPack = ShaderCompatibility.useFullDetailPass();
             int irisDepthTex = ShaderCompatibility.getShaderDepthTexture();
+            int activeDrawFbo = (prevDrawFbo != 0 && isShaderPack) ? prevDrawFbo : main.frameBufferId;
+
+            // In Iris, we copy the composite framebuffer to sceneCopy so we can sample it
+            // In vanilla, we copy activeDrawFbo to sceneCopy as well to have a clean, static input texture
+            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, activeDrawFbo);
+            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
+            GlStateManager._glBlitFrameBuffer(
+                    0, 0, main.width, main.height,
+                    0, 0, sceneCopy.width, sceneCopy.height,
+                    GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
+            );
+
+            // Determine depth texture ID:
+            // 1. If Iris is active, use Iris depth texture directly
+            // 2. In vanilla, main.getDepthTextureId() is the actual depth texture of the world!
             int depthSamplerId;
             if (irisDepthTex > 0) {
                 depthSamplerId = irisDepthTex;
             } else {
-                GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readSourceFbo);
-                GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, currentDepth.frameBufferId);
-                GlStateManager._glBlitFrameBuffer(0, 0, main.width, main.height, 0, 0, currentDepth.width, currentDepth.height, GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
-                depthSamplerId = currentDepth.getDepthTextureId();
+                depthSamplerId = main.getDepthTextureId();
             }
 
-            // Switch to main framebuffer for drawing
-            main.bindWrite(true);
+            // Draw into postTarget (NEVER directly into activeDrawFbo, so depthSamplerId and sceneCopy are never in a feedback loop!)
+            postTarget.bindWrite(true);
             RenderSystem.disableBlend();
             RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
@@ -172,7 +178,8 @@ public final class GargantuaPostProcessor {
             Matrix4f viewRotation = new Matrix4f(view).setTranslation(0.0f, 0.0f, 0.0f);
             Vec3 camPos = camera.getPosition();
 
-            for (GargantuaEntity entity : entities) {
+            for (int i = 0; i < entities.size(); i++) {
+                GargantuaEntity entity = entities.get(i);
                 if (entity.isRemoved()) continue;
 
                 float rg = entity.gravitationalRadius(partialTicks);
@@ -211,12 +218,35 @@ public final class GargantuaPostProcessor {
 
                 RenderSystem.setShader(() -> shader);
                 drawFullscreenQuad();
+
+                // If more entities exist, ping-pong postTarget back into sceneCopy for next pass
+                if (i < entities.size() - 1) {
+                    GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, postTarget.frameBufferId);
+                    GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
+                    GlStateManager._glBlitFrameBuffer(
+                            0, 0, postTarget.width, postTarget.height,
+                            0, 0, sceneCopy.width, sceneCopy.height,
+                            GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
+                    );
+                    postTarget.bindWrite(true);
+                }
             }
+
+            // Blit finished composited color from postTarget back into activeDrawFbo
+            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, postTarget.frameBufferId);
+            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, activeDrawFbo);
+            GlStateManager._glBlitFrameBuffer(
+                    0, 0, postTarget.width, postTarget.height,
+                    0, 0, main.width, main.height,
+                    GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
+            );
+
         } catch (Throwable t) {
             System.err.println("[ZoltraakCinematic] Gargantua post-processing error: " + t.getMessage());
         } finally {
             GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, prevReadFbo);
             GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, prevDrawFbo);
+            GlStateManager._viewport(0, 0, main.viewWidth, main.viewHeight);
             if (prevDepthTest) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
             if (prevCull) RenderSystem.enableCull(); else RenderSystem.disableCull();
             if (prevBlend) RenderSystem.enableBlend(); else RenderSystem.disableBlend();
@@ -226,16 +256,16 @@ public final class GargantuaPostProcessor {
     }
 
     private static void ensureTargets(int width, int height) {
+        if (postTarget == null || postTarget.width != width || postTarget.height != height) {
+            if (postTarget != null) postTarget.destroyBuffers();
+            postTarget = new TextureTarget(width, height, false, Minecraft.ON_OSX);
+            postTarget.setFilterMode(GL11.GL_LINEAR);
+        }
+
         if (sceneCopy == null || sceneCopy.width != width || sceneCopy.height != height) {
             if (sceneCopy != null) sceneCopy.destroyBuffers();
             sceneCopy = new TextureTarget(width, height, false, Minecraft.ON_OSX);
             sceneCopy.setFilterMode(GL11.GL_LINEAR);
-        }
-
-        if (currentDepth == null || currentDepth.width != width || currentDepth.height != height) {
-            if (currentDepth != null) currentDepth.destroyBuffers();
-            currentDepth = new TextureTarget(width, height, true, Minecraft.ON_OSX);
-            currentDepth.setFilterMode(GL11.GL_NEAREST);
         }
     }
 
@@ -264,13 +294,13 @@ public final class GargantuaPostProcessor {
 
     public static void release() {
         ACTIVE_CLIENT_INSTANCES.clear();
+        if (postTarget != null) {
+            postTarget.destroyBuffers();
+            postTarget = null;
+        }
         if (sceneCopy != null) {
             sceneCopy.destroyBuffers();
             sceneCopy = null;
-        }
-        if (currentDepth != null) {
-            currentDepth.destroyBuffers();
-            currentDepth = null;
         }
         levelViewMatrix = null;
     }

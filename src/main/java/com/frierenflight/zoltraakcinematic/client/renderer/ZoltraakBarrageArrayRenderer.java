@@ -12,7 +12,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
@@ -173,7 +172,6 @@ public class ZoltraakBarrageArrayRenderer {
             } else {
                 if (state.wasCasting) {
                     state.wasCasting = false;
-                    spawnShatterParticles(living, state.colorTheme);
                 }
                 state.introTicks = Math.max(0, state.introTicks - 1);
             }
@@ -330,37 +328,6 @@ public class ZoltraakBarrageArrayRenderer {
             }
         }
         bufferSource.endBatch(ZoltraakRenderTypes.BARRAGE_ATLAS);
-    }
-
-    private static void spawnShatterParticles(LivingEntity caster, int colorTheme) {
-        if (caster == null || caster.level() == null) return;
-
-        Vec3 eyePos = caster.getEyePosition();
-        float yRot = caster.getYRot();
-        Vec3 flatLook = Vec3.directionFromRotation(0, yRot);
-        Vec3 right = Vec3.directionFromRotation(0, yRot + 90);
-        Vec3 worldUp = new Vec3(0, 1, 0);
-
-        Random rng = new Random();
-        boolean isPurple = colorTheme == 1;
-
-        for (int i = 0; i < FernBarrageSpell.BARRAGE_CIRCLE_COUNT; i++) {
-            Vec3 local = FernBarrageSpell.BARRAGE_CIRCLE_OFFSETS[i];
-            float baseR = FernBarrageSpell.BARRAGE_CIRCLE_SCALES[i];
-            Vec3 circleCenter = eyePos.add(right.scale(local.x)).add(worldUp.scale(local.y)).add(flatLook.scale(local.z));
-
-            for (int k = 0; k < 2; k++) {
-                double angle = rng.nextDouble() * Math.PI * 2.0;
-                double r = baseR * (0.5 + rng.nextDouble() * 0.5);
-                Vec3 p = circleCenter.add(right.scale(Math.cos(angle) * r)).add(worldUp.scale(Math.sin(angle) * r));
-                Vec3 vel = worldUp.scale(0.04 + rng.nextDouble() * 0.04)
-                        .add(right.scale((rng.nextDouble() - 0.5) * 0.04))
-                        .add(flatLook.scale((rng.nextDouble() - 0.5) * 0.04));
-
-                caster.level().addParticle(isPurple ? ParticleTypes.WITCH : ParticleTypes.ELECTRIC_SPARK,
-                        p.x, p.y, p.z, vel.x, vel.y, vel.z);
-            }
-        }
     }
 
     private static void renderDisc(PoseStack poseStack, VertexConsumer builder, float radius, int alpha, int r, int g, int b) {
