@@ -4,6 +4,7 @@ import com.frierenflight.zoltraakcinematic.ZoltraakDamage;
 import com.frierenflight.zoltraakcinematic.client.renderer.IZoltraakVisualEntity;
 import com.frierenflight.zoltraakcinematic.client.renderer.ZoltraakMode;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicEntities;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSpells;
 import io.redspace.ironsspellbooks.damage.DamageSources;
@@ -439,7 +440,7 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
                 net.minecraft.world.damagesource.DamageSource source = isPurple
                         ? ModCinematicSpells.CORRUPTED_BARRAGE.get().getDamageSource(this, livingShooter)
                         : ModCinematicSpells.ZOLTRAAK_BARRAGE.get().getDamageSource(this, livingShooter);
-                damaged = ZoltraakDamage.apply(livingTarget, damage, source, true);
+                damaged = ZoltraakDamage.apply(livingTarget, damage, source, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
             } else {
                 damaged = livingTarget.hurt(damageSources().magic(), damage);
             }

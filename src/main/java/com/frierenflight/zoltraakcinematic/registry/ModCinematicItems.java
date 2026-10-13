@@ -44,6 +44,9 @@ public class ModCinematicItems {
     public static final DeferredItem<Item> GARGANTUA_SCROLL =
             ITEMS.register("gargantua_scroll", com.frierenflight.zoltraakcinematic.item.GargantuaScrollItem::new);
 
+    public static final DeferredItem<Item> CHRONOS_DILATATION_WATCH =
+            ITEMS.register("chronos_dilatation_watch", com.frierenflight.zoltraakcinematic.item.ChronosDilatationWatchItem::new);
+
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }

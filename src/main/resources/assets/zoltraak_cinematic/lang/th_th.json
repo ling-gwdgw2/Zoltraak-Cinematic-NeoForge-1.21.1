@@ -81,5 +81,7 @@
   "subtitles.zoltraak_cinematic.singularity_charge": "กาลอวกาศบิดเบี้ยวและบีบอัดอย่างรุนแรง",
   "subtitles.zoltraak_cinematic.singularity_active": "คลื่นความโน้มถ่วงของหลุมดำส่งเสียงกึกก้อง",
   "subtitles.zoltraak_cinematic.singularity_explode": "เอกภาวะหลุมดำระเบิดยุบตัวทำลายล้าง",
-  "subtitles.zoltraak_cinematic.tinnitus": "เสียงคลื่นกระแทกสะท้อนก้องในหู"
+  "subtitles.zoltraak_cinematic.tinnitus": "เสียงคลื่นกระแทกสะท้อนก้องในหู",
+  "item.zoltraak_cinematic.chronos_dilatation_watch": "นาฬิกาพกยืดเวลาสัมพัทธภาพ",
+  "item.zoltraak_cinematic.chronos_dilatation_watch.desc": "นาฬิกาพกโบราณที่เดินช้าลงเมื่อเข้าใกล้สนามโน้มถ่วงเข้มข้น ลดคูลดาวน์เวทมนตร์ +15% และเพิ่มพลังเวทหลุมดำ +35%"
 }

@@ -1,13 +1,10 @@
 package com.frierenflight.zoltraakcinematic.entity.boss.ai;
 
-import com.frierenflight.zoltraakcinematic.client.renderer.ZoltraakMode;
-import com.frierenflight.zoltraakcinematic.entity.ZoltraakCinematicBeamEntity;
+import com.frierenflight.zoltraakcinematic.entity.GargantuaEntity;
 import com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
@@ -16,25 +13,28 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 
 /**
- * 📜 QualCataclysmicGoal — Phase 4 Ultimate: Original Cataclysmic Zoltraak (極大破滅ゾルトラーク).
+ * 📜 QualCataclysmicGoal — Phase 4 Ultimate: Cosmic Singularity (มหาเวทเอกภาวะหลุมดำ - Gargantua Black Hole).
  *
  * Triggered when Qual is at critical health (HP < 20%):
- * 1. CHARGING STANCE (60 ticks / 3.0 seconds):
+ * 1. CHARGING STANCE (70 ticks / 3.5 seconds):
  *    - Qual halts motionlessly mid-air
- *    - Massive dark mana singularity collapses inward toward Qual
- *    - Resonant ancient humming & thunderous charge VFX
+ *    - Massive dark mana logarithmic singularity vortex collapses inward towards Qual
+ *    - Demonic resonance & spatial tearing audio
  *
- * 2. CATACLYSMIC DISCHARGE:
- *    - Fires a colossal 4-meter diameter beam (ZoltraakMode.LARGE)
- *    - 95 Base Armor-Piercing Damage sweeping across 80 blocks
- *    - 20-block terminal shockwave detonation
- *    - Demands either a full 360-degree Geodesic Dome or thick subterranean bedrock to survive!
+ * 2. EVENT HORIZON SUMMON (400 ticks / 20.0 seconds active lifetime):
+ *    - Spawns a colossal rotating Kerr black hole (GargantuaEntity) midway towards the player
+ *    - Relativistic accretion disk shears anything in range, inward gravitational pull across 100 blocks
+ *    - Terminates with an apocalyptic Supernova implosion detonation
+ *    - Cooldown: 200 seconds (4000 ticks) as explicitly configured
  */
 public class QualCataclysmicGoal extends Goal {
+    public static final int COOLDOWN_TICKS = 4000; // 200 seconds cooldown
+    private static final int CHARGE_DURATION = 70;  // 3.5 seconds
+    private static final int BLACK_HOLE_LIFETIME = 400; // 20.0 seconds
+
     private final QualBossEntity qual;
-    private int cooldown = 140;
+    private int cooldown = 200; // Initial delay upon entering Phase 4 (10s buffer)
     private int chargeTimer = 0;
-    private static final int CHARGE_DURATION = 60; // 3.0 seconds
 
     public QualCataclysmicGoal(QualBossEntity qual) {
         this.qual = qual;
@@ -61,7 +61,7 @@ public class QualCataclysmicGoal extends Goal {
         this.chargeTimer = CHARGE_DURATION;
         qual.setCataclysmicCharging(true);
         if (qual.level() instanceof ServerLevel serverLevel) {
-            serverLevel.playSound(null, qual.blockPosition(), ModCinematicSounds.QUAL_CATACLYSMIC_CHARGE.get(), SoundSource.HOSTILE, 2.5f, 1.0f);
+            serverLevel.playSound(null, qual.blockPosition(), ModCinematicSounds.QUAL_CATACLYSMIC_CHARGE.get(), SoundSource.HOSTILE, 3.0f, 0.95f);
         }
     }
 
@@ -96,47 +96,36 @@ public class QualCataclysmicGoal extends Goal {
         qual.setDeltaMovement(Vec3.ZERO); // Stationary floating during charge
 
         if (qual.level() instanceof ServerLevel serverLevel) {
-            Vec3 anchor = ZoltraakCinematicBeamEntity.getStaffAnchorPos(qual);
-
-            // Inward-converging singularity vortex particles
-            for (int i = 0; i < 6; i++) {
-                double ox = (qual.getRandom().nextDouble() - 0.5) * 3.5;
-                double oy = (qual.getRandom().nextDouble() - 0.5) * 3.5;
-                double oz = (qual.getRandom().nextDouble() - 0.5) * 3.5;
-                serverLevel.sendParticles(ParticleTypes.PORTAL, anchor.x + ox, anchor.y + oy, anchor.z + oz, 1, -ox * 0.4, -oy * 0.4, -oz * 0.4, 0.2);
-            }
-
-            if (chargeTimer % 10 == 0) {
-                serverLevel.sendParticles(ParticleTypes.WITCH, anchor.x, anchor.y, anchor.z, 15, 0.6, 0.6, 0.6, 0.05);
-                serverLevel.playSound(null, qual.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.HOSTILE, 0.8f, 0.45f + (CHARGE_DURATION - chargeTimer) * 0.01f);
+            if (chargeTimer % 15 == 0) {
+                serverLevel.playSound(null, qual.blockPosition(), ModCinematicSounds.SINGULARITY_ACTIVE.get(), SoundSource.HOSTILE, 1.8f, 1.15f);
             }
         }
 
         chargeTimer--;
 
         if (chargeTimer <= 0) {
-            fireCataclysmicBeam(target);
+            summonGargantuaSingularity(target);
             qual.setCataclysmicCharging(false);
-            cooldown = 180 + qual.getRandom().nextInt(40); // 9 - 11s cooldown
+            cooldown = COOLDOWN_TICKS; // 200 seconds cooldown (4000 ticks)
         }
     }
 
-    private void fireCataclysmicBeam(LivingEntity target) {
+    private void summonGargantuaSingularity(LivingEntity target) {
         if (!(qual.level() instanceof ServerLevel serverLevel)) return;
 
-        Vec3 anchor = ZoltraakCinematicBeamEntity.getStaffAnchorPos(qual);
+        Vec3 bossPos = qual.position().add(0, 1.5, 0);
+        Vec3 targetPos = target.position().add(0, 1.0, 0);
 
-        // Spawn Colossal Corrupted Beam (Mode.LARGE, ColorTheme 1 = Corrupted Void)
-        ZoltraakCinematicBeamEntity beam = new ZoltraakCinematicBeamEntity(serverLevel, qual, 95.0f, 80.0f, 1);
-        beam.setMode(ZoltraakMode.LARGE);
-        beam.setPos(anchor.x, anchor.y, anchor.z);
-        beam.setYRot(qual.getYRot());
-        beam.setXRot(qual.getXRot());
-        serverLevel.addFreshEntity(beam);
+        // Spawn singularity elevated midway towards target (65% towards target, 4.5m elevated)
+        Vec3 spawnPos = bossPos.lerp(targetPos, 0.65).add(0, 4.5, 0);
 
-        // Apocalyptic Thunder & Shockwave SFX
-        serverLevel.playSound(null, qual.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 2.5f, 0.65f);
-        serverLevel.playSound(null, qual.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 2.0f, 0.70f);
-        serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, anchor.x, anchor.y, anchor.z, 2, 0, 0, 0, 0);
+        Vec3 spinAxis = new Vec3(0, 1, 0);
+        float spellPower = 600.0f; // Boss cataclysmic tier spell power
+
+        GargantuaEntity blackHole = new GargantuaEntity(serverLevel, qual, spawnPos, spinAxis, spellPower, BLACK_HOLE_LIFETIME);
+        serverLevel.addFreshEntity(blackHole);
+
+        // Resonant Spacetime Tear Sound
+        serverLevel.playSound(null, spawnPos.x, spawnPos.y, spawnPos.z, ModCinematicSounds.SINGULARITY_CHARGE.get(), SoundSource.HOSTILE, 4.5f, 0.90f);
     }
 }

@@ -13,7 +13,6 @@ import io.redspace.ironsspellbooks.api.registry.AttributeRegistry;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -22,7 +21,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.BossEvent;
@@ -83,6 +81,8 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
             SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.INT);
     public static final EntityDataAccessor<Boolean> DATA_IS_FLYING =
             SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.BOOLEAN);
+    public static final EntityDataAccessor<Integer> DATA_TELEPORT_FLASH_TICKS =
+            SynchedEntityData.defineId(QualBossEntity.class, EntityDataSerializers.INT);
 
     public static final int CAST_STATE_IDLE = 0;
     public static final int CAST_STATE_BEAM = 1;
@@ -133,7 +133,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
                 .add(Attributes.MOVEMENT_SPEED, 0.30)
                 .add(Attributes.ATTACK_DAMAGE, 12.0)
                 .add(AttributeRegistry.MAX_MANA, 6000.0)
-                .add(AttributeRegistry.MANA_REGEN, 60.0)
+                .add(AttributeRegistry.MANA_REGEN, 20.0)
                 .add(AttributeRegistry.SPELL_POWER, 1.4)
                 .add(AttributeRegistry.SPELL_RESIST, 1.4)
                 .add(AttributeRegistry.CAST_TIME_REDUCTION, 0.35)
@@ -157,6 +157,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         builder.define(DATA_CHARGING_CATACLYSMIC, false);
         builder.define(DATA_CASTING_STATE, CAST_STATE_IDLE);
         builder.define(DATA_IS_FLYING, false);
+        builder.define(DATA_TELEPORT_FLASH_TICKS, 0);
     }
 
     public int getPhase() {
@@ -181,6 +182,14 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
 
     public void setCastingState(int state) {
         this.entityData.set(DATA_CASTING_STATE, state);
+    }
+
+    public int getTeleportFlashTicks() {
+        return this.entityData.get(DATA_TELEPORT_FLASH_TICKS);
+    }
+
+    public void triggerTeleportFlash() {
+        this.entityData.set(DATA_TELEPORT_FLASH_TICKS, 12);
     }
 
     /**
@@ -289,9 +298,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
 
             // Roar of demonic awareness when more challengers arrive
             if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-                serverLevel.sendParticles(ParticleTypes.WITCH, this.getX(), this.getY() + 1.6, this.getZ(), 45, 1.2, 1.2, 1.2, 0.1);
-                serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.6, this.getZ(), 60, 1.2, 1.6, 1.2, 0.3);
-                serverLevel.playSound(null, this.blockPosition(), SoundEvents.WITHER_AMBIENT, SoundSource.HOSTILE, 1.8f, 0.7f);
+                serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.QUAL_AMBIENT.get(), SoundSource.HOSTILE, 1.8f, 0.7f);
             }
         }
     }
@@ -341,9 +348,12 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         // Handle Phase Transition Effects & Timers
         if (phaseTransitionTimer > 0) {
             phaseTransitionTimer--;
-            if (phaseTransitionTimer % 4 == 0 && this.level() instanceof net.minecraft.server.level.ServerLevel sl) {
-                sl.sendParticles(ParticleTypes.WITCH, this.getX(), this.getY() + 1.6, this.getZ(), 10, 0.8, 1.2, 0.8, 0.05);
-            }
+        }
+
+        // Tick down client-synced teleport flash shockwave timer
+        int flash = getTeleportFlashTicks();
+        if (flash > 0) {
+            this.entityData.set(DATA_TELEPORT_FLASH_TICKS, flash - 1);
         }
 
         // Synchronize Active Combat Casting State to Tracking Clients
@@ -405,9 +415,8 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
 
         if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
             serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.QUAL_PHASE_TRANSITION.get(), SoundSource.HOSTILE, 1.8f, 1.0f);
-            serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.8, this.getZ(), 1, 0, 0, 0, 0);
-            serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.6, this.getZ(), 60, 1.2, 1.8, 1.2, 0.2);
         }
+        triggerTeleportFlash();
     }
 
     @Override
@@ -431,18 +440,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
             }
         }
 
-        // Visual Demonic Corruption Aura
-        if (this.level().isClientSide) {
-            double px = this.getX() + (this.getRandom().nextDouble() - 0.5) * 1.4;
-            double py = this.getY() + 0.2 + this.getRandom().nextDouble() * 2.8;
-            double pz = this.getZ() + (this.getRandom().nextDouble() - 0.5) * 1.4;
-
-            // Black void / Witch purple particles trailing behind Qual
-            this.level().addParticle(ParticleTypes.WITCH, px, py, pz, 0, -0.02, 0);
-            if (this.getRandom().nextFloat() < 0.35f) {
-                this.level().addParticle(ParticleTypes.PORTAL, px, py, pz, (this.getRandom().nextDouble() - 0.5) * 0.2, -0.1, (this.getRandom().nextDouble() - 0.5) * 0.2);
-            }
-        }
+        // Demonic Corruption Aura is rendered via custom GLSL 150 shader math in QualBossRenderer
     }
 
     @Override
@@ -570,10 +568,9 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         if (getPhase() >= 3 && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) {
             if ((source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE) || source.is(net.minecraft.tags.DamageTypeTags.WITCH_RESISTANT_TO)) && this.getRandom().nextFloat() < 0.35f) {
                 if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-                    serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, this.getX(), this.getY() + 1.6, this.getZ(), 20, 0.6, 0.8, 0.6, 0.1);
-                    serverLevel.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY() + 1.6, this.getZ(), 10, 0.4, 0.6, 0.4, 0.05);
-                    serverLevel.playSound(null, this.blockPosition(), SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.HOSTILE, 1.4f, 1.8f);
+                    serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.ZOLTRAAK_IMPACT.get(), SoundSource.HOSTILE, 1.4f, 1.8f);
                 }
+                triggerTeleportFlash();
                 amount *= 0.5f; // Absorb 50% of the damage
             }
         }
@@ -619,8 +616,6 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         super.die(cause);
         this.bossEvent.removeAllPlayers();
         if (this.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, this.getX(), this.getY() + 1.5, this.getZ(), 3, 0.5, 0.5, 0.5, 0);
-            serverLevel.sendParticles(ParticleTypes.PORTAL, this.getX(), this.getY() + 1.5, this.getZ(), 120, 1.5, 2.0, 1.5, 0.5);
             serverLevel.playSound(null, this.blockPosition(), ModCinematicSounds.QUAL_DEATH.get(), SoundSource.HOSTILE, 2.0f, 1.0f);
 
             // Award bonus XP orbs scaled with player count

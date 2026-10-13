@@ -1,0 +1,105 @@
+# 📜 Changelog — Zoltraak: Cinematic Edition
+
+All notable changes to the **Zoltraak: Cinematic Edition** mod project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.0.2] - 2026-10-07
+
+### 🌟 Boss Visual Overhaul & Pacing Refinement
+
+#### Added
+- **Subtle Dark Miasma VFX (`renderSubtleDarkMiasma`)**:
+  - Implemented an elegant, floating dark mana particle effect in `QualBossRenderer.java`.
+  - Emits soft, translucent purple-black motes (`r=110, g=15, b=160, alpha=75..110`) that gently drift upwards around Qual.
+  - Designed with pure mathematical procedural GLSL shaders that remain aesthetic and airy without obscuring the boss character model, horns, or robes.
+
+#### Changed & Balanced
+- **Pacing & Recovery Window in `QualCombatGoal.java`**:
+  - **Mandatory Cooldown Window**: Added a dedicated **10.0 – 12.0 second (200–240 ticks)** recovery cooldown (`attackTimer = 200 + random(40)`) after Qual completes her Corrupted Barrage channel. Qual idly hovers during this window, providing players a fair and rewarding opportunity to counter-attack.
+  - **Single Beam Cadence**: Tuned single-beam Zoltraak delays to **3.5 – 5.0 seconds (70–100 ticks)** across Phase 1, Phase 2, and Phase 3 to eliminate beam spamming.
+- **Boss Mana Economy in `QualBossEntity.java`**:
+  - Rebalanced `AttributeRegistry.MANA_REGEN` from `60.0/s` down to **`20.0/s`**, ensuring mana is a finite tactical resource that drains during volleys and regenerates predictably.
+- **Corrupted Barrage Duration in `CorruptedBarrageSpell.java`**:
+  - Hard-capped continuous channel duration for Qual's Corrupted Barrage to exactly **4.0 seconds (80 ticks)** (down from 10.0 seconds).
+- **Ancient Unsealing Ritual Aesthetic in `QualSealingStoneRenderer.java`**:
+  - Replaced the generic orange fire/flame palette with authentic **Celestial Cyan (`0.25, 0.75, 1.0`)** representing Frieren's ancient seal, which shifts and shatters into **Demonic Zoltraak Violet (`0.85, 0.15, 0.95`)**.
+
+#### Removed
+- **Thick Helical Tendrils**: Removed `renderHelicalManaTendrils` from `QualBossRenderer.java` 100%, completely eliminating the cluttered 3–4 thick pink spiral ribbons that previously obscured the character model.
+- **Ground Magic Circle**: Removed `renderGroundCircle` beneath Qual's feet in `QualBossRenderer.java`, keeping the arena floor clean and uncluttered.
+- **Oversized Coronal Flare**: Removed the large 1.35m chest flare quad (`renderCoronalFlares`) from `QualBossRenderer.java` to prevent blinding lens flares over the torso.
+
+#### Fixed
+- **Vanilla Audio & Particle Purge**:
+  - Completely purged lingering Vanilla sound events (`SoundEvents.WITHER_AMBIENT`, `SoundEvents.AMETHYST_BLOCK_HIT`) from `QualBossEntity.java`, replacing them with custom mod sounds (`ModCinematicSounds.QUAL_AMBIENT`, `ModCinematicSounds.ZOLTRAAK_IMPACT`).
+  - Purged Vanilla particle emitters (`ParticleTypes.FLAME`, `LAVA`, `SMOKE`, `EXPLOSION_EMITTER`) and sound events from `QualSealingStoneBlockEntity.java`.
+  - Fixed a missing sound reference (`SEAL_CRACK`) by binding to `ModCinematicSounds.SINGULARITY_CHARGE`.
+
+#### Tooling & Deployment
+- Updated `neoforge.mods.toml`, `build.py`, `README.md`, and `ARCHITECTURE.md` to version `1.0.2`.
+- `build.py` now automatically deletes older `1.0.0` JAR files from target CurseForge mod directories upon deployment to prevent duplicate mod crashes.
+
+---
+
+## [1.0.1] - 2026-10-04
+
+### 🌌 Astral Singularity & Combat Balance
+
+#### Added
+- **Astral Singularity (Gargantua Black Hole)**:
+  - Added the apocalyptic rotating Kerr black hole ultimate spell (`GargantuaEntity.java`), triggered during Qual's Phase 4 (critical HP < 20%) and available as a master-tier spell.
+  - Implemented 4th-order geodesic raymarching, Doppler-beamed volumetric accretion disk, inward gravitational pull across 100 blocks, screen shake (`GargantuaShake.java`), and terminal supernova detonation.
+- **Chronos Dilatation Watch**:
+  - Added a Curios charm accessory (`ChronosDilatationWatchItem.java`) allowing relativistic manipulation of spacetime and casting speed.
+  - Included dedicated pixel-art textures, model definitions, and crafting recipes.
+
+#### Fixed & Balanced
+- **Gargantua Damage Curve (`fix.md`)**:
+  - Fixed an issue where the event horizon dealt an overpowered 20% Max HP damage every 0.4 seconds, which previously killed any entity in 2 seconds regardless of health pool.
+  - Added proper `Spell Power` scaling to the accretion disk damage calculation.
+  - Factored in the custom `BLACK_HOLE_MAGIC_RESIST` attribute before final damage application.
+  - Scaled the swallowed matter bonus (`swallowedBonus`) dynamically rather than capping at a rigid 200 damage.
+- **I-Frame Bypass Bug in `ZoltraakDamage.java`**:
+  - Fixed an issue where rapid barrage attacks set targets' `invulnerableTime` to 20 ticks, unintentionally making targets immune to all attacks and spells from teammates.
+- **Shader Stability & GPU Safety**:
+  - Added `safeNormalize` to the defense barrier shader to prevent GPU division-by-zero crashes.
+  - Hardened shaders against NaN values and non-uniform derivatives.
+  - Eliminated square bounding box clipping artifacts on optical lens flares.
+- **Recipe Fixes**:
+  - Corrected an invalid item reference (`arcane_salvage` → `irons_spellbooks:arcane_rune`) in `ordinary_grimoire.json`.
+  - Rebalanced the recipes for Frieren's Staff and the Ordinary Grimoire to post-Qual endgame tiers.
+
+---
+
+## [1.0.0] - 2026-09-28
+
+### 🚀 Initial Cinematic Release
+
+#### Added
+- **Core Architecture & Shaders**:
+  - Standalone Core GLSL 150 shader pipeline (`black_magic_circle.fsh`, `cinematic_flare.fsh`, `corona.fsh`, `defense_barrier.fsh`, `zoltraak_beam.fsh`).
+  - True HDR bloom and soft depth fade without requiring external dependencies (Photon / KilaGraph).
+- **Offensive Magic (Zoltraak)**:
+  - **Zoltraak: Frieren Blast**: Hypersonic photonic beam with a 12-block terminal shockwave dome.
+  - **Corrupted Zoltraak: Qual**: 100% armor-piercing void beam with Wither effect.
+  - **Great Zoltraak**: High-yield apocalyptic beam with screen shake and chromatic dispersion.
+  - **Zoltraak: Grand Phalanx Barrage**: Fern's 24-circle celestial array firing continuous guided Zoltraak light lances.
+- **Defensive Magic**:
+  - Geodesic honeycomb barrier dome and directional aegis shields with procedural hexagonal lattice resonance and damage absorption.
+- **Human Flight Magic**:
+  - Omnidirectional 3D flight with aerodynamic roll/pitch banking and stamina/mana mechanics.
+- **Boss Encounter: Qual, The Elder Sage of Corruption**:
+  - 4-phase combat progression state machine (100% → 75% → 40% → 20% → 0%).
+  - Multi-player scaling (+200 HP per challenger) and tactical target cycling.
+  - Custom GeckoLib 3D entity model, textures, and combat animations.
+- **Frieren's Ancient Sealing Monolith**:
+  - 5-second unsealing ritual block (`QualSealingStoneBlock`) and procedural block entity renderer (`QualSealingStoneRenderer`).
+- **Items & Equipment**:
+  - Frieren's Staff with custom 3D model and spell scaling.
+  - Ordinary Grimoire with custom school attributes (`Zoltraak Spell Power`, `Zoltraak Resistance`).
+- **Toolchain**:
+  - Automated JDK 21 `build.py` orchestrator with automatic deployment to local CurseForge instances.

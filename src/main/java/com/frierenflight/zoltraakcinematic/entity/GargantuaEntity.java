@@ -3,6 +3,7 @@ package com.frierenflight.zoltraakcinematic.entity;
 import com.frierenflight.zoltraakcinematic.ZoltraakDamage;
 import com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicEntities;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.level.GameRules;
@@ -80,6 +81,8 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
             SynchedEntityData.defineId(GargantuaEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float> DATA_SPELL_POWER =
             SynchedEntityData.defineId(GargantuaEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Integer> DATA_MAX_LIFETIME =
+            SynchedEntityData.defineId(GargantuaEntity.class, EntityDataSerializers.INT);
 
     private UUID casterUuid;
     private boolean blastResolved = false;
@@ -97,8 +100,13 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
     }
 
     public GargantuaEntity(Level level, LivingEntity caster, Vec3 center, Vec3 spinAxis, float spellPower) {
+        this(level, caster, center, spinAxis, spellPower, LIFETIME_TICKS);
+    }
+
+    public GargantuaEntity(Level level, LivingEntity caster, Vec3 center, Vec3 spinAxis, float spellPower, int customLifetime) {
         this(ModCinematicEntities.GARGANTUA.get(), level);
         setPos(center.x, center.y, center.z);
+        this.entityData.set(DATA_MAX_LIFETIME, Math.max(60, customLifetime));
         configure(caster, center, spinAxis, level.random.nextInt(), spellPower);
     }
 
@@ -131,6 +139,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         builder.define(DATA_SWALLOWED, 0);
         builder.define(DATA_DISPLAY, false);
         builder.define(DATA_SPELL_POWER, 500.0f);
+        builder.define(DATA_MAX_LIFETIME, LIFETIME_TICKS);
     }
 
     public int getCasterId() {
@@ -143,6 +152,56 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
     public void setSpellPower(float power) {
         this.entityData.set(DATA_SPELL_POWER, Math.max(1.0f, power));
+    }
+
+    public int getMaxLifetimeTicks() {
+        return this.entityData.get(DATA_MAX_LIFETIME);
+    }
+
+    public void setMaxLifetimeTicks(int ticks) {
+        this.entityData.set(DATA_MAX_LIFETIME, Math.max(60, ticks));
+    }
+
+    public int getTearEndTick() {
+        int max = getMaxLifetimeTicks();
+        if (max == LIFETIME_TICKS) return TEAR_END_TICK;
+        return Math.max(20, Math.round(max * 0.10f));
+    }
+
+    public int getBlastTick() {
+        int max = getMaxLifetimeTicks();
+        if (max == LIFETIME_TICKS) return BLAST_TICK;
+        return Math.max(getTearEndTick() + 40, Math.round(max * 0.875f));
+    }
+
+    public int getCriticalStartTick() {
+        int max = getMaxLifetimeTicks();
+        if (max == LIFETIME_TICKS) return CRITICAL_START_TICK;
+        return Math.max(getTearEndTick() + 20, getBlastTick() - 30);
+    }
+
+    public int getHoldEndTick() {
+        return getCriticalStartTick();
+    }
+
+    public int getCriticalEndTick() {
+        return getBlastTick();
+    }
+
+    public int getFadeStartTick() {
+        int max = getMaxLifetimeTicks();
+        if (max == LIFETIME_TICKS) return FADE_START_TICK;
+        return Math.min(max - 10, getBlastTick() + 10);
+    }
+
+    public static boolean isEntityImmuneToVortex(Entity entity, LivingEntity caster) {
+        if (entity == null) return true;
+        if (entity == caster) return true;
+        if (caster instanceof com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity &&
+            entity instanceof com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -202,20 +261,24 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
     public float gravitationalRadius(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks);
         if (age <= 0.0f) return 0.15f;
-        if (age < (float) TEAR_END_TICK) {
-            float p = smoothstep(age / (float) TEAR_END_TICK);
+        int tearEnd = getTearEndTick();
+        int holdEnd = getHoldEndTick();
+        int critEnd = getCriticalEndTick();
+        int blastTick = getBlastTick();
+        if (age < (float) tearEnd) {
+            float p = smoothstep(age / (float) tearEnd);
             return Mth.clamp(0.15f + (GRAVITATIONAL_RADIUS - 0.15f) * p, 0.15f, GRAVITATIONAL_RADIUS);
         }
-        if (age <= (float) HOLD_END_TICK) {
+        if (age <= (float) holdEnd) {
             return GRAVITATIONAL_RADIUS;
         }
-        if (age <= (float) CRITICAL_END_TICK) {
+        if (age <= (float) critEnd) {
             // Critical gravitational implosion: compresses inward before detonating
-            float p = smoothstep((age - (float) HOLD_END_TICK) / ((float) CRITICAL_END_TICK - (float) HOLD_END_TICK));
+            float p = smoothstep((age - (float) holdEnd) / ((float) critEnd - (float) holdEnd));
             return Mth.clamp(GRAVITATIONAL_RADIUS - 2.2f * p, 1.8f, GRAVITATIONAL_RADIUS);
         }
         // Supernova shock expansion: core rapidly blows open into expanding cosmic remnant
-        float postBlast = age - (float) BLAST_TICK;
+        float postBlast = age - (float) blastTick;
         float expand = Mth.clamp(postBlast / 85.0f, 0.0f, 1.0f);
         float easeExpand = 1.0f - (1.0f - expand) * (1.0f - expand);
         return 1.8f + (GRAVITATIONAL_RADIUS * 2.2f - 1.8f) * easeExpand;
@@ -224,30 +287,35 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
     public float opened(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks);
         if (age <= 0.0f) return 0.0f;
-        if (age < (float) TEAR_END_TICK) {
-            float progress = age / (float) TEAR_END_TICK;
+        int tearEnd = getTearEndTick();
+        int blastTick = getBlastTick();
+        int maxLife = getMaxLifetimeTicks();
+        if (age < (float) tearEnd) {
+            float progress = age / (float) tearEnd;
             return Mth.clamp(smoothstep(progress), 0.0f, 1.0f);
         }
-        if (age <= (float) BLAST_TICK + 15.0f) {
+        if (age <= (float) blastTick + 15.0f) {
             return 1.0f; // Stays fully open through peak detonation
         }
-        if (age >= (float) LIFETIME_TICKS) {
+        if (age >= (float) maxLife) {
             return 0.0f; // Completely closed and healed
         }
-        // Seamless spacetime healing & dissolution from tick 1115 to 1200
-        float dissolveProgress = (age - ((float) BLAST_TICK + 15.0f)) / ((float) LIFETIME_TICKS - ((float) BLAST_TICK + 15.0f));
+        // Seamless spacetime healing & dissolution from blast until end of lifetime
+        float dissolveProgress = (age - ((float) blastTick + 15.0f)) / ((float) maxLife - ((float) blastTick + 15.0f));
         return Mth.clamp(1.0f - smoothstep(dissolveProgress), 0.0f, 1.0f);
     }
 
     public float criticality(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks);
-        if (age <= (float) HOLD_END_TICK) return 0.0f;
-        if (age >= (float) CRITICAL_END_TICK) return 1.0f;
-        return smoothstep((age - (float) HOLD_END_TICK) / ((float) CRITICAL_END_TICK - (float) HOLD_END_TICK));
+        int holdEnd = getHoldEndTick();
+        int critEnd = getCriticalEndTick();
+        if (age <= (float) holdEnd) return 0.0f;
+        if (age >= (float) critEnd) return 1.0f;
+        return smoothstep((age - (float) holdEnd) / ((float) critEnd - (float) holdEnd));
     }
 
     public float blastFlash(float partialTicks) {
-        float age = getVisualAgeTicks(partialTicks) - (float) BLAST_TICK;
+        float age = getVisualAgeTicks(partialTicks) - (float) getBlastTick();
         if (age < 0.0f || age > 75.0f) return 0.0f;
         float p = age / 75.0f;
         return (1.0f - p) * (1.0f - p);
@@ -255,22 +323,28 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
     public float fade(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks);
-        if (age <= (float) FADE_START_TICK) return 0.0f;
-        return Mth.clamp((age - (float) FADE_START_TICK) / ((float) LIFETIME_TICKS - (float) FADE_START_TICK), 0.0f, 1.0f);
+        int fadeStart = getFadeStartTick();
+        int maxLife = getMaxLifetimeTicks();
+        if (age <= (float) fadeStart) return 0.0f;
+        return Mth.clamp((age - (float) fadeStart) / ((float) maxLife - (float) fadeStart), 0.0f, 1.0f);
     }
 
     public float brightness(float partialTicks) {
         float age = getVisualAgeTicks(partialTicks);
-        if (age <= (float) TEAR_END_TICK) {
+        int tearEnd = getTearEndTick();
+        int holdEnd = getHoldEndTick();
+        int critEnd = getCriticalEndTick();
+        int maxLife = getMaxLifetimeTicks();
+        if (age <= (float) tearEnd) {
             return 0.5f + 0.5f * opened(partialTicks);
         }
-        if (age <= (float) HOLD_END_TICK) {
+        if (age <= (float) holdEnd) {
             return 1.0f;
         }
-        if (age <= (float) CRITICAL_END_TICK) {
+        if (age <= (float) critEnd) {
             return 1.0f + 3.0f * criticality(partialTicks);
         }
-        if (age <= (float) LIFETIME_TICKS) {
+        if (age <= (float) maxLife) {
             float blast = blastFlash(partialTicks);
             float open = opened(partialTicks);
             return (1.0f + 3.5f * blast) * open;
@@ -322,36 +396,38 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
                 this.level().playSound(null, c.x, c.y, c.z, ModCinematicSounds.SINGULARITY_CHARGE.get(), SoundSource.WEATHER, 4.0f, 0.95f);
             }
 
-            // 2. Active Cosmic Hum (Ticks 60 - 1060)
-            if (this.tickCount > TEAR_END_TICK && this.tickCount <= HOLD_END_TICK && this.tickCount % 40 == 0) {
+            // 2. Active Cosmic Hum (Ticks during active tear/hold)
+            int tearEnd = getTearEndTick();
+            int holdEnd = getHoldEndTick();
+            if (this.tickCount > tearEnd && this.tickCount <= holdEnd && this.tickCount % 40 == 0) {
                 this.level().playSound(null, c.x, c.y, c.z, ModCinematicSounds.SINGULARITY_ACTIVE.get(), SoundSource.WEATHER, 2.5f, 1.0f);
             }
         }
 
         if (!this.level().isClientSide() && this.level() instanceof ServerLevel serverLevel) {
             // Surface block tearing during active phase
-            if (this.tickCount >= TEAR_END_TICK && this.tickCount <= HOLD_END_TICK) {
+            if (this.tickCount >= getTearEndTick() && this.tickCount <= getHoldEndTick()) {
                 tearSurfaceBlocks(serverLevel);
             }
 
             // Gravitational pull applies until criticality ends
-            if (this.tickCount <= CRITICAL_END_TICK) {
+            if (this.tickCount <= getCriticalEndTick()) {
                 applyPull(serverLevel);
             }
 
-            // Supernova Detonation at BLAST_TICK
-            if (this.tickCount >= BLAST_TICK && !this.blastResolved) {
+            // Supernova Detonation at blast tick
+            if (this.tickCount >= getBlastTick() && !this.blastResolved) {
                 resolveBlast(serverLevel);
                 this.blastResolved = true;
             }
 
-            // Pristine World Auto-Reconstruction (Ticks 1108 - 1200)
-            if (this.tickCount >= BLAST_TICK + 8) {
+            // Pristine World Auto-Reconstruction
+            if (this.tickCount >= getBlastTick() + 8) {
                 reconstructBlocks(serverLevel);
             }
         }
 
-        if (this.tickCount >= LIFETIME_TICKS) {
+        if (this.tickCount >= getMaxLifetimeTicks()) {
             this.discard();
         }
     }
@@ -378,7 +454,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
             com.frierenflight.zoltraakcinematic.client.renderer.GargantuaPostProcessor.registerClientInstance(entity);
 
             // Supernova Detonation Screen Flash (Rendered smoothly via triggerFlash)
-            if (entity.getVisualAgeTicks(0.0f) >= GargantuaEntity.BLAST_TICK && !entity.clientBlastTriggered) {
+            if (entity.getVisualAgeTicks(0.0f) >= (float) entity.getBlastTick() && !entity.clientBlastTriggered) {
                 entity.clientBlastTriggered = true;
                 com.frierenflight.zoltraakcinematic.client.ZoltraakCinematicClientEvents.triggerFlash(45, 1.0f);
             }
@@ -468,8 +544,8 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
         if (this.tornBlocks.isEmpty()) return;
 
-        // Evenly restore remaining blocks before LIFETIME_TICKS
-        int remainingTicks = Math.max(1, LIFETIME_TICKS - this.tickCount);
+        // Evenly restore remaining blocks before end of lifetime
+        int remainingTicks = Math.max(1, getMaxLifetimeTicks() - this.tickCount);
         int batchSize = Math.max(3, (int) Math.ceil((double) this.tornBlocks.size() / (double) remainingTicks * 2.0));
 
         List<BlockPos> sorted = new ArrayList<>(this.tornBlocks.keySet());
@@ -520,7 +596,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         AABB box = new AABB(center.x - pullDist, center.y - pullDist, center.z - pullDist,
                 center.x + pullDist, center.y + pullDist, center.z + pullDist);
 
-        List<Entity> list = level.getEntities(this, box, e -> e.isAlive() && e != caster);
+        List<Entity> list = level.getEntities(this, box, e -> e.isAlive() && !isEntityImmuneToVortex(e, caster));
         float tidalPct = (float) ZoltraakCinematicConfig.getTidalDamagePercent();
         double baseAccel = ZoltraakCinematicConfig.getPullAcceleration();
         Set<UUID> damagedThisTick = new HashSet<>();
@@ -546,7 +622,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
             // --- DAMAGE LOGIC (Accretion Disk & Event Horizon) ---
             // Continuous damage applies every 8 ticks (0.4s) to ANY mob or boss within 32 blocks
-            if (targetLiving != null && targetLiving.isAlive() && targetLiving != caster && this.tickCount % 8 == 0) {
+            if (targetLiving != null && targetLiving.isAlive() && !isEntityImmuneToVortex(targetLiving, caster) && this.tickCount % 8 == 0) {
                 if (boxDist <= diskRadius && damagedThisTick.add(targetLiving.getUUID())) {
                     // For monsters and bosses: damageCauser is ALWAYS 'this' (GargantuaEntity).
                     // GargantuaEntity is physically located right next to the boss (boxDist <= 32),
@@ -558,18 +634,19 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
                         targetLiving.setLastHurtByPlayer(player);
                     }
 
+                    float spellPowerMult = Math.max(0.1f, getSpellPower() / 500.0f);
                     float dmg;
                     if (boxDist <= eventHorizonDist) {
                         // Event horizon core: maximum gravitational crush
-                        dmg = Math.max(35.0f, targetLiving.getMaxHealth() * tidalPct);
+                        dmg = Math.max(35.0f * spellPowerMult, targetLiving.getMaxHealth() * (tidalPct * spellPowerMult));
                     } else {
                         // Accretion disk: relativistic plasma shear (scales smoothly from 30% to 100% of tidal damage)
                         double proximity = (diskRadius - boxDist) / (diskRadius - eventHorizonDist);
                         float plasmaFactor = (float) (0.30 + 0.70 * proximity);
-                        dmg = Math.max(20.0f, targetLiving.getMaxHealth() * (tidalPct * plasmaFactor));
+                        dmg = Math.max(20.0f * spellPowerMult, targetLiving.getMaxHealth() * (tidalPct * plasmaFactor * spellPowerMult));
                     }
 
-                    ZoltraakDamage.apply(targetLiving, dmg, damageSource, true);
+                    ZoltraakDamage.apply(targetLiving, dmg, damageSource, ModCinematicSchools.BLACK_HOLE.get(), true);
                     noteSwallowed();
                 }
             }
@@ -668,12 +745,14 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
             debris.discard();
         }
 
-        List<Entity> list = level.getEntities(this, blastBox, e -> e.isAlive() && e != caster);
+        List<Entity> list = level.getEntities(this, blastBox, e -> e.isAlive() && !isEntityImmuneToVortex(e, caster));
         Set<UUID> hitTargets = new HashSet<>();
 
         float spellPowerMult = Math.max(0.1f, getSpellPower() / 500.0f);
-        float swallowedBonus = Math.min((float) getSwallowedCount() * 10.0f, 200.0f);
-        float baseDamage = ((float) ZoltraakCinematicConfig.getBlastDamage() * spellPowerMult) + swallowedBonus;
+        float baseBlast = ((float) ZoltraakCinematicConfig.getBlastDamage() * spellPowerMult);
+        float maxSwallowedBonus = baseBlast * 1.0f; // Scale up to +100% bonus damage based on swallowed mass
+        float swallowedBonus = Math.min((float) getSwallowedCount() * 10.0f * spellPowerMult, maxSwallowedBonus);
+        float baseDamage = baseBlast + swallowedBonus;
 
         for (Entity e : list) {
             LivingEntity target = null;
@@ -684,7 +763,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
                     target = parentLiving;
                 }
             }
-            if (target == null || !target.isAlive() || target == caster) continue;
+            if (target == null || !target.isAlive() || isEntityImmuneToVortex(target, caster)) continue;
             if (!hitTargets.add(target.getUUID())) continue;
 
             Entity damageCauser = (target instanceof Player && caster != null) ? caster : this;
@@ -696,7 +775,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
             double dist = Math.sqrt(target.getBoundingBox().distanceToSqr(center));
             float falloff = (float) Math.max(0.25, 1.0 - dist / blastRadius);
             float finalDamage = baseDamage * falloff;
-            ZoltraakDamage.apply(target, finalDamage, damageSource, false);
+            ZoltraakDamage.apply(target, finalDamage, damageSource, ModCinematicSchools.BLACK_HOLE.get(), false);
 
             Vec3 push = target.position().subtract(center).normalize().scale(3.2 * falloff);
             target.setDeltaMovement(target.getDeltaMovement().add(push));
@@ -728,6 +807,9 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         if (tag.contains("SpellPower")) {
             setSpellPower(tag.getFloat("SpellPower"));
         }
+        if (tag.contains("MaxLifetime")) {
+            setMaxLifetimeTicks(tag.getInt("MaxLifetime"));
+        }
     }
 
     @Override
@@ -737,5 +819,6 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         }
         tag.putInt("Swallowed", getSwallowedCount());
         tag.putFloat("SpellPower", getSpellPower());
+        tag.putInt("MaxLifetime", getMaxLifetimeTicks());
     }
 }

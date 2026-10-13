@@ -30,10 +30,11 @@ public final class GargantuaShake {
                 float visualAge = gargantua.getVisualAgeTicks(partialTick);
                 double dist = Math.sqrt(camPos.distanceToSqr(gargantua.centre(partialTick)));
 
-                // 1. Spacetime Rupture Opening Jolt (ticks 0 - 60)
+                // 1. Spacetime Rupture Opening Jolt
                 float openingShake = 0.0f;
-                if (visualAge >= 0.0f && visualAge <= (float) GargantuaEntity.TEAR_END_TICK) {
-                    float openProgress = visualAge / (float) GargantuaEntity.TEAR_END_TICK;
+                int tearEnd = gargantua.getTearEndTick();
+                if (visualAge >= 0.0f && visualAge <= (float) tearEnd) {
+                    float openProgress = visualAge / (float) tearEnd;
                     float distFactor = (float) Mth.clamp(1.0 - dist / 80.0d, 0.0, 1.0);
                     float jolt = (float) (Math.sin(openProgress * Math.PI) * 2.8f);
                     openingShake = jolt * distFactor;
@@ -41,15 +42,16 @@ public final class GargantuaShake {
 
                 // 2. Continuous cosmic low rumble while active, escalating exponentially into critical collapse
                 float rumble = 0.0f;
-                if (visualAge > (float) GargantuaEntity.TEAR_END_TICK && visualAge < (float) GargantuaEntity.CRITICAL_END_TICK) {
+                int critEnd = gargantua.getCriticalEndTick();
+                if (visualAge > (float) tearEnd && visualAge < (float) critEnd) {
                     float distFactor = (float) Mth.clamp(1.0 - dist / 80.0d, 0.0, 1.0);
                     float baseRumble = 0.20f;
                     float crit = gargantua.criticality(partialTick);
                     rumble = (baseRumble + 3.8f * (crit * crit)) * distFactor;
                 }
 
-                // 3. Colossal Supernova Detonation Shockwave at BLAST_TICK (1100 ticks)
-                float blastElapsed = visualAge - (float) GargantuaEntity.BLAST_TICK;
+                // 3. Colossal Supernova Detonation Shockwave at blast tick
+                float blastElapsed = visualAge - (float) gargantua.getBlastTick();
                 float blastShake = 0.0f;
                 if (blastElapsed >= 0.0f && blastElapsed <= SHAKE_TICKS) {
                     float timeFactor = 1.0f - blastElapsed / SHAKE_TICKS;

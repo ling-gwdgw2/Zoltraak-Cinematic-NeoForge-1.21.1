@@ -54,6 +54,7 @@ public class ZoltraakCinematicMod {
             event.accept(ModCinematicItems.ELDER_SAGE_GRIMOIRE.get());
             event.accept(ModCinematicItems.HORN_OF_CORRUPTION.get());
             event.accept(ModCinematicItems.CORRUPTION_CORE.get());
+            event.accept(ModCinematicItems.CHRONOS_DILATATION_WATCH.get());
             event.accept(ModCinematicItems.GARGANTUA_SCROLL.get());
             event.accept(ModCinematicItems.QUAL_SEALING_STONE.get());
             event.accept(ModCinematicItems.QUAL_SPAWN_EGG.get());

@@ -3,6 +3,7 @@ package com.frierenflight.zoltraakcinematic.entity;
 import com.frierenflight.zoltraakcinematic.client.renderer.IZoltraakVisualEntity;
 import com.frierenflight.zoltraakcinematic.client.renderer.ZoltraakMode;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicEntities;
+import com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSpells;
 import net.minecraft.sounds.SoundEvents;
@@ -376,7 +377,7 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
                             float blastDmg = Math.max(12.0f, directBeamDamage * factor);
 
                             if (owner != null) {
-                                ZoltraakDamage.apply(target, blastDmg, spellSource, true);
+                                ZoltraakDamage.apply(target, blastDmg, spellSource, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
                             } else {
                                 target.hurt(damageSources().magic(), blastDmg);
                             }
@@ -444,7 +445,7 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
                             hitEntityIds.add(target.getId());
 
                             if (owner != null) {
-                                ZoltraakDamage.apply(target, beamDamage, spellSource, true);
+                                ZoltraakDamage.apply(target, beamDamage, spellSource, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
                             } else {
                                 target.hurt(damageSources().magic(), beamDamage);
                             }

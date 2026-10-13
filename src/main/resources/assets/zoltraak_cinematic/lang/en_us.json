@@ -80,5 +80,7 @@
   "subtitles.zoltraak_cinematic.singularity_charge": "Spacetime fractures and compresses",
   "subtitles.zoltraak_cinematic.singularity_active": "Singularity hums with gravitational waves",
   "subtitles.zoltraak_cinematic.singularity_explode": "Astral Singularity detonates in cosmic collapse",
-  "subtitles.zoltraak_cinematic.tinnitus": "Acoustic shockwave rings in ears"
+  "subtitles.zoltraak_cinematic.tinnitus": "Acoustic shockwave rings in ears",
+  "item.zoltraak_cinematic.chronos_dilatation_watch": "Chronos Dilatation Watch",
+  "item.zoltraak_cinematic.chronos_dilatation_watch.desc": "An ancient pocket watch whose ticks dilate near intense gravitational fields. Grants +15% Cooldown Reduction and +35% Black Hole Spell Power."
 }

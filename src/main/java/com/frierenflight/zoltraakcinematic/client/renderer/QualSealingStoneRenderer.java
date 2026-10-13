@@ -171,9 +171,11 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         Matrix4f pose = poseStack.last().pose();
         VertexConsumer circleBuilder = bufferSource.getBuffer(RENDER_TYPE_CIRCLE);
 
-        float r = 1.0f;
-        float g = 0.65f + 0.15f * pulse;
-        float b = 0.22f;
+        // Frieren Celestial Blue (0.25, 0.75, 1.0) shifting to Demonic Corrupted Violet (0.85, 0.15, 0.95)
+        float corruptShift = Mth.clamp(progress * 1.8f, 0.0f, 1.0f);
+        float r = Mth.lerp(corruptShift, 0.25f, 0.85f);
+        float g = Mth.lerp(corruptShift, 0.75f, 0.15f + 0.10f * pulse);
+        float b = Mth.lerp(corruptShift, 1.00f, 0.95f);
 
         circleBuilder.addVertex(pose, -scale, 0.0f, -scale).setUv(0.0f, 0.0f).setColor(r, g, b, alpha);
         circleBuilder.addVertex(pose,  scale, 0.0f, -scale).setUv(1.0f, 0.0f).setColor(r, g, b, alpha);
@@ -190,9 +192,9 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         Vec3 v = new Vec3(0.0, 0.0, 1.0);
 
         // Outer concentric runic border circle
-        arc(lines, mat, new Vec3(0, 0.02, 0), u, v, scale * 1.02, 0.022f, alpha * 0.85f, 1.0f, 0.72f, 0.25f, Math.PI * 2);
+        arc(lines, mat, new Vec3(0, 0.02, 0), u, v, scale * 1.02, 0.022f, alpha * 0.85f, r, g, b, Math.PI * 2);
         // Inner counter-rotating boundary circle
-        arc(lines, mat, new Vec3(0, 0.02, 0), u, v, scale * 0.58, 0.016f, alpha * 0.70f, 1.0f, 0.85f, 0.35f, Math.PI * 2);
+        arc(lines, mat, new Vec3(0, 0.02, 0), u, v, scale * 0.58, 0.016f, alpha * 0.70f, 0.90f, 0.35f, 1.0f, Math.PI * 2);
 
         // 6 Collapsing / Inward-spiraling energy charge ribbons (Zoltraak style)
         for (int k = 0; k < 6; k++) {
@@ -204,7 +206,7 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
                 double rQ = (scale * (1.0 - q) + 0.08);
                 Vec3 pa = new Vec3(Math.cos(a + p * 1.5) * rP, 0.025, Math.sin(a + p * 1.5) * rP);
                 Vec3 pb = new Vec3(Math.cos(a + q * 1.5) * rQ, 0.025, Math.sin(a + q * 1.5) * rQ);
-                ribbon(lines, mat, pa, pb, new Vec3(0, 1, 0), (float) (0.024 * Math.sin(p * Math.PI)), alpha * 0.75f, 1.0f, 0.78f, 0.25f);
+                ribbon(lines, mat, pa, pb, new Vec3(0, 1, 0), (float) (0.024 * Math.sin(p * Math.PI)), alpha * 0.75f, r, g, b);
             }
         }
         flush(bufferSource, ZoltraakRenderTypes.LIGHT);
@@ -215,13 +217,13 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         Vec3 center = new Vec3(0.0, 0.04, 0.0);
 
         // Outer soft corona orb
-        quad(glow, mat, center, camRight.scale(glowSize * 2.6), camUp.scale(glowSize * 2.6), 1.0f, 0.52f, 0.15f, alpha * 0.55f);
+        quad(glow, mat, center, camRight.scale(glowSize * 2.6), camUp.scale(glowSize * 2.6), 0.75f, 0.15f, 0.95f, alpha * 0.55f);
         // White-hot glint core
-        quad(glow, mat, center, camRight.scale(glowSize * 0.85), camUp.scale(glowSize * 0.85), 1.0f, 0.96f, 0.82f, alpha * 0.95f);
+        quad(glow, mat, center, camRight.scale(glowSize * 0.85), camUp.scale(glowSize * 0.85), 0.95f, 0.85f, 1.0f, alpha * 0.95f);
         // Horizontal anamorphic lens streak
-        quad(glow, mat, center, camRight.scale(glowSize * 4.6), camUp.scale(glowSize * 0.12), 1.0f, 0.72f, 0.22f, alpha * 0.80f);
+        quad(glow, mat, center, camRight.scale(glowSize * 4.6), camUp.scale(glowSize * 0.12), 0.85f, 0.35f, 1.0f, alpha * 0.80f);
         // Vertical glint streak
-        quad(glow, mat, center, camRight.scale(glowSize * 0.12), camUp.scale(glowSize * 2.0), 1.0f, 0.58f, 0.16f, alpha * 0.65f);
+        quad(glow, mat, center, camRight.scale(glowSize * 0.12), camUp.scale(glowSize * 2.0), 0.70f, 0.20f, 0.90f, alpha * 0.65f);
 
         flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
     }
@@ -251,9 +253,9 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         Matrix4f pose = poseStack.last().pose();
         VertexConsumer ringBuilder = bufferSource.getBuffer(RENDER_TYPE_RUNE_RING);
 
-        float r = 1.0f;
-        float g = 0.58f;
-        float b = 0.22f;
+        float r = 0.82f;
+        float g = 0.18f;
+        float b = 0.96f;
 
         int segments = 16;
         for (int i = 0; i < segments; i++) {
@@ -276,17 +278,17 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         poseStack.popPose();
         flush(bufferSource, RENDER_TYPE_RUNE_RING);
 
-        // B. Ascending Double-Helix Fire Spirals (ZoltraakRenderTypes.LIGHT)
+        // B. Ascending Double-Helix Mana Spirals (ZoltraakRenderTypes.LIGHT)
         VertexConsumer lines = bufferSource.getBuffer(ZoltraakRenderTypes.LIGHT);
         Matrix4f mat = poseStack.last().pose();
         Vec3 u = new Vec3(1.0, 0.0, 0.0);
         Vec3 v = new Vec3(0.0, 0.0, 1.0);
 
         // Rim rings on top and bottom of the floating cylinder
-        arc(lines, mat, new Vec3(0, ringY, 0), u, v, radius + 0.01, 0.015f, alpha * 0.85f, 1.0f, 0.85f, 0.35f, Math.PI * 2);
-        arc(lines, mat, new Vec3(0, ringY + ringH, 0), u, v, radius + 0.01, 0.015f, alpha * 0.85f, 1.0f, 0.85f, 0.35f, Math.PI * 2);
+        arc(lines, mat, new Vec3(0, ringY, 0), u, v, radius + 0.01, 0.015f, alpha * 0.85f, 0.85f, 0.25f, 0.98f, Math.PI * 2);
+        arc(lines, mat, new Vec3(0, ringY + ringH, 0), u, v, radius + 0.01, 0.015f, alpha * 0.85f, 0.85f, 0.25f, 0.98f, Math.PI * 2);
 
-        // Double helical fire spirals wrapping around the cylinder from bottom
+        // Double helical corrupted mana spirals wrapping around the cylinder from bottom
         for (int h = 0; h < 2; h++) {
             double offsetAngle = h * Math.PI;
             for (int j = 0; j < 20; j++) {
@@ -301,7 +303,7 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
                 Vec3 pa = new Vec3(Math.cos(a1) * r1, y1, Math.sin(a1) * r1);
                 Vec3 pb = new Vec3(Math.cos(a2) * r2, y2, Math.sin(a2) * r2);
                 Vec3 normal = new Vec3(Math.cos((a1 + a2) * 0.5), 0, Math.sin((a1 + a2) * 0.5));
-                ribbon(lines, mat, pa, pb, normal, 0.018f, alpha * 0.70f, 1.0f, 0.65f, 0.18f);
+                ribbon(lines, mat, pa, pb, normal, 0.018f, alpha * 0.70f, 0.80f, 0.15f, 0.95f);
             }
         }
         flush(bufferSource, ZoltraakRenderTypes.LIGHT);
@@ -310,17 +312,17 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
         Vec3 ringCenter = new Vec3(0.0, ringY + ringH * 0.5, 0.0);
         float ringGlowSize = 0.5f * alpha;
-        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 2.2), camUp.scale(ringGlowSize * 2.2), 1.0f, 0.55f, 0.15f, alpha * 0.5f);
-        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 0.7), camUp.scale(ringGlowSize * 0.7), 1.0f, 0.95f, 0.8f, alpha * 0.9f);
-        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 3.2), camUp.scale(ringGlowSize * 0.1), 1.0f, 0.75f, 0.25f, alpha * 0.7f);
+        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 2.2), camUp.scale(ringGlowSize * 2.2), 0.75f, 0.15f, 0.95f, alpha * 0.5f);
+        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 0.7), camUp.scale(ringGlowSize * 0.7), 0.95f, 0.85f, 1.0f, alpha * 0.9f);
+        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 3.2), camUp.scale(ringGlowSize * 0.1), 0.85f, 0.35f, 1.0f, alpha * 0.7f);
         flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
     }
 
     /**
-     * 3. Blazing Skyward Fire Pillar (28m), Helical Spirals, Rushing Rings & Ground Shockwaves:
-     * - Central white-hot core column
-     * - 4-Way volumetric rotating cross flame sheath (RENDER_TYPE_FIRE_BEAM)
-     * - 6 Helical spiraling flame tendrils (ZoltraakRenderTypes.LIGHT)
+     * 3. Apocalyptic Skyward Corrupted Beam (28m), Helical Spirals, Rushing Rings & Ground Shockwaves:
+     * - Central white-hot/violet core column
+     * - 4-Way volumetric rotating cross dark mana sheath (RENDER_TYPE_FIRE_BEAM)
+     * - 6 Helical spiraling dark energy tendrils (ZoltraakRenderTypes.LIGHT)
      * - 4 Rushing skyward shockwave rings (arc)
      * - Ground expanding shockwave rings (arc)
      * - Massive base & apex anamorphic eruption flares (ZoltraakRenderTypes.ZOL_GLOW)
@@ -336,13 +338,13 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
 
         Matrix4f mat = poseStack.last().pose();
 
-        // A. 4-Way Cross Quads Volumetric Flame Column
+        // A. 4-Way Cross Quads Volumetric Corrupted Mana Column
         poseStack.pushPose();
         VertexConsumer beamBuilder = bufferSource.getBuffer(RENDER_TYPE_FIRE_BEAM);
 
-        float r = 1.0f;
-        float g = 0.88f;
-        float b = 0.55f;
+        float r = 0.82f;
+        float g = 0.20f;
+        float b = 0.98f;
         float alpha = beamProgress * 0.95f;
 
         for (int i = 0; i < 4; i++) {
@@ -366,7 +368,7 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         Vec3 u = new Vec3(1.0, 0.0, 0.0);
         Vec3 v = new Vec3(0.0, 0.0, 1.0);
 
-        // B1. 6 Helical Spiraling Flame Tendrils coiling around the pillar up into the sky
+        // B1. 6 Helical Spiraling Energy Tendrils coiling around the pillar up into the sky
         for (int k = 0; k < 6; k++) {
             double baseAngle = k * Math.PI / 3.0;
             for (int j = 0; j < 32; j++) {
@@ -381,7 +383,7 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
                 Vec3 pa = new Vec3(Math.cos(a1) * r1, y1, Math.sin(a1) * r1);
                 Vec3 pb = new Vec3(Math.cos(a2) * r2, y2, Math.sin(a2) * r2);
                 Vec3 norm = new Vec3(Math.cos((a1 + a2) * 0.5), 0, Math.sin((a1 + a2) * 0.5));
-                ribbon(lines, mat, pa, pb, norm, 0.022f * beamProgress, beamProgress * 0.75f, 1.0f, 0.72f, 0.22f);
+                ribbon(lines, mat, pa, pb, norm, 0.022f * beamProgress, beamProgress * 0.75f, 0.80f, 0.15f, 0.95f);
             }
         }
 
@@ -390,7 +392,7 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
             double ringY = ((ticks * 0.85 + k * 7.0) % Math.max(1.0, height));
             double ringRadius = (0.60 + 0.10 * (ringY / height)) * beamProgress;
             float ringFade = (float) (1.0 - (ringY / height));
-            arc(lines, mat, new Vec3(0, ringY, 0), u, v, ringRadius, 0.028f, beamProgress * ringFade * 0.75f, 1.0f, 0.92f, 0.45f, Math.PI * 2);
+            arc(lines, mat, new Vec3(0, ringY, 0), u, v, ringRadius, 0.028f, beamProgress * ringFade * 0.75f, 0.90f, 0.35f, 1.0f, Math.PI * 2);
         }
 
         // B3. Ground Expanding Shockwave Rings (radiating outward across the ground on thunder strikes)
@@ -398,7 +400,7 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
             double waveAge = (ticks * 0.40 + k * 8.0) % 24.0;
             double waveR = (0.6 + waveAge * 0.28) * beamProgress;
             float waveAlpha = (float) Math.max(0.0, (1.0 - waveAge / 24.0) * beamProgress * 0.65);
-            arc(lines, mat, new Vec3(0, 0.03, 0), u, v, waveR, 0.026f, waveAlpha, 1.0f, 0.68f, 0.18f, Math.PI * 2);
+            arc(lines, mat, new Vec3(0, 0.03, 0), u, v, waveR, 0.026f, waveAlpha, 0.80f, 0.15f, 0.95f, Math.PI * 2);
         }
 
         flush(bufferSource, ZoltraakRenderTypes.LIGHT);
@@ -409,16 +411,16 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         float eruptionSize = 1.4f * beamProgress;
 
         // Base colossal anamorphic flare
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 3.2), camUp.scale(eruptionSize * 3.2), 1.0f, 0.52f, 0.15f, beamProgress * 0.65f);
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 1.1), camUp.scale(eruptionSize * 1.1), 1.0f, 0.98f, 0.85f, beamProgress * 0.95f);
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 6.5), camUp.scale(eruptionSize * 0.18), 1.0f, 0.75f, 0.25f, beamProgress * 0.90f);
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 0.18), camUp.scale(eruptionSize * 3.8), 1.0f, 0.60f, 0.18f, beamProgress * 0.70f);
+        quad(glow, mat, basePos, camRight.scale(eruptionSize * 3.2), camUp.scale(eruptionSize * 3.2), 0.75f, 0.15f, 0.95f, beamProgress * 0.65f);
+        quad(glow, mat, basePos, camRight.scale(eruptionSize * 1.1), camUp.scale(eruptionSize * 1.1), 0.95f, 0.85f, 1.0f, beamProgress * 0.95f);
+        quad(glow, mat, basePos, camRight.scale(eruptionSize * 6.5), camUp.scale(eruptionSize * 0.18), 0.85f, 0.35f, 1.0f, beamProgress * 0.90f);
+        quad(glow, mat, basePos, camRight.scale(eruptionSize * 0.18), camUp.scale(eruptionSize * 3.8), 0.70f, 0.18f, 0.90f, beamProgress * 0.70f);
 
         // Apex flare at the top of the 28-block pillar
         Vec3 topPos = new Vec3(0.0, height, 0.0);
         float topSize = 0.9f * beamProgress;
-        quad(glow, mat, topPos, camRight.scale(topSize * 2.0), camUp.scale(topSize * 2.0), 1.0f, 0.65f, 0.25f, beamProgress * 0.60f);
-        quad(glow, mat, topPos, camRight.scale(topSize * 3.5), camUp.scale(topSize * 0.12), 1.0f, 0.85f, 0.40f, beamProgress * 0.75f);
+        quad(glow, mat, topPos, camRight.scale(topSize * 2.0), camUp.scale(topSize * 2.0), 0.75f, 0.20f, 0.95f, beamProgress * 0.60f);
+        quad(glow, mat, topPos, camRight.scale(topSize * 3.5), camUp.scale(topSize * 0.12), 0.90f, 0.40f, 1.0f, beamProgress * 0.75f);
 
         flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
     }

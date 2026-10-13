@@ -1,5 +1,5 @@
 # Zoltraak: Cinematic Edition — Architecture & Technical Documentation
-**Version:** 1.0.0 | **Minecraft:** 1.21.1 | **Mod Loader:** NeoForge 21.1.248+ | **Target API:** Iron's Spells 'n Spellbooks
+**Version:** 1.0.2 | **Minecraft:** 1.21.1 | **Mod Loader:** NeoForge 21.1.248+ | **Target API:** Iron's Spells 'n Spellbooks
 
 ---
 
@@ -104,7 +104,7 @@ graph TD
 ```
 zoltraak-cinematic/
 ├── build.py                                  # Standalone Python + JDK 21 build & auto-deployment pipeline
-├── zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar # Compiled mod artifact
+├── zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar # Compiled mod artifact
 ├── libs/                                     # NeoForge and runtime dependency jars
 ├── reverse_engineering/                      # Source reference implementations (frierenvoid)
 └── src/main/
@@ -389,21 +389,25 @@ The singularity executes an exact 1,200-tick (60.0s) timeline:
 - **Zero Item Deletion Guarantee:** `ItemEntity` instances are **strictly never swallowed or destroyed**. Inside the horizon, their velocity is dampened ($\vec{v} \times 0.85$), ensuring all player items and dropped loot remain 100% safe to pick up.
 
 #### 5.6.4 Dual-Zone Damage & Boss Anti-Snipe Bypass
-- **Damage Type:** `zoltraak_cinematic:gargantua` (`DamageSource` tagged `#is_magic`, `#bypasses_armor`, `#bypasses_shield`, `#always_hurts_ender_dragons`, `#bypasses_wolf_armor`).
+- **Damage Type & School Resistance:** `zoltraak_cinematic:gargantua` (`DamageSource` tagged `#is_magic`, `#bypasses_armor`, `#bypasses_shield`, `#always_hurts_ender_dragons`, `#bypasses_wolf_armor`). Applied with `ModCinematicSchools.BLACK_HOLE` through `ZoltraakDamage.apply`, properly triggering `DamageSources.getResist(target, school)` against target `BLACK_HOLE_MAGIC_RESIST` and general `SPELL_RESIST` attributes.
 - **Bounding Box Distance:** Measured directly to the nearest point on target bounding box $d_{\text{box}} = \sqrt{\text{distanceToSqr}(\text{center})}$, eliminating false penalties for giant bosses.
 - **Accretion Vortex Damage (Every 8 ticks / 0.4s within $d_{\text{box}} \le 32.0\text{m}$):**
+  Scales dynamically with caster Black Hole Spell Power: $\text{Mult}_{\text{power}} = \max\left(0.1,\, \frac{\text{SpellPower}}{500.0}\right)$.
   - **Zone 1: Event Horizon Core ($d_{\text{box}} \le 7.2\text{m}$):**
-    $$\text{Damage}_{\text{horizon}} = \max\left(35.0,\, \text{MaxHP} \times \text{tidalPct}\right) \quad (\text{tidalPct default} = 20\%)$$
+    $$\text{Damage}_{\text{horizon}} = \max\left(35.0 \times \text{Mult}_{\text{power}},\, \text{MaxHP} \times (\text{tidalPct} \times \text{Mult}_{\text{power}})\right) \quad (\text{tidalPct default} = 8\%)$$
   - **Zone 2: Accretion Disk Plasma Shear ($7.2\text{m} < d_{\text{box}} \le 32.0\text{m}$):**
     $$\text{Factor}_{\text{plasma}} = 0.30 + 0.70 \times \left(\frac{32.0 - d_{\text{box}}}{32.0 - 7.2}\right)$$
-    $$\text{Damage}_{\text{plasma}} = \max\left(20.0,\, \text{MaxHP} \times (\text{tidalPct} \times \text{Factor}_{\text{plasma}})\right)$$
+    $$\text{Damage}_{\text{plasma}} = \max\left(20.0 \times \text{Mult}_{\text{power}},\, \text{MaxHP} \times (\text{tidalPct} \times \text{Factor}_{\text{plasma}} \times \text{Mult}_{\text{power}})\right)$$
+- **Zero Teammate I-Frame Lockout (`rapid == true`):** `ZoltraakDamage.apply` clears `target.invulnerableTime = 0` on rapid hits, ensuring incoming sword swings, arrows, and ally spells are never blocked by residual invulnerability frames.
 - **Boss Anti-Snipe Immunity Architecture:**
   Modded bosses (such as Cataclysm or Twilight Forest) often enforce out-of-range immunity if the damaging entity is far away ($>32\text{m}$). Gargantua completely bypasses this:
   - If the target is a Monster/Boss, `damageCauser` is set directly to `GargantuaEntity` itself (physically situated right next to the boss, $d_{\text{box}} \le 32\text{m}$).
   - Full player credit, kill advancement, and XP drops are preserved by invoking `targetLiving.setLastHurtByPlayer(player)`.
   - For PvP (target is `Player`), `damageCauser` is set to the caster for proper death messages.
 - **Supernova Detonation Blast Damage (Tick 1100, $d \le 32.0\text{m}$):**
-  $$\text{BaseDamage} = \left(\text{ConfigBlastDamage} \times \max\left(0.1,\, \frac{\text{SpellPower}}{500.0}\right)\right) + \min(\text{swallowedCount} \times 10.0,\, 200.0)$$
+  $$\text{BaseBlast} = \text{ConfigBlastDamage} \times \text{Mult}_{\text{power}}$$
+  $$\text{SwallowedBonus} = \min\left(\text{swallowedCount} \times 10.0 \times \text{Mult}_{\text{power}},\, \text{BaseBlast} \times 1.0\right) \quad (\text{up to } +100\% \text{ bonus})$$
+  $$\text{BaseDamage} = \text{BaseBlast} + \text{SwallowedBonus}$$
   $$\text{Falloff} = \max\left(0.25,\, 1.0 - \frac{d}{32.0}\right), \quad \text{FinalDamage} = \text{BaseDamage} \times \text{Falloff}$$
   Radial knockback impulse: $\vec{v}_{\text{impulse}} = \hat{r}_{\text{outward}} \times (3.2 \times \text{Falloff})$.
 
@@ -439,7 +443,7 @@ The singularity executes an exact 1,200-tick (60.0s) timeline:
 - **`GargantuaCommands`:** Admin/Creative commands `/singularity`, `/zoltraak singularity`, `/gargantua`, `/zoltraak gargantua` (Permission level 2).
 - **Config Options (`ZoltraakCinematicConfig`):**
   - `pullRadius` ($100.0\text{m}$, range $10.0$–$300.0$)
-  - `tidalDamagePercent` ($0.20$, range $0.01$–$1.0$)
+  - `tidalDamagePercent` ($0.08$, range $0.01$–$1.0$)
   - `blastDamage` ($800.0$, range $10.0$–$10000.0$)
   - `blastRadius` ($32.0\text{m}$, range $5.0$–$200.0$)
   - `pullAcceleration` ($0.12$, range $0.01$–$2.0$)
@@ -545,7 +549,7 @@ Custom networking is implemented via NeoForge 1.21.1 Network Registry:
 The project features a dedicated Python orchestration script (`build.py`):
 1. **Compilation**: Invokes JDK 21 `javac` directly against `libs/neoforge-21.1.248-client.jar`, `libs/neoforge-21.1.248-universal.jar`, and supporting libraries.
 2. **Resource Merging**: Recursively mirrors `src/main/resources` into `build/classes`.
-3. **Packaging**: Generates `zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar`.
+3. **Packaging**: Generates `zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar`.
 4. **Auto-Deployment**: Copies the built JAR automatically to:
    - Mod root and parent workspace folder.
    - CurseForge test instances:

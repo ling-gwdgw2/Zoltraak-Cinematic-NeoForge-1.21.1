@@ -48,7 +48,7 @@
    - **[Iron's Spells 'n Spellbooks](https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks)** (1.21.1)
    *(ไม่จำเป็นต้องติดตั้ง Photon หรือ KilaGraph เพิ่มเติมอีกต่อไป ม็อดมี Shader & Geometry Engine ในตัว 100%)*
 4. *(รองรับ)* เข้ากันได้ดีกับ **Oculus / Iris Shaders**
-5. ดาวน์โหลดไฟล์ `zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar` แล้ววางลงในโฟลเดอร์ `.minecraft/mods`
+5. ดาวน์โหลดไฟล์ `zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar` แล้ววางลงในโฟลเดอร์ `.minecraft/mods`
 
 ---
 
@@ -66,7 +66,17 @@ python build.py
 ```
 
 ผลลัพธ์ไฟล์ JAR จะถูกสร้างขึ้นที่:
-`./zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar`
+`./zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar`
+
+---
+
+## Documentation & Architecture
+
+- **[Changelog (ประวัติการอัปเดต)](CHANGELOG.md)**: บันทึกการเพิ่มฟีเจอร์และการแก้ไขบั๊กอย่างละเอียดในแต่ละเวอร์ชัน
+- **[Roadmap (แผนงานระดับมหภาค)](ROADMAP.md)**: แผนการพัฒนาและสถาปัตยกรรมสู่อนาคต เช่น การย้ายสู่ Vulkan
+- **[Architectural Limitations & Gaps](GAPS.md)**: ข้อจำกัดทางสถาปัตยกรรมและข้อแลกเปลี่ยนทางเทคนิค
+- **[Full Mod Wiki & Compendium](WIKI.md)**: สารานุกรมเวทมนตร์และคู่มือการเล่นตัวเต็ม
+- **[Technical Architecture](ARCHITECTURE.md)**: เอกสารสถาปัตยกรรมทางเทคนิคและเอนจินกราฟิก
 
 ---
 

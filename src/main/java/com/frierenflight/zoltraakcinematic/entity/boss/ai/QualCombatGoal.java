@@ -58,36 +58,36 @@ public class QualCombatGoal extends Goal {
             case 1 -> {
                 // Phase 1: Probing Stance — Single Corrupted Zoltraak
                 qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 6);
-                attackTimer = 65 + qual.getRandom().nextInt(25); // ~3.5 - 4.5s
+                attackTimer = 70 + qual.getRandom().nextInt(30); // ~3.5 - 5.0s (70-100 ticks)
             }
             case 2 -> {
                 // Phase 2: Demonic Barrage Matrix
                 if (qual.getRandom().nextFloat() < 0.65f) {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
-                    attackTimer = 100 + qual.getRandom().nextInt(30); // ~5 - 6.5s
+                    attackTimer = 200 + qual.getRandom().nextInt(40); // 10.0 - 12.0s recovery window (200-240 ticks)
                 } else {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 7);
-                    attackTimer = 50 + qual.getRandom().nextInt(20); // ~2.5 - 3.5s
+                    attackTimer = 70 + qual.getRandom().nextInt(30); // ~3.5 - 5.0s (70-100 ticks)
                 }
             }
             case 3 -> {
                 // Phase 3: Tactical Adaptation
                 if (qual.getRandom().nextFloat() < 0.55f) {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
-                    attackTimer = 85 + qual.getRandom().nextInt(25);
+                    attackTimer = 200 + qual.getRandom().nextInt(40); // 10.0 - 12.0s recovery window (200-240 ticks)
                 } else {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 9);
-                    attackTimer = 40 + qual.getRandom().nextInt(15);
+                    attackTimer = 70 + qual.getRandom().nextInt(30); // ~3.5 - 5.0s (70-100 ticks)
                 }
             }
             case 4 -> {
                 // Phase 4: Overdrive Sustained Fire
                 if (qual.getRandom().nextFloat() < 0.5f) {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
-                    attackTimer = 70 + qual.getRandom().nextInt(20);
+                    attackTimer = 200 + qual.getRandom().nextInt(40); // 10.0 - 12.0s recovery window (200-240 ticks)
                 } else {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 10);
-                    attackTimer = 35 + qual.getRandom().nextInt(15);
+                    attackTimer = 60 + qual.getRandom().nextInt(30); // ~3.0 - 4.5s
                 }
             }
         }

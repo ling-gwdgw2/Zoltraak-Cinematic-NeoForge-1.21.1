@@ -30,8 +30,8 @@ public class ZoltraakCinematicConfig {
                 .defineInRange("pullRadius", 100.0d, 10.0d, 300.0d);
 
         TIDAL_DAMAGE_PERCENT = builder
-                .comment("Tidal disruption damage dealt to living entities inside the event horizon, expressed as a fraction of target Max HP (e.g. 0.20 = 20% Max HP every 0.4s).")
-                .defineInRange("tidalDamagePercent", 0.20d, 0.01d, 1.0d);
+                .comment("Tidal disruption damage dealt to living entities inside the event horizon, expressed as a fraction of target Max HP (e.g. 0.08 = 8% Max HP every 0.4s).")
+                .defineInRange("tidalDamagePercent", 0.08d, 0.01d, 1.0d);
 
         BLAST_DAMAGE = builder
                 .comment("Base damage dealt by the final Supernova detonation at tick 1100 (55.0s).")
@@ -73,7 +73,7 @@ public class ZoltraakCinematicConfig {
     }
 
     public static double getTidalDamagePercent() {
-        return SPEC.isLoaded() ? TIDAL_DAMAGE_PERCENT.get() : 0.20d;
+        return SPEC.isLoaded() ? TIDAL_DAMAGE_PERCENT.get() : 0.08d;
     }
 
     public static double getBlastDamage() {

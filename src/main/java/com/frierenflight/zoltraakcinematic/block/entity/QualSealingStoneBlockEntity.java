@@ -4,11 +4,9 @@ import com.frierenflight.zoltraakcinematic.entity.boss.QualBossEntity;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicBlocks;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicEntities;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import net.minecraft.world.level.block.Blocks;
@@ -46,8 +44,7 @@ public class QualSealingStoneBlockEntity extends BlockEntity {
 
             if (this.level instanceof ServerLevel sl) {
                 sl.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
-                sl.playSound(null, this.worldPosition, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.5f, 0.6f);
-                sl.playSound(null, this.worldPosition, SoundEvents.BLAZE_SHOOT, SoundSource.BLOCKS, 1.2f, 0.75f);
+                sl.playSound(null, this.worldPosition, ModCinematicSounds.QUAL_PHASE_TRANSITION.get(), SoundSource.BLOCKS, 1.8f, 0.75f);
             }
         }
     }
@@ -57,38 +54,7 @@ public class QualSealingStoneBlockEntity extends BlockEntity {
             return;
         }
         this.unsealTicks++;
-
-        double cx = worldPosition.getX() + 0.5;
-        double cy = worldPosition.getY() + 0.46;
-        double cz = worldPosition.getZ() + 0.5;
-
-        // Stage 1 & 2 (Ticks 0..65): Rising embers & sparks around the magic circle
-        if (unsealTicks <= 65) {
-            if (level != null && level.random.nextFloat() < 0.6f) {
-                double angle = level.random.nextDouble() * Math.PI * 2;
-                double r = 0.4 + level.random.nextDouble() * 0.9;
-                level.addParticle(ParticleTypes.FLAME, cx + Math.cos(angle) * r, cy + 0.05, cz + Math.sin(angle) * r, 0, 0.03 + level.random.nextDouble() * 0.04, 0);
-            }
-            if (level != null && level.random.nextFloat() < 0.2f) {
-                double angle = level.random.nextDouble() * Math.PI * 2;
-                double r = 0.7 + level.random.nextDouble() * 0.6;
-                level.addParticle(ParticleTypes.LAVA, cx + Math.cos(angle) * r, cy + 0.1, cz + Math.sin(angle) * r, 0, 0.02, 0);
-            }
-        }
-        // Stage 3 (Ticks 65..99): Erupting skyward fire pillar sparks & camera rumble
-        else if (unsealTicks < TOTAL_UNSEAL_TICKS) {
-            if (level != null) {
-                for (int i = 0; i < 4; i++) {
-                    double angle = level.random.nextDouble() * Math.PI * 2;
-                    double r = level.random.nextDouble() * 0.35;
-                    double vy = 0.25 + level.random.nextDouble() * 0.45;
-                    level.addParticle(ParticleTypes.FLAME, cx + Math.cos(angle) * r, cy + 0.1, cz + Math.sin(angle) * r, (level.random.nextDouble() - 0.5) * 0.06, vy, (level.random.nextDouble() - 0.5) * 0.06);
-                }
-                if (level.random.nextFloat() < 0.4f) {
-                    level.addParticle(ParticleTypes.LAVA, cx + (level.random.nextDouble() - 0.5) * 0.4, cy + 0.2, cz + (level.random.nextDouble() - 0.5) * 0.4, 0, 0.1, 0);
-                }
-            }
-        }
+        // Pure Mathematical Procedural Shader Rendering via QualSealingStoneRenderer (No Vanilla Particles)
     }
 
     public void tick() {
@@ -108,43 +74,29 @@ public class QualSealingStoneBlockEntity extends BlockEntity {
             serverLevel.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
         }
 
-        // Stage 1 (0.0s – 1.5s, Ticks 0..30): 8-Pointed Star Activation & Embers
+        // Stage 1 (0.0s – 1.5s, Ticks 0..30): Sealing Runes Shift & Ancient Crack Sounds
         if (unsealTicks <= 30) {
-            serverLevel.sendParticles(ParticleTypes.FLAME, cx, cy + 0.2, cz, 4, 0.3, 0.1, 0.3, 0.02);
             if (unsealTicks % 10 == 0) {
-                float pitch = 0.8f + (unsealTicks / 30.0f) * 0.3f;
-                serverLevel.playSound(null, worldPosition, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.2f, pitch);
+                serverLevel.playSound(null, worldPosition, ModCinematicSounds.SINGULARITY_CHARGE.get(), SoundSource.BLOCKS, 1.5f, 0.9f);
             }
         }
-        // Stage 2 (1.5s – 3.25s, Ticks 30..65): 3D Runic Ring Ascent & Escalation
+        // Stage 2 (1.5s – 3.25s, Ticks 30..65): Harmonic Mana Surge
         else if (unsealTicks <= 65) {
-            serverLevel.sendParticles(ParticleTypes.LAVA, cx, cy + 0.5, cz, 2, 0.4, 0.2, 0.4, 0.05);
-            serverLevel.sendParticles(ParticleTypes.ENCHANT, cx, cy + 0.8, cz, 6, 0.5, 0.3, 0.5, 0.1);
-
             if (unsealTicks % 12 == 0) {
-                serverLevel.playSound(null, worldPosition, SoundEvents.BLAZE_SHOOT, SoundSource.BLOCKS, 1.1f, 0.85f);
-                serverLevel.playSound(null, worldPosition, ModCinematicSounds.QUAL_PHASE_TRANSITION.get(), SoundSource.BLOCKS, 1.0f, 1.2f);
+                serverLevel.playSound(null, worldPosition, ModCinematicSounds.SINGULARITY_ACTIVE.get(), SoundSource.BLOCKS, 1.4f, 1.1f);
             }
         }
-        // Stage 3 (3.25s – 5.0s, Ticks 65..99): Skyward Fire Pillar & Earthquake Rumble
+        // Stage 3 (3.25s – 5.0s, Ticks 65..99): Spacetime Rupture Resonance
         else if (unsealTicks < TOTAL_UNSEAL_TICKS) {
-            for (int y = 0; y < 20; y += 3) {
-                serverLevel.sendParticles(ParticleTypes.FLAME, cx, cy + y, cz, 4, 0.3, 0.5, 0.3, 0.08);
-                serverLevel.sendParticles(ParticleTypes.SMOKE, cx, cy + y, cz, 2, 0.2, 0.4, 0.2, 0.04);
-            }
-
-            if (unsealTicks % 6 == 0) {
-                serverLevel.playSound(null, worldPosition, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.HOSTILE, 1.4f, 0.65f);
-                serverLevel.playSound(null, worldPosition, SoundEvents.WITHER_AMBIENT, SoundSource.HOSTILE, 1.2f, 0.6f);
+            if (unsealTicks % 10 == 0) {
+                serverLevel.playSound(null, worldPosition, ModCinematicSounds.QUAL_PHASE_TRANSITION.get(), SoundSource.HOSTILE, 1.8f, 1.25f);
             }
         }
-        // Stage 4 (5.0s, Tick 100): Final Cataclysmic Shatter & Boss Manifestation!
+        // Stage 4 (5.0s, Tick 100): Final Apocalyptic Shatter & Boss Manifestation!
         else {
-            // Shatter blast VFX & SFX
-            serverLevel.sendParticles(ParticleTypes.EXPLOSION_EMITTER, cx, cy + 1.0, cz, 3, 0, 0, 0, 0);
-            serverLevel.sendParticles(ParticleTypes.LAVA, cx, cy + 1.5, cz, 40, 1.5, 1.5, 1.5, 0.3);
-            serverLevel.playSound(null, worldPosition, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 2.5f, 0.7f);
-            serverLevel.playSound(null, worldPosition, ModCinematicSounds.QUAL_SPAWN.get(), SoundSource.HOSTILE, 2.5f, 1.0f);
+            // Shatter detonation (100% Custom Mod Sounds)
+            serverLevel.playSound(null, worldPosition, ModCinematicSounds.SINGULARITY_EXPLODE.get(), SoundSource.HOSTILE, 3.5f, 0.85f);
+            serverLevel.playSound(null, worldPosition, ModCinematicSounds.QUAL_SPAWN.get(), SoundSource.HOSTILE, 3.0f, 1.0f);
 
             // Spawn Qual Boss floating in the air
             QualBossEntity qual = ModCinematicEntities.QUAL_BOSS.get().create(serverLevel);

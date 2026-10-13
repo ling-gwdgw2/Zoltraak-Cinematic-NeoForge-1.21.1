@@ -19,8 +19,8 @@ def build():
     print("  BUILDING: ZOLTRAAK CINEMATIC EDITION (NEOFORGE 1.21.1)")
     print("==================================================")
 
-    out_jar = os.path.join(base_dir, 'zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar')
-    parent_jar = os.path.join(base_dir, '..', 'zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar')
+    out_jar = os.path.join(base_dir, 'zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar')
+    parent_jar = os.path.join(base_dir, '..', 'zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar')
     bin_dir = os.path.join(base_dir, 'build', 'classes')
     nf_client = os.path.join(base_dir, 'libs', 'neoforge-21.1.248-client.jar')
     nf_univ = os.path.join(base_dir, 'libs', 'neoforge-21.1.248-universal.jar')
@@ -74,6 +74,12 @@ def build():
     try:
         shutil.copy2(out_jar, parent_jar)
         print(f"[SUCCESS] Copied to parent folder: {parent_jar}")
+        old_parent = os.path.join(base_dir, '..', 'zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar')
+        if os.path.exists(old_parent):
+            try:
+                os.remove(old_parent)
+            except Exception:
+                pass
     except Exception as e:
         print(f"[WARNING] Could not copy to parent: {e}")
 
@@ -88,6 +94,14 @@ def build():
                 dest = os.path.join(target_dir, os.path.basename(out_jar))
                 shutil.copy2(out_jar, dest)
                 print(f"[SUCCESS] Copied to instance: {dest}")
+                # Clean up previous 1.0.0 version to prevent duplicate mod conflict
+                old_jar = os.path.join(target_dir, "zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar")
+                if os.path.exists(old_jar):
+                    try:
+                        os.remove(old_jar)
+                        print(f"[SUCCESS] Removed obsolete version from instance: {old_jar}")
+                    except Exception:
+                        pass
                 # Also overwrite beta2 filename if it exists in target_dir
                 beta2 = os.path.join(target_dir, "zoltraak_cinematic-neoforge-1.21.1-1.0.0beta2.jar")
                 if os.path.exists(beta2):
