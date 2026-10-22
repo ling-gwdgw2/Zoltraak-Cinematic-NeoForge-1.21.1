@@ -1,6 +1,6 @@
 # Zoltraak: Cinematic Edition — Configuration Specification & Guide (CONFIG)
 
-**Version:** 1.0.2+ | **Minecraft:** 1.21.1 | **Mod Loader:** NeoForge 21.1.248+
+**Version:** 1.0.3 | **Minecraft:** 1.21.1 | **Mod Loader:** NeoForge 21.1.248+
 
 This document defines the complete configuration architecture and setting specifications for **Zoltraak: Cinematic Edition**. It covers server-wide balance, combat mechanics, client-side accessibility, shader optimization, and modpack customization profiles.
 

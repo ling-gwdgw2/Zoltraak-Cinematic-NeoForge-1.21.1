@@ -1,5 +1,5 @@
 # Zoltraak: Cinematic Edition — Architecture & Technical Documentation
-**Version:** 1.0.2 | **Minecraft:** 1.21.1 | **Mod Loader:** NeoForge 21.1.248+ | **Target API:** Iron's Spells 'n Spellbooks
+**Version:** 1.0.3 | **Minecraft:** 1.21.1 | **Mod Loader:** NeoForge 21.1.248+ | **Target API:** Iron's Spells 'n Spellbooks
 
 ---
 
@@ -104,7 +104,7 @@ graph TD
 ```
 zoltraak-cinematic/
 ├── build.py                                  # Standalone Python + JDK 21 build & auto-deployment pipeline
-├── zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar # Compiled mod artifact
+├── zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar # Compiled mod artifact
 ├── libs/                                     # NeoForge and runtime dependency jars
 ├── reverse_engineering/                      # Source reference implementations (frierenvoid)
 └── src/main/
@@ -574,7 +574,7 @@ The mod incorporates a dual-tier configuration system designed for seamless mult
 The project features a dedicated Python orchestration script (`build.py`):
 1. **Compilation**: Invokes JDK 21 `javac` directly against `libs/neoforge-21.1.248-client.jar`, `libs/neoforge-21.1.248-universal.jar`, and supporting libraries.
 2. **Resource Merging**: Recursively mirrors `src/main/resources` into `build/classes`.
-3. **Packaging**: Generates `zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar`.
+3. **Packaging**: Generates `zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar`.
 4. **Auto-Deployment**: Copies the built JAR automatically to:
    - Mod root and parent workspace folder.
    - CurseForge test instances:
