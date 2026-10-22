@@ -177,13 +177,12 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
     private void renderGeodesicHoneycomb(Matrix4f m, MultiBufferSource buffers, double radius,
                                          float age, float fade, float life, float partial,
                                          Vec3 hit, float hitAge) {
-        VertexConsumer surface = buffers.getBuffer(ZoltraakRenderTypes.DEFENSE_SURFACE);
-        VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
-
         int index = 0;
         float deploy = Mth.clamp(age / 8.0F, 0.0F, 1.0F);
         float grow = 0.2F + 0.8F * (float) Math.sin(deploy * Math.PI * 0.5);
 
+        // --- Pass 1: Honeycomb Plate Faces & Beveled Facets (DEFENSE_SURFACE) ---
+        VertexConsumer surface = buffers.getBuffer(ZoltraakRenderTypes.DEFENSE_SURFACE);
         for (GeodesicDomeData.Cell cell : GeodesicDomeData.CELLS) {
             Vec3 norm = cell.center().normalize();
             Vec3 center = norm.scale(radius * grow);
@@ -240,10 +239,41 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
                 tri(surface, m, curVerts[k], insetVerts[next], insetVerts[k], r * 0.8F, g * 0.85F, b, bevelAlpha);
             }
 
-            // 3. Draw Glowing Neon Cyan Seams along Hexagon Borders
+            index++;
+        }
+        flush(buffers, ZoltraakRenderTypes.DEFENSE_SURFACE);
+
+        // --- Pass 2: Glowing Neon Cyan Seams & Stress Cracks (LIGHT) ---
+        VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
+        index = 0;
+        for (GeodesicDomeData.Cell cell : GeodesicDomeData.CELLS) {
+            Vec3 norm = cell.center().normalize();
+            Vec3 center = norm.scale(radius * grow);
+            Vec3[] verts = cell.vertices();
+            int vCount = verts.length;
+
+            if (life == 0.0F) {
+                float shatter = 1.0F - fade;
+                center = center.add(norm.scale(shatter * (3.0 + Math.sin(index * 2.3) * 2.2)))
+                        .add(new Vec3(0, shatter * 2.5, 0));
+            }
+
+            double distToHit = center.distanceToSqr(hit);
             float flash = (float) (Math.exp(-hitAge * 0.28) * Math.exp(-distToHit * 0.35));
             float linePower = fade * grow * (0.85F + 0.5F * flash);
 
+            Vec3[] curVerts = new Vec3[vCount];
+            for (int k = 0; k < vCount; k++) {
+                Vec3 p = verts[k].normalize().scale(radius * grow);
+                if (life == 0.0F) {
+                    float shatter = 1.0F - fade;
+                    p = p.add(norm.scale(shatter * (3.0 + Math.sin(index * 2.3) * 2.2)))
+                            .add(new Vec3(0, shatter * 2.5, 0));
+                }
+                curVerts[k] = p;
+            }
+
+            // 3. Draw Glowing Neon Cyan Seams along Hexagon Borders
             for (int k = 0; k < vCount; k++) {
                 int next = (k + 1) % vCount;
                 Vec3 p1 = curVerts[k];
@@ -268,8 +298,6 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
 
             index++;
         }
-
-        flush(buffers, ZoltraakRenderTypes.DEFENSE_SURFACE);
         flush(buffers, ZoltraakRenderTypes.LIGHT);
     }
 
@@ -314,12 +342,12 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
                                    DefenseBarrierEntity.VisualPose pose, Vec3 hit,
                                    Vec3 u, Vec3 v, Vec3 normal,
                                    Vec3 camRight, Vec3 camUp) {
-        VertexConsumer surface = buffers.getBuffer(ZoltraakRenderTypes.DEFENSE_SURFACE);
-        VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
-        int index = 0;
         float deploy = Mth.clamp(age / 6.0F, 0.0F, 1.0F);
         float grow = 0.2F + 0.8F * (float) Math.sin(deploy * Math.PI * 0.5);
 
+        // --- Pass 1: Inset Hexagonal Plate Faces & Bevel Facets (DEFENSE_SURFACE) ---
+        VertexConsumer surface = buffers.getBuffer(ZoltraakRenderTypes.DEFENSE_SURFACE);
+        int index = 0;
         for (Vec3 cell : DefenseBarrierEntity.cells()) {
             double size = DefenseBarrierEntity.CELL_RADIUS * grow;
             Vec3 center = u.scale(cell.x * grow).add(v.scale(cell.y * grow));
@@ -357,7 +385,25 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
                 tri(surface, m, p1, ip2, ip1, r * 0.8F, g * 0.85F, b, alpha * 0.7F);
             }
 
-            // Neon Borders
+            index++;
+        }
+        flush(buffers, ZoltraakRenderTypes.DEFENSE_SURFACE);
+
+        // --- Pass 2: Neon Borders & Stress Cracks (LIGHT) ---
+        VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
+        index = 0;
+        for (Vec3 cell : DefenseBarrierEntity.cells()) {
+            double size = DefenseBarrierEntity.CELL_RADIUS * grow;
+            Vec3 center = u.scale(cell.x * grow).add(v.scale(cell.y * grow));
+
+            if (life == 0.0F) {
+                float shatterTime = 1.0F - fade;
+                center = center.add(u.scale(cell.x * shatterTime * 2.5))
+                        .add(v.scale(cell.y * shatterTime * 2.5))
+                        .add(normal.scale(Math.sin(index * 2.4) * shatterTime * 3.0));
+            }
+
+            double distToHit = center.distanceToSqr(hit);
             float flash = (float) (Math.exp(-entity.hitAge(partial) * 0.28) * Math.exp(-distToHit * 0.40));
             float power = fade * grow * (0.85F + 0.5F * flash);
 
@@ -379,11 +425,9 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
 
             index++;
         }
-
-        flush(buffers, ZoltraakRenderTypes.DEFENSE_SURFACE);
         flush(buffers, ZoltraakRenderTypes.LIGHT);
 
-        // Procedural Mathematical Mana Deflection Flash & Dielectric Sparks
+        // --- Pass 3: Procedural Mathematical Mana Deflection Flash & Dielectric Sparks (ZOL_IMPACT) ---
         float impact = entity.hitAge(partial);
         if (impact < 14.0F) {
             float impactProgress = Mth.clamp(impact / 14.0F, 0.0F, 1.0F);
@@ -399,7 +443,7 @@ public final class DefenseBarrierRenderer extends EntityRenderer<DefenseBarrierE
             flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
         }
 
-        // Catastrophic Mana Rupture on Shatter
+        // --- Pass 4: Catastrophic Mana Rupture on Shatter (ZOL_IMPACT) ---
         if (life == 0.0F && fade > 0.03F) {
             float shatterProgress = Mth.clamp(1.0F - fade, 0.0F, 1.0F);
             float shatterFade = fade * 0.90F;

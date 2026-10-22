@@ -212,20 +212,22 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         flush(bufferSource, ZoltraakRenderTypes.LIGHT);
 
         // C. Center Camera-Aligned Anamorphic Flare & Soft Corona (ZoltraakRenderTypes.ZOL_GLOW)
-        VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
-        float glowSize = (0.35f + 0.25f * pulse) * Math.min(progress * 4.0f, 1.0f);
-        Vec3 center = new Vec3(0.0, 0.04, 0.0);
+        if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isAnamorphicLensFlaresEnabled()) {
+            VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
+            float glowSize = (0.35f + 0.25f * pulse) * Math.min(progress * 4.0f, 1.0f);
+            Vec3 center = new Vec3(0.0, 0.04, 0.0);
 
-        // Outer soft corona orb
-        quad(glow, mat, center, camRight.scale(glowSize * 2.6), camUp.scale(glowSize * 2.6), 0.75f, 0.15f, 0.95f, alpha * 0.55f);
-        // White-hot glint core
-        quad(glow, mat, center, camRight.scale(glowSize * 0.85), camUp.scale(glowSize * 0.85), 0.95f, 0.85f, 1.0f, alpha * 0.95f);
-        // Horizontal anamorphic lens streak
-        quad(glow, mat, center, camRight.scale(glowSize * 4.6), camUp.scale(glowSize * 0.12), 0.85f, 0.35f, 1.0f, alpha * 0.80f);
-        // Vertical glint streak
-        quad(glow, mat, center, camRight.scale(glowSize * 0.12), camUp.scale(glowSize * 2.0), 0.70f, 0.20f, 0.90f, alpha * 0.65f);
+            // Outer soft corona orb
+            quad(glow, mat, center, camRight.scale(glowSize * 2.6), camUp.scale(glowSize * 2.6), 0.75f, 0.15f, 0.95f, alpha * 0.55f);
+            // White-hot glint core
+            quad(glow, mat, center, camRight.scale(glowSize * 0.85), camUp.scale(glowSize * 0.85), 0.95f, 0.85f, 1.0f, alpha * 0.95f);
+            // Horizontal anamorphic lens streak
+            quad(glow, mat, center, camRight.scale(glowSize * 4.6), camUp.scale(glowSize * 0.12), 0.85f, 0.35f, 1.0f, alpha * 0.80f);
+            // Vertical glint streak
+            quad(glow, mat, center, camRight.scale(glowSize * 0.12), camUp.scale(glowSize * 2.0), 0.70f, 0.20f, 0.90f, alpha * 0.65f);
 
-        flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
+            flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
+        }
     }
 
     /**
@@ -309,13 +311,15 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         flush(bufferSource, ZoltraakRenderTypes.LIGHT);
 
         // C. Mid-Air Floating Ring Center Flare (ZoltraakRenderTypes.ZOL_GLOW)
-        VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
-        Vec3 ringCenter = new Vec3(0.0, ringY + ringH * 0.5, 0.0);
-        float ringGlowSize = 0.5f * alpha;
-        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 2.2), camUp.scale(ringGlowSize * 2.2), 0.75f, 0.15f, 0.95f, alpha * 0.5f);
-        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 0.7), camUp.scale(ringGlowSize * 0.7), 0.95f, 0.85f, 1.0f, alpha * 0.9f);
-        quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 3.2), camUp.scale(ringGlowSize * 0.1), 0.85f, 0.35f, 1.0f, alpha * 0.7f);
-        flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
+        if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isAnamorphicLensFlaresEnabled()) {
+            VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
+            Vec3 ringCenter = new Vec3(0.0, ringY + ringH * 0.5, 0.0);
+            float ringGlowSize = 0.5f * alpha;
+            quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 2.2), camUp.scale(ringGlowSize * 2.2), 0.75f, 0.15f, 0.95f, alpha * 0.5f);
+            quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 0.7), camUp.scale(ringGlowSize * 0.7), 0.95f, 0.85f, 1.0f, alpha * 0.9f);
+            quad(glow, mat, ringCenter, camRight.scale(ringGlowSize * 3.2), camUp.scale(ringGlowSize * 0.1), 0.85f, 0.35f, 1.0f, alpha * 0.7f);
+            flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
+        }
     }
 
     /**
@@ -406,23 +410,25 @@ public class QualSealingStoneRenderer implements BlockEntityRenderer<QualSealing
         flush(bufferSource, ZoltraakRenderTypes.LIGHT);
 
         // C. Massive Eruption Anamorphic Bloom Flare (ZoltraakRenderTypes.ZOL_GLOW)
-        VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
-        Vec3 basePos = new Vec3(0.0, 0.25, 0.0);
-        float eruptionSize = 1.4f * beamProgress;
+        if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isAnamorphicLensFlaresEnabled()) {
+            VertexConsumer glow = bufferSource.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
+            Vec3 basePos = new Vec3(0.0, 0.25, 0.0);
+            float eruptionSize = 1.4f * beamProgress;
 
-        // Base colossal anamorphic flare
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 3.2), camUp.scale(eruptionSize * 3.2), 0.75f, 0.15f, 0.95f, beamProgress * 0.65f);
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 1.1), camUp.scale(eruptionSize * 1.1), 0.95f, 0.85f, 1.0f, beamProgress * 0.95f);
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 6.5), camUp.scale(eruptionSize * 0.18), 0.85f, 0.35f, 1.0f, beamProgress * 0.90f);
-        quad(glow, mat, basePos, camRight.scale(eruptionSize * 0.18), camUp.scale(eruptionSize * 3.8), 0.70f, 0.18f, 0.90f, beamProgress * 0.70f);
+            // Base colossal anamorphic flare
+            quad(glow, mat, basePos, camRight.scale(eruptionSize * 3.2), camUp.scale(eruptionSize * 3.2), 0.75f, 0.15f, 0.95f, beamProgress * 0.65f);
+            quad(glow, mat, basePos, camRight.scale(eruptionSize * 1.1), camUp.scale(eruptionSize * 1.1), 0.95f, 0.85f, 1.0f, beamProgress * 0.95f);
+            quad(glow, mat, basePos, camRight.scale(eruptionSize * 6.5), camUp.scale(eruptionSize * 0.18), 0.85f, 0.35f, 1.0f, beamProgress * 0.90f);
+            quad(glow, mat, basePos, camRight.scale(eruptionSize * 0.18), camUp.scale(eruptionSize * 3.8), 0.70f, 0.18f, 0.90f, beamProgress * 0.70f);
 
-        // Apex flare at the top of the 28-block pillar
-        Vec3 topPos = new Vec3(0.0, height, 0.0);
-        float topSize = 0.9f * beamProgress;
-        quad(glow, mat, topPos, camRight.scale(topSize * 2.0), camUp.scale(topSize * 2.0), 0.75f, 0.20f, 0.95f, beamProgress * 0.60f);
-        quad(glow, mat, topPos, camRight.scale(topSize * 3.5), camUp.scale(topSize * 0.12), 0.90f, 0.40f, 1.0f, beamProgress * 0.75f);
+            // Apex flare at the top of the 28-block pillar
+            Vec3 topPos = new Vec3(0.0, height, 0.0);
+            float topSize = 0.9f * beamProgress;
+            quad(glow, mat, topPos, camRight.scale(topSize * 2.0), camUp.scale(topSize * 2.0), 0.75f, 0.20f, 0.95f, beamProgress * 0.60f);
+            quad(glow, mat, topPos, camRight.scale(topSize * 3.5), camUp.scale(topSize * 0.12), 0.90f, 0.40f, 1.0f, beamProgress * 0.75f);
 
-        flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
+            flush(bufferSource, ZoltraakRenderTypes.ZOL_GLOW);
+        }
     }
 
     // =========================================================================

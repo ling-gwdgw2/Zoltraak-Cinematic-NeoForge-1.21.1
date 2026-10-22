@@ -1,4 +1,4 @@
-# 📜 Changelog — Zoltraak: Cinematic Edition
+# Changelog — Zoltraak: Cinematic Edition
 
 All notable changes to the **Zoltraak: Cinematic Edition** mod project are documented in this file.
 
@@ -7,9 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-10-22
+
+### Dual-Tier Configuration Engine & Critical Stability Overhaul
+
+#### Added
+- **Dual-Tier Configuration Engine (`zoltraak_cinematic-common.toml` & `zoltraak_cinematic-client.toml`)**:
+  - Implemented client-server decoupled configuration architecture (`ZoltraakCinematicConfig.java` & `ZoltraakCinematicClientConfig.java`).
+  - **Server / Gameplay Settings (`zoltraak_cinematic-common.toml`)**:
+    - `[flight_system]`: Base flight mana drain (`50.0/s`), fast flight drain multiplier (`1.6x`), max vertical velocity, airborne reconnect grace period (`60 ticks`), and action bar telemetry toggle.
+    - `[spells_and_beams]`: Standard and Large beam range (`64.0` / `96.0` blocks), kinetic spell damage multipliers, and shield disabling on direct hits.
+    - `[barrage_matrix]`: Supersonic projectile aerodynamic homing strength (`0.08`), projectile velocity (`2.8`), and matrix salvo fire intervals.
+    - `[defense_barrier]`: Geodesic shield mana capacity multiplier (`1.0x`) and base lifetime duration.
+    - `[qual_boss]`: Boss max health scaling (`600.0 HP`), attack delay intervals, and recovery window duration after barrage volleys.
+    - `[artifacts_and_relics]`: Relic stats, casting speed buffs, and ring effect scalers.
+    - `[gargantua]`: Gravitational pull radius (`100.0` blocks), inward acceleration, event horizon tidal damage percent (`8%/tick`), supernova blast damage (`800.0`), and blast radius (`32.0` blocks).
+  - **Client Accessibility & GPU Tuning (`zoltraak_cinematic-client.toml`)**:
+    - **Photosensitive Flash Protection**: Full toggle (`enableScreenFlash`) and intensity slider (`screenFlashIntensity`, `0.0` – `1.0`).
+    - **Camera Shake Controls**: Global camera shake toggle (`enableCameraShake`) and scale multiplier (`cameraShakeMultiplier`) for Zoltraak recoil, rapid barrage rumble, and black hole gravitational tremor.
+    - **Tinnitus Audio Mute**: Dedicated toggle (`enableTinnitusSound`) to silence high-frequency ringing audio post-supernova.
+    - **Aerodynamic Flight Roll**: Toggle (`enableFlightCameraRoll`) for 3D banking camera roll during flight.
+    - **GPU Shader Optimization**: Configurable raymarching step limits (`blackHoleRaymarchSteps`: 32 to 128) and toggles for anamorphic lens flare quad rendering (`enableAnamorphicLensFlares`) and gravitational lensing background distortion (`enableGravitationalLensing`).
+
+#### Fixed & Stabilized
+- **Volatile Singularity Reconstruction Purge (Memory & Crater Fix)**:
+  - Completely removed the unstable in-memory block tracking map (`tornBlocks`) and batch restoration routines (`reconstructBlocks`, `restoreAllRemainingBlocks`) in `GargantuaEntity.java`.
+  - Prevents severe RAM spikes, eliminates chunk loading deadlock loops during entity unload, prevents permanent craters from ungraceful server stops, and ensures 100% compatibility with land protection mods (e.g. FTB Chunks).
+- **Anti-Griefing Zoltraak Beam**:
+  - Purged direct block destruction logic from `ZoltraakCinematicBeamEntity.java`. The beam now delivers cinematic kinetic and spell damage without carving holes through claimed player bases or server terrain.
+- **Barrage Double-Stepping & Physics Alignment**:
+  - Fixed projectile double movement in `ZoltraakBarrageProjectileEntity.java` by replacing `super.tick()` with `super.baseTick()`, eliminating inadvertent 2x speed and unwanted vanilla water bubble particles.
+- **Flight Thread-Safety & Login Airborne Protection**:
+  - Converted `activeFlyers` and `landingProtection` tracking sets in `FlightEvents.java` to `ConcurrentHashMap.newKeySet()`.
+  - Added seamless flight grace period on player login/reconnection and purged legacy vanilla sprite particles (`ELECTRIC_SPARK`, `CLOUD`).
+- **Defense Barrier Translucent Depth Sorting**:
+  - Refactored `DefenseBarrierRenderer.java` to perform multi-pass isolated vertex buffer flushes between surface polygon faces (`DEFENSE_SURFACE`), glowing borders (`LIGHT`), and mana deflection impacts (`ZOL_IMPACT`), eliminating translucent Z-buffer interleaving.
+
+---
+
 ## [1.0.2] - 2026-10-07
 
-### 🌟 Boss Visual Overhaul & Pacing Refinement
+### Boss Visual Overhaul & Pacing Refinement
 
 #### Added
 - **Subtle Dark Miasma VFX (`renderSubtleDarkMiasma`)**:
@@ -47,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.1] - 2026-10-04
 
-### 🌌 Astral Singularity & Combat Balance
+### Astral Singularity & Combat Balance
 
 #### Added
 - **Astral Singularity (Gargantua Black Hole)**:
@@ -77,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-09-28
 
-### 🚀 Initial Cinematic Release
+### Initial Cinematic Release
 
 #### Added
 - **Core Architecture & Shaders**:

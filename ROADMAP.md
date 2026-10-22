@@ -48,29 +48,29 @@ Zoltraak: Cinematic Edition is engineered to bridge anime-grade cinematics with 
 
 ---
 
-## 4. Long-Term Macro Vision: Minecraft 26.x and Vulkan Migration
+## 4. Long-Term Macro Vision: Minecraft 26.2, Vulkan Migration and Aperture
 
-As the Minecraft rendering ecosystem transitions away from legacy OpenGL 3.2 Core profiles toward modern graphics APIs (Vulkan, DirectX 12, Metal), the visual and mathematical architecture of Zoltraak: Cinematic Edition will undergo fundamental restructuring.
+With the official confirmation of Aperture (the successor to Iris running on Minecraft 26.2 with Vulkan and Sodium), the Minecraft graphics ecosystem is formally transitioning from legacy OpenGL 3.2 Core profiles to a modern, low-overhead Vulkan pipeline. Zoltraak: Cinematic Edition will leverage Aperture's architecture to unlock desktop-class compute and raytracing capabilities.
 
 ### 4.1 Transition from OpenGL 3.2 / GLSL 150 to SPIR-V and Vulkan
 * SPIR-V Bytecode Compilation:
-  * Transition from runtime GLSL 150 text parsing (`#version 150`) to offline-compiled SPIR-V binary modules.
+  * Transition from runtime GLSL 150 text parsing (`#version 150`) to offline-compiled SPIR-V binary modules natively consumed by Vulkan and Aperture.
   * Unified shader pipeline with cross-compilation support via SPIRV-Cross for multi-backend execution.
 * Explicit Pipeline State Objects (PSO):
   * Pre-baking blend modes, depth-stencil states, and vertex layouts into immutable PSOs, removing OpenGL state validation overhead from the render loop.
 
-### 4.2 Compute Shader Relativistic Raymarching
+### 4.2 Compute Shader Relativistic Raymarching under Aperture
 * Decoupling from the Fragment Stage:
-  * In OpenGL 150, the Kerr black hole raymarching is constrained to fullscreen fragment shaders (`gargantua.fsh`). This incurs heavy rasterization penalties and pixel overdraw.
-  * In the Vulkan architecture, raymarching of the Thorne geodesic equations ($d^2u/d\phi^2 + u = 3Mu^2$) will be offloaded entirely to asynchronous GPU Compute Shaders.
+  * In OpenGL 150, the Kerr black hole raymarching is constrained to fullscreen fragment shaders (`gargantua.fsh`), incurring heavy rasterization and fill-rate penalties.
+  * In the Aperture Vulkan architecture, raymarching of the Thorne geodesic equations ($d^2u/d\phi^2 + u = 3Mu^2$) will be offloaded entirely to asynchronous GPU Compute Shaders.
 * Variable Rate Shading (VRS) and Tiled Compute:
   * Compute dispatch will utilize 16x16 tile workgroups with hierarchical bounding box checks, executing geodesic leapfrog calculations only on pixels intersecting the gravitational lensing envelope.
   * High-density accretion disk simulations will execute independently of the game frame rate on asynchronous compute queues.
 
-### 4.3 Declarative Render Graph Architecture
-* Modern Render Graph Integration:
-  * Replacing custom mixin hooks (`GameRendererMixin`) and procedural draw calls (`ZoltraakRenderPass`) with a declarative, barrier-synchronized Render Graph.
-  * Native compatibility with modern graphics mods (VulkanMod, Iris Vulkan backend, Sodium Vulkan ports).
+### 4.3 Native Aperture Render Graph Integration
+* Aperture Render Graph Hooking:
+  * Replacing custom mixin hooks (`GameRendererMixin`) and procedural draw passes (`ZoltraakRenderPass`) with Aperture's declarative, barrier-synchronized Render Graph.
+  * Resolves the current shaderpack limitation: screen-space gravitational lensing (`SceneLens`) and post-processing passes will integrate directly into Aperture's G-buffer pipeline without disabling refractive features.
   * Automated resource aliasing and barrier transitions for off-screen FBO ping-pong buffers (`SceneLens`, post-processing passes).
 
 ### 4.4 High-Performance Kinematics via Project Loom and Panama
@@ -88,4 +88,4 @@ As the Minecraft rendering ecosystem transitions away from legacy OpenGL 3.2 Cor
 | Phase 1: Polish & Optimization | MC 1.21.1 / NeoForge 21.1.x | OpenGL 3.2 (GLSL 150) | Quality presets, shader warmup cache, boss parry mechanics, memory optimizations. |
 | Phase 2: Engine Expansion | MC 1.22.x / NeoForge Next | OpenGL 3.2 / Early WBOIT | Order-independent transparency, modular runic matrix, Macht and Aura boss encounters. |
 | Phase 3: Modern API Preparation | MC 25.x / Next-Gen Loader | Hybrid OpenGL / Vulkan Stubs | SPIR-V shader toolchain, Render Graph abstraction, Virtual Threaded kinematics. |
-| Phase 4: Full Vulkan Architecture | MC 26.x / Vulkan Native | Vulkan 1.3 / SPIR-V | Compute shader geodesic raymarching, immutable PSOs, asynchronous compute queues, full raytracing interoperability. |
+| Phase 4: Full Vulkan Architecture | MC 26.2 / Aperture + Sodium | Vulkan 1.3 / SPIR-V | Compute shader geodesic raymarching, Aperture Render Graph integration, immutable PSOs, full raytracing interoperability. |

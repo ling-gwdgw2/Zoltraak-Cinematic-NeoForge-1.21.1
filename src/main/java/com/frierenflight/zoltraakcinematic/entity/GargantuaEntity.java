@@ -87,7 +87,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
     private UUID casterUuid;
     private boolean blastResolved = false;
     private boolean clientBlastTriggered = false;
-    private final Map<BlockPos, BlockState> tornBlocks = new LinkedHashMap<>();
+    private int tornBlockCount = 0;
 
     public GargantuaEntity(EntityType<?> entityType, Level level) {
         super(entityType, level);
@@ -420,11 +420,6 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
                 resolveBlast(serverLevel);
                 this.blastResolved = true;
             }
-
-            // Pristine World Auto-Reconstruction
-            if (this.tickCount >= getBlastTick() + 8) {
-                reconstructBlocks(serverLevel);
-            }
         }
 
         if (this.tickCount >= getMaxLifetimeTicks()) {
@@ -442,7 +437,6 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
     @Override
     public void remove(RemovalReason reason) {
-        restoreAllRemainingBlocks();
         super.remove(reason);
         if (this.level().isClientSide() && net.neoforged.fml.loading.FMLEnvironment.dist.isClient()) {
             ClientHandler.onClientRemove(this);
@@ -474,7 +468,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         }
 
         // Limit maximum torn blocks to avoid server TPS drop during the 1-minute lifetime
-        if (this.tornBlocks.size() >= 180) return;
+        if (this.tornBlockCount >= 180) return;
         if (this.tickCount % 4 != 0) return;
 
         Vec3 center = centre(1.0f);
@@ -503,7 +497,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
             if (targetPos.getY() < groundY - maxDepth) continue;
 
             BlockState state = level.getBlockState(targetPos);
-            this.tornBlocks.put(targetPos.immutable(), state);
+            this.tornBlockCount++;
 
             FallingBlockEntity falling = FallingBlockEntity.fall(level, targetPos, state);
             falling.dropItem = false;
@@ -527,63 +521,12 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
     }
 
     private boolean canTearBlock(ServerLevel level, BlockPos pos) {
-        if (this.tornBlocks.containsKey(pos)) return false;
         BlockState state = level.getBlockState(pos);
         if (state.isAir() || !state.getFluidState().isEmpty()) return false;
         if (state.getDestroySpeed(level, pos) < 0) return false;
         if (level.getBlockEntity(pos) != null) return false;
         if (pos.getY() <= level.getMinBuildHeight() + 2) return false;
         return true;
-    }
-
-    private void reconstructBlocks(ServerLevel level) {
-        if (!ZoltraakCinematicConfig.isAutoReconstructBlocks()) {
-            this.tornBlocks.clear();
-            return;
-        }
-
-        if (this.tornBlocks.isEmpty()) return;
-
-        // Evenly restore remaining blocks before end of lifetime
-        int remainingTicks = Math.max(1, getMaxLifetimeTicks() - this.tickCount);
-        int batchSize = Math.max(3, (int) Math.ceil((double) this.tornBlocks.size() / (double) remainingTicks * 2.0));
-
-        List<BlockPos> sorted = new ArrayList<>(this.tornBlocks.keySet());
-        sorted.sort(Comparator.comparingInt(Vec3i::getY));
-
-        int count = 0;
-        for (BlockPos pos : sorted) {
-            if (count >= batchSize) break;
-            BlockState state = this.tornBlocks.remove(pos);
-            if (state != null) {
-                level.setBlock(pos, state, 3);
-                level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state),
-                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                        4, 0.2, 0.2, 0.2, 0.05);
-                count++;
-            }
-        }
-    }
-
-    private void restoreAllRemainingBlocks() {
-        if (!ZoltraakCinematicConfig.isAutoReconstructBlocks()) {
-            this.tornBlocks.clear();
-            return;
-        }
-
-        if (this.tornBlocks.isEmpty()) return;
-        if (!(this.level() instanceof ServerLevel serverLevel)) return;
-
-        List<BlockPos> sorted = new ArrayList<>(this.tornBlocks.keySet());
-        sorted.sort(Comparator.comparingInt(Vec3i::getY));
-
-        for (BlockPos pos : sorted) {
-            BlockState state = this.tornBlocks.remove(pos);
-            if (state != null) {
-                serverLevel.setBlock(pos, state, 3);
-            }
-        }
-        this.tornBlocks.clear();
     }
 
     private void applyPull(ServerLevel level) {

@@ -49,17 +49,20 @@ public final class DefenseBarrierEntity extends Entity {
     }
 
     public static DefenseBarrierEntity create(ServerLevel level, LivingEntity caster, float capacity, int mode) {
-        return create(level, caster, capacity, mode, 300);
+        int defaultDuration = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBarrierDurationTicks();
+        return create(level, caster, capacity, mode, defaultDuration);
     }
 
     public static DefenseBarrierEntity create(ServerLevel level, LivingEntity caster, float capacity, int mode, int duration) {
         DefenseBarrierEntity entity = new DefenseBarrierEntity(ModCinematicEntities.DEFENSE_BARRIER.get(), level);
         entity.ownerUUID = caster.getUUID();
 
+        float scaledCapacity = capacity * (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBarrierCapacityMultiplier();
+
         CompoundTag tag = new CompoundTag();
         tag.putInt("Owner", caster.getId());
-        tag.putFloat("Capacity", capacity);
-        tag.putFloat("Maximum", capacity);
+        tag.putFloat("Capacity", scaledCapacity);
+        tag.putFloat("Maximum", scaledCapacity);
         tag.putLong("Birth", level.getGameTime());
         tag.putInt("Duration", duration);
         tag.putInt("Mode", mode);
@@ -389,6 +392,12 @@ public final class DefenseBarrierEntity extends Entity {
                     double checkRadius = mode() == MODE_DOME ? DOME_RADIUS + 2.0 : BARRIER_RADIUS + 2.5;
                     for (Projectile p : serverLevel.getEntitiesOfClass(Projectile.class, this.getBoundingBox().inflate(checkRadius))) {
                         if (!p.isRemoved() && !this.friendly(p.getOwner())) {
+                            boolean deflectArrows = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isBarrierDeflectArrows();
+                            boolean deflectMagic = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isBarrierDeflectMagicProjectiles();
+
+                            if (p instanceof AbstractArrow && !deflectArrows) continue;
+                            if ((p instanceof AbstractMagicProjectile || p instanceof ZoltraakBarrageProjectileEntity) && !deflectMagic) continue;
+
                             Vec3 curPos = p.position();
                             Vec3 nextPos = curPos.add(p.getDeltaMovement());
                             Optional<Vec3> contact = this.intersection(curPos, nextPos);

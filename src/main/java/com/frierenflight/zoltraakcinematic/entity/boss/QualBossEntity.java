@@ -271,10 +271,12 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         );
 
         int playerCount = Math.max(1, nearbyPlayers.size());
+        double baseHealth = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getQualBaseHealth();
+        double healthPerPlayer = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getQualHealthPerExtraPlayer();
 
         if (forceInitial || !scaledHealthInitialized) {
             this.lastKnownPlayerCount = playerCount;
-            double scaledMax = BASE_MAX_HEALTH + (playerCount - 1) * HEALTH_PER_PLAYER;
+            double scaledMax = baseHealth + (playerCount - 1) * healthPerPlayer;
 
             AttributeInstance maxHealthAttr = this.getAttribute(Attributes.MAX_HEALTH);
             if (maxHealthAttr != null) {
@@ -285,7 +287,7 @@ public class QualBossEntity extends AbstractSpellCastingMob implements Enemy, Ge
         } else if (playerCount > this.lastKnownPlayerCount) {
             // New players joined the raid! Scale max health up while preserving HP percentage
             double oldMax = this.getMaxHealth();
-            double newMax = BASE_MAX_HEALTH + (playerCount - 1) * HEALTH_PER_PLAYER;
+            double newMax = baseHealth + (playerCount - 1) * healthPerPlayer;
             float currentHealth = this.getHealth();
             float hpRatio = (float) (currentHealth / Math.max(1.0, oldMax));
 

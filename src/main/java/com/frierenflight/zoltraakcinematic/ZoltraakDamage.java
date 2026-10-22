@@ -30,8 +30,6 @@ public final class ZoltraakDamage {
             }
         }
 
-        int saved = target.invulnerableTime;
-
         try {
             if (rapid) {
                 target.invulnerableTime = 0;

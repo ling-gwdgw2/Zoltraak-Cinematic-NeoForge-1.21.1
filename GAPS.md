@@ -32,6 +32,7 @@ This document provides a transparent disclosure of known architectural limitatio
 * Technical Impact:
   * Custom screen-space refraction passes requiring off-screen depth sampling (`SceneLens.java`) can conflict with shaderpacks that rewrite the main framebuffer format.
   * To guarantee zero game crashes, `ShaderCompatibility.java` utilizes dynamic reflection to detect active shaderpacks and automatically disables screen-space lens distortion. As a result, players with shaderpacks active receive flat alpha blending rather than physical gravitational lensing.
+  * Future Solution: This architectural limitation will be fundamentally eliminated upon migrating to Aperture (the Vulkan-native successor to Iris on Minecraft 26.2 with Sodium), where custom render passes will register directly into Aperture's unified, barrier-synchronized Render Graph.
 
 ### 2.5 Framebuffer Ping-Pong Memory Bandwidth
 * Core Issue: The post-processing pipeline (`GargantuaPostProcessor.java`) requires dual-buffered framebuffer copying (`sceneCopy` to `postTarget` to `activeDrawFbo`) to prevent OpenGL sampling feedback loops.
@@ -48,11 +49,12 @@ This document provides a transparent disclosure of known architectural limitatio
   * `GargantuaEntity` computes relativistic inward acceleration and frame-dragging tangential vectors across an attraction radius of up to 100 blocks.
   * In standard gameplay environments, iterating through entities within this bounding box is negligible. However, in heavily populated environments (such as high-density mob grinders with 300+ entities), computing vector kinematics on the main thread can cause server tick duration to exceed 50 milliseconds, resulting in temporary TPS drops below 20.
 
-### 3.2 Chunk Persistence and World Reconstruction Volatility
-* Core Issue: The terrain tearing and restoration engine (`tearSurfaceBlocks` and `reconstructBlocks`) tracks torn block coordinates in volatile server memory arrays (`List<TornBlockRecord>`).
-* Technical Impact:
-  * Normal gameplay lifecycles are safe: if an entity is removed via command, combat expiration, or regular chunk unload, the fallback cleanup method (`restoreAllRemainingBlocks()`) triggers immediately.
-  * However, in the event of an ungraceful server crash (process kill, JVM SIGKILL, hard power outage) occurring midway through a 60-second singularity lifespan, the in-memory restoration queue is lost. Any blocks torn prior to the crash will remain modified in chunk storage. Persistent NBT capability serialization for active craters is not yet implemented.
+### 3.2 Elimination of Block Reconstruction and Server Memory Queues (Resolved)
+* Core Design Decision: The terrain reconstruction engine (`reconstructBlocks`, `restoreAllRemainingBlocks`, and the volatile `tornBlocks` map) has been completely decommissioned and removed.
+* Rationale & Architecture Impact:
+  * In multiplayer and modpack environments, players predominantly utilize land protection systems (such as FTB Chunks, WorldGuard, or OpenPartiesAndClaims) to safeguard their builds.
+  * Maintaining volatile in-memory block queues across the black hole's 60-second lifespan introduced unnecessary memory overhead, risks of permanent terrain damage on ungraceful server shutdowns, and chunk loading loops during entity removal.
+  * Zoltraak Beam craters and Gargantua no longer execute arbitrary block restoration loops, eliminating main-thread block update spikes (`setBlock` flag 3) and preserving peak server TPS under all multiplayer conditions.
 
 ### 3.3 I-Frame Bypass Workaround
 * Core Issue: Vanilla Minecraft imposes a hardcoded 20-tick (1.0-second) damage immunity window (`invulnerableTime = 20`) on living entities following any damage event.

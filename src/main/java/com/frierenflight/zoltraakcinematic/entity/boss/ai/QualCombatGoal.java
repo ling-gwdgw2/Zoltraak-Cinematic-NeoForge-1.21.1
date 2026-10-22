@@ -64,7 +64,7 @@ public class QualCombatGoal extends Goal {
                 // Phase 2: Demonic Barrage Matrix
                 if (qual.getRandom().nextFloat() < 0.65f) {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
-                    attackTimer = 200 + qual.getRandom().nextInt(40); // 10.0 - 12.0s recovery window (200-240 ticks)
+                    attackTimer = calculateRecoveryWindow();
                 } else {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 7);
                     attackTimer = 70 + qual.getRandom().nextInt(30); // ~3.5 - 5.0s (70-100 ticks)
@@ -74,7 +74,7 @@ public class QualCombatGoal extends Goal {
                 // Phase 3: Tactical Adaptation
                 if (qual.getRandom().nextFloat() < 0.55f) {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
-                    attackTimer = 200 + qual.getRandom().nextInt(40); // 10.0 - 12.0s recovery window (200-240 ticks)
+                    attackTimer = calculateRecoveryWindow();
                 } else {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 9);
                     attackTimer = 70 + qual.getRandom().nextInt(30); // ~3.5 - 5.0s (70-100 ticks)
@@ -84,7 +84,7 @@ public class QualCombatGoal extends Goal {
                 // Phase 4: Overdrive Sustained Fire
                 if (qual.getRandom().nextFloat() < 0.5f) {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_BARRAGE.get(), 1);
-                    attackTimer = 200 + qual.getRandom().nextInt(40); // 10.0 - 12.0s recovery window (200-240 ticks)
+                    attackTimer = calculateRecoveryWindow();
                 } else {
                     qual.initiateCastSpell(ModCinematicSpells.CORRUPTED_ZOLTRAAK.get(), 10);
                     attackTimer = 60 + qual.getRandom().nextInt(30); // ~3.0 - 4.5s
@@ -94,6 +94,13 @@ public class QualCombatGoal extends Goal {
 
         // Multiplayer Tactical Cycling: evaluate switching target between spell volleys
         considerTargetSwitch(target);
+    }
+
+    private int calculateRecoveryWindow() {
+        int min = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getQualRecoveryWindowMinTicks();
+        int max = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getQualRecoveryWindowMaxTicks();
+        int delta = Math.max(1, max - min);
+        return min + qual.getRandom().nextInt(delta);
     }
 
     /**

@@ -8,6 +8,7 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.util.Mth;
 import org.joml.Matrix4f;
@@ -108,26 +109,33 @@ public class QualBossRenderer extends GeoEntityRenderer<QualBossEntity> {
             renderQuad(poseStack, glowBuilder, size, 110, 15, 160, alpha);
             poseStack.popPose();
         }
+        flush(bufferSource, ZoltraakRenderTypes.BLACK_GLOW);
     }
 
     /**
      * 5. Cataclysmic Singularity Convergence (Logarithmic Inward Spiral Vortex).
      */
     private void renderCataclysmicSingularity(QualBossEntity entity, Camera camera, float gameTime, PoseStack poseStack, MultiBufferSource bufferSource) {
-        VertexConsumer flareBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.BLACK_GLOW);
-        VertexConsumer coronaBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.CORONA);
-        VertexConsumer lightBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.LIGHT);
-
         poseStack.pushPose();
         poseStack.translate(0.0, 1.85, 1.35);
 
         float corePulse = 1.6f + 0.35f * Mth.sin(gameTime * 0.8f);
         poseStack.pushPose();
         poseStack.mulPose(camera.rotation());
+
+        VertexConsumer coronaBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.CORONA);
         renderQuad(poseStack, coronaBuilder, corePulse, 255, 80, 255, 255);
-        renderQuad(poseStack, flareBuilder, corePulse * 1.8f, 230, 30, 255, 240);
+        flush(bufferSource, ZoltraakRenderTypes.CORONA);
+
+        if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isAnamorphicLensFlaresEnabled()) {
+            VertexConsumer flareBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.BLACK_GLOW);
+            renderQuad(poseStack, flareBuilder, corePulse * 1.8f, 230, 30, 255, 240);
+            flush(bufferSource, ZoltraakRenderTypes.BLACK_GLOW);
+        }
+
         poseStack.popPose();
 
+        VertexConsumer lightBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.LIGHT);
         Matrix4f mat = poseStack.last().pose();
         int arms = 4;
         int steps = 16;
@@ -166,6 +174,7 @@ public class QualBossRenderer extends GeoEntityRenderer<QualBossEntity> {
                 lightBuilder.addVertex(mat, x0, y0 + w, z0).setColor(red, green, blue, alpha);
             }
         }
+        flush(bufferSource, ZoltraakRenderTypes.LIGHT);
 
         poseStack.popPose();
     }
@@ -187,6 +196,7 @@ public class QualBossRenderer extends GeoEntityRenderer<QualBossEntity> {
         poseStack.mulPose(Axis.XP.rotationDegrees(90.0f));
         renderQuad(poseStack, impactBuilder, radius, 220, 40, 255, alpha);
         poseStack.popPose();
+        flush(bufferSource, ZoltraakRenderTypes.ZOL_IMPACT);
     }
 
     private static void renderQuad(PoseStack poseStack, VertexConsumer builder, float radius, int r, int g, int b, int a) {
@@ -195,5 +205,11 @@ public class QualBossRenderer extends GeoEntityRenderer<QualBossEntity> {
         builder.addVertex(mat, radius, radius, 0.0f).setUv(1.0f, 0.0f).setColor(r, g, b, a);
         builder.addVertex(mat, radius, -radius, 0.0f).setUv(1.0f, 1.0f).setColor(r, g, b, a);
         builder.addVertex(mat, -radius, -radius, 0.0f).setUv(0.0f, 1.0f).setColor(r, g, b, a);
+    }
+
+    private static void flush(MultiBufferSource b, RenderType t) {
+        if (b instanceof MultiBufferSource.BufferSource s) {
+            s.endBatch(t);
+        }
     }
 }

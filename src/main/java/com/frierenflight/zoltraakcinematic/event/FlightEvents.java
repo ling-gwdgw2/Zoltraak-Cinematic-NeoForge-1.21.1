@@ -4,7 +4,6 @@ import com.frierenflight.zoltraakcinematic.registry.ModCinematicMobEffects;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
 import io.redspace.ironsspellbooks.network.SyncManaPacket;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,9 +24,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * FlightEvents
@@ -35,13 +34,14 @@ import java.util.UUID;
  * ability synchronization, particle trails, fall-damage immunity, and safety parachutes.
  */
 public final class FlightEvents {
-    private static final Set<UUID> activeFlyers = new HashSet<>();
-    private static final Set<UUID> landingProtection = new HashSet<>();
+    private static final Set<UUID> activeFlyers = ConcurrentHashMap.newKeySet();
+    private static final Set<UUID> landingProtection = ConcurrentHashMap.newKeySet();
 
     public static void register() {
         NeoForge.EVENT_BUS.addListener(FlightEvents::onPlayerTick);
         NeoForge.EVENT_BUS.addListener(EventPriority.HIGH, FlightEvents::onLivingIncomingDamage);
         NeoForge.EVENT_BUS.addListener(FlightEvents::onPlayerLoggedOut);
+        NeoForge.EVENT_BUS.addListener(FlightEvents::onPlayerLoggedIn);
     }
 
     public static void enableFlight(ServerPlayer player) {
@@ -73,7 +73,16 @@ public final class FlightEvents {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         activeFlyers.remove(event.getEntity().getUUID());
-        landingProtection.remove(event.getEntity().getUUID());
+        // Note: Retain landingProtection across logout so players reconnecting in mid-air do not plunge to their death!
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            if (!player.onGround()) {
+                landingProtection.add(player.getUUID());
+            }
+        }
     }
 
     @SubscribeEvent
@@ -108,7 +117,7 @@ public final class FlightEvents {
             boolean isAirborne = !player.onGround() && !player.isInWater() && !player.isInLava();
 
             // Seamless auto-float engagement when in mid-air
-            if (isAirborne && !isFlying) {
+            if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isAutoEngageAirborne() && isAirborne && !isFlying) {
                 player.getAbilities().flying = true;
                 player.onUpdateAbilities();
                 isFlying = true;
@@ -119,8 +128,9 @@ public final class FlightEvents {
 
                 int spellLevel = player.getEffect(ModCinematicMobEffects.FLIGHT).getAmplifier() + 1;
 
-                // Base consumption: 50 mana/sec at Level 1 -> 40 mana/sec at Level 5
-                float basePerSec = 50.0f - (spellLevel - 1) * 2.5f;
+                // Configurable Base consumption & scaling
+                float basePerSec = (float) Math.max(1.0, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBaseManaCostPerSecond()
+                        - (spellLevel - 1) * com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getManaReductionPerLevel());
                 float basePerTick = basePerSec / 20.0f;
 
                 // Accurate movement velocity (calculates actual tick displacement on server)
@@ -133,16 +143,18 @@ public final class FlightEvents {
                 double speed = Math.max(vel.length(), displacementSpeed);
                 double verticalClimb = Math.max(vel.y, dy);
 
+                boolean scalingEnabled = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isSpeedAltitudeScalingEnabled();
+
                 // Exponential Speed Multiplier
                 float speedMult = 1.0f;
-                if (speed > 0.10) {
+                if (scalingEnabled && speed > 0.10) {
                     double excess = speed - 0.10;
-                    speedMult += (float) Math.pow(excess / 0.18, 1.8);
+                    speedMult += (float) Math.pow(excess / 0.18, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getSpeedMultiplierExponent());
                 }
                 if (player.isSprinting()) {
                     speedMult += 0.5f;
                 }
-                speedMult = Math.min(speedMult, 8.0f); // Sanity cap against physics glitches
+                speedMult = (float) Math.min(speedMult, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getMaxSpeedMultiplier());
 
                 // Exponential Altitude Multiplier (Height above ground)
                 Vec3 start = player.position();
@@ -151,15 +163,15 @@ public final class FlightEvents {
                 double heightAboveGround = (hit.getType() == HitResult.Type.BLOCK) ? Math.max(0.0, start.y - hit.getLocation().y) : 128.0;
 
                 float heightMult = 1.0f;
-                if (heightAboveGround > 3.0) {
+                if (scalingEnabled && heightAboveGround > 3.0) {
                     double hExcess = heightAboveGround - 3.0;
-                    heightMult += (float) Math.pow(hExcess / 10.0, 1.7);
+                    heightMult += (float) Math.pow(hExcess / 10.0, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getAltitudeMultiplierExponent());
                 }
                 // Rapid vertical climb mana surcharge
-                if (verticalClimb > 0.05) {
+                if (scalingEnabled && verticalClimb > 0.05) {
                     heightMult += (float) (verticalClimb * 3.0);
                 }
-                heightMult = Math.min(heightMult, 15.0f); // Sanity cap against sky-high overflow
+                heightMult = (float) Math.min(heightMult, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getMaxAltitudeMultiplier());
 
                 // Dynamic Total Mana Drain
                 float drainThisTick = basePerTick * speedMult * heightMult;
@@ -175,8 +187,11 @@ public final class FlightEvents {
                         magicData.setMana(0.0f);
                         PacketDistributor.sendToPlayer(player, new SyncManaPacket(magicData));
 
-                        // Emergency 3.5s feather fall buffer
-                        player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 70, 0, false, false, false));
+                        // Emergency feather fall buffer (Configurable)
+                        int emergencyTicks = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getEmergencyBufferTicks();
+                        if (emergencyTicks > 0) {
+                            player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, emergencyTicks, 0, false, false, false));
+                        }
 
                         ServerLevel sl = player.serverLevel();
                         sl.playSound(null, player.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 1.2f, 1.6f);
@@ -195,23 +210,8 @@ public final class FlightEvents {
                     }
                 }
 
-                // Visual particle trails under feet/body
-                if (player.tickCount % 2 == 0) {
-                    ServerLevel sl = player.serverLevel();
-                    double px = player.getX() + (sl.random.nextDouble() - 0.5) * 0.5;
-                    double py = player.getY() + 0.1;
-                    double pz = player.getZ() + (sl.random.nextDouble() - 0.5) * 0.5;
-                    sl.sendParticles(ParticleTypes.ELECTRIC_SPARK, px, py, pz, 1, 0, -0.05, 0, 0.02);
-
-                    if (speed > 0.3) {
-                        double trailX = (Math.abs(vel.x) > 0.01) ? -vel.x * 0.25 : -dx * 0.25;
-                        double trailZ = (Math.abs(vel.z) > 0.01) ? -vel.z * 0.25 : -dz * 0.25;
-                        sl.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.2, player.getZ(), 1, trailX, 0.05, trailZ, 0.02);
-                    }
-                }
-
                 // Action Bar Flight Telemetry (HUD)
-                if (player.tickCount % 8 == 0) {
+                if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isTelemetryHUDEnabled() && player.tickCount % 8 == 0) {
                     float drainPerSec = drainThisTick * 20.0f;
                     String telemetry = String.format("§b✦ Flight Magic: §f%.0f mana/s  §7|  §eAlt: %.0fm  §7|  §6Spd: %.1fx",
                             drainPerSec, heightAboveGround, speedMult);

@@ -328,7 +328,7 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
 
     @Override
     public void tick() {
-        super.tick();
+        super.baseTick();
 
         if (spawnOrigin == null) {
             spawnOrigin = computeCircleOrigin(0.0f);
@@ -350,7 +350,8 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
             pathHistory.add(pos);
         }
 
-        if (spawnOrigin.distanceTo(pos) >= 64.0 || tickCount >= MAX_LIFETIME) {
+        int maxLife = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBarrageMaxLifetimeTicks();
+        if (spawnOrigin.distanceTo(pos) >= 64.0 || tickCount >= maxLife) {
             if (!level().isClientSide) {
                 stopOnImpact(pos);
             }
@@ -370,7 +371,8 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
                 if (speed > 0.001) {
                     Vec3 currentDir = currentMove.normalize();
                     // Gentle initial bloom from circle, followed by swift aerodynamic lock-on
-                    float steerRate = (tickCount < 2) ? 0.18f : 0.34f;
+                    float configSteer = (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBarrageHomingStrength();
+                    float steerRate = (tickCount < 2) ? configSteer * 0.5f : configSteer;
                     Vec3 newDir = currentDir.lerp(desiredDir, steerRate).normalize();
                     setDeltaMovement(newDir.scale(speed));
                 }
@@ -436,13 +438,14 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
             boolean isPurple = getColorTheme() == 1;
             boolean damaged;
 
+            float finalDamage = damage * (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBarrageDamageMultiplier();
             if (shooter instanceof LivingEntity livingShooter) {
                 net.minecraft.world.damagesource.DamageSource source = isPurple
                         ? ModCinematicSpells.CORRUPTED_BARRAGE.get().getDamageSource(this, livingShooter)
                         : ModCinematicSpells.ZOLTRAAK_BARRAGE.get().getDamageSource(this, livingShooter);
-                damaged = ZoltraakDamage.apply(livingTarget, damage, source, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
+                damaged = ZoltraakDamage.apply(livingTarget, finalDamage, source, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
             } else {
-                damaged = livingTarget.hurt(damageSources().magic(), damage);
+                damaged = livingTarget.hurt(damageSources().magic(), finalDamage);
             }
 
             // Stagger effect and knockback: cancel item use & disable shield when attack is effective

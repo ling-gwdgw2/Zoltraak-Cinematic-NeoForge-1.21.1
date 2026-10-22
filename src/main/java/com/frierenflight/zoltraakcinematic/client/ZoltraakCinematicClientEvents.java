@@ -65,6 +65,17 @@ public class ZoltraakCinematicClientEvents {
         NeoForge.EVENT_BUS.addListener(com.frierenflight.zoltraakcinematic.client.renderer.GargantuaPostProcessor::onRenderLevelStage);
         NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onEntityJoinLevel);
         NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onEntityLeaveLevel);
+        NeoForge.EVENT_BUS.addListener(ZoltraakCinematicClientEvents::onPlaySound);
+    }
+
+    public static void onPlaySound(net.neoforged.neoforge.client.event.sound.PlaySoundEvent event) {
+        if (event.getSound() == null) return;
+        net.minecraft.resources.ResourceLocation loc = event.getSound().getLocation();
+        if (loc != null && loc.getNamespace().equals(ZoltraakCinematicMod.MODID)) {
+            if (loc.getPath().equals("tinnitus") && !com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isTinnitusSoundEnabled()) {
+                event.setSound(null);
+            }
+        }
     }
 
     public static void onEntityJoinLevel(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
@@ -122,15 +133,21 @@ public class ZoltraakCinematicClientEvents {
         double dist = mc.player.position().distanceTo(beamPos);
         boolean isCaster = (beam instanceof ZoltraakCinematicBeamEntity b && b.getOwner() == mc.player) || dist < 2.5;
 
+        boolean shakeEnabled = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isCameraShakeEnabled();
+        float shakeMult = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getCameraShakeMultiplier();
+
         if (isCaster) {
-            shakeDuration = 6; // 6 ticks (~0.30s)
-            shakeIntensity = 1.0f;
-            flashDuration = 3; // 3 ticks (~0.15s)
-            flashIntensity = 1.0f;
+            if (shakeEnabled) {
+                shakeDuration = 6; // 6 ticks (~0.30s)
+                shakeIntensity = 1.0f * shakeMult;
+            }
+            triggerFlash(3, 1.0f);
         } else if (dist < 32.0) {
-            float factor = (float) (1.0 - dist / 32.0);
-            shakeDuration = Math.max(shakeDuration, (int) (4 * factor));
-            shakeIntensity = Math.max(shakeIntensity, 0.65f * factor);
+            if (shakeEnabled) {
+                float factor = (float) (1.0 - dist / 32.0);
+                shakeDuration = Math.max(shakeDuration, (int) (4 * factor));
+                shakeIntensity = Math.max(shakeIntensity, 0.65f * factor * shakeMult);
+            }
         }
     }
 
@@ -138,14 +155,19 @@ public class ZoltraakCinematicClientEvents {
      * Triggers continuous micro-rumble screen vibration during rapid barrage fire.
      */
     public static void triggerBarrageMicroRumble() {
+        if (!com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isCameraShakeEnabled()) return;
         barrageRumbleTicks = Math.max(barrageRumbleTicks, 3);
     }
 
     /**
-     * Applies high-speed camera kickback & harmonic screen vibration during spell release.
+     * Applies high-speed camera kickback & harmonic screen vibration during spell release,
+     * and subtle aerodynamic banking roll during flight.
      */
     public static void onCameraAngles(ViewportEvent.ComputeCameraAngles event) {
-        if (shakeDuration > 0) {
+        boolean shakeEnabled = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isCameraShakeEnabled();
+        float shakeMult = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getCameraShakeMultiplier();
+
+        if (shakeEnabled && shakeDuration > 0) {
             float partial = (float) event.getPartialTick();
             float t = (6 - shakeDuration) + partial;
             float progress = Math.max(0.0f, (shakeDuration - partial) / 6.0f) * shakeIntensity;
@@ -163,34 +185,49 @@ public class ZoltraakCinematicClientEvents {
             event.setRoll(event.getRoll() + rollJitter);
         }
 
-        if (barrageRumbleTicks > 0) {
+        if (shakeEnabled && barrageRumbleTicks > 0) {
             float rumbleTime = (float) event.getPartialTick() + (3 - barrageRumbleTicks);
-            float rumblePitch = (float) Math.sin(rumbleTime * 34.0) * 0.16f;
-            float rumbleYaw   = (float) Math.cos(rumbleTime * 28.0) * 0.13f;
-            float rumbleRoll  = (float) Math.sin(rumbleTime * 22.0) * 0.10f;
+            float rumblePitch = (float) Math.sin(rumbleTime * 34.0) * 0.16f * shakeMult;
+            float rumbleYaw   = (float) Math.cos(rumbleTime * 28.0) * 0.13f * shakeMult;
+            float rumbleRoll  = (float) Math.sin(rumbleTime * 22.0) * 0.10f * shakeMult;
 
             event.setPitch(event.getPitch() + rumblePitch);
             event.setYaw(event.getYaw() + rumbleYaw);
             event.setRoll(event.getRoll() + rumbleRoll);
         }
 
-        float gShake = com.frierenflight.zoltraakcinematic.client.renderer.GargantuaShake.currentShake((float) event.getPartialTick());
-        if (gShake > 0.001f) {
-            long now = System.currentTimeMillis();
-            long step = now / 14L;
-            float r1 = (float) ((step * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
-            float r2 = (float) (((step + 127L) * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
-            float pitchJitter = (r1 * 2.0f - 1.0f) * gShake * 0.85f;
-            float yawJitter   = (r2 * 2.0f - 1.0f) * gShake * 1.15f;
-            event.setPitch(event.getPitch() + net.minecraft.util.Mth.clamp(pitchJitter, -12.0f, 12.0f));
-            event.setYaw(event.getYaw() + net.minecraft.util.Mth.clamp(yawJitter, -12.0f, 12.0f));
+        if (shakeEnabled) {
+            float gShake = com.frierenflight.zoltraakcinematic.client.renderer.GargantuaShake.currentShake((float) event.getPartialTick()) * shakeMult;
+            if (gShake > 0.001f) {
+                long now = System.currentTimeMillis();
+                long step = now / 14L;
+                float r1 = (float) ((step * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
+                float r2 = (float) (((step + 127L) * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
+                float pitchJitter = (r1 * 2.0f - 1.0f) * gShake * 0.85f;
+                float yawJitter   = (r2 * 2.0f - 1.0f) * gShake * 1.15f;
+                event.setPitch(event.getPitch() + net.minecraft.util.Mth.clamp(pitchJitter, -12.0f, 12.0f));
+                event.setYaw(event.getYaw() + net.minecraft.util.Mth.clamp(yawJitter, -12.0f, 12.0f));
+            }
+        }
+
+        // Aerodynamic Flight Camera Roll Banking
+        if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isFlightCameraRollEnabled()) {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player != null && mc.player.hasEffect(com.frierenflight.zoltraakcinematic.registry.ModCinematicMobEffects.FLIGHT) && mc.player.getAbilities().flying) {
+                float yRotDelta = mc.player.getYRot() - mc.player.yRotO;
+                while (yRotDelta < -180.0f) yRotDelta += 360.0f;
+                while (yRotDelta >= 180.0f) yRotDelta -= 360.0f;
+                float targetRoll = net.minecraft.util.Mth.clamp(-yRotDelta * 0.45f, -6.5f, 6.5f);
+                event.setRoll(event.getRoll() + targetRoll);
+            }
         }
     }
 
     public static void triggerFlash(int duration, float intensity) {
+        if (!com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isScreenFlashEnabled()) return;
         flashDuration = duration;
         maxFlashDuration = duration;
-        flashIntensity = intensity;
+        flashIntensity = intensity * com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getScreenFlashIntensity();
     }
 
     /**

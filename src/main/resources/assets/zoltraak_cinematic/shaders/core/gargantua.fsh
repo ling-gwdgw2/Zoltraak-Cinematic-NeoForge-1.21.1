@@ -99,7 +99,7 @@ uniform vec4 HoleState;
 // x = disk inner radius, y = outer radius, both in r_g; z = h/r; w = brightness
 uniform vec4 DiskShape;
 
-const int GARG_STEPS_MAX = 112;
+const int GARG_STEPS_MAX = 128;
 const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 60.0;
@@ -206,7 +206,8 @@ void main() {
 
     p += d * (gargWhiteNoise(vUv * 512.0) * 0.1);
 
-    int steps = int(mix(48.0, float(GARG_STEPS_MAX),
+    float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 64.0;
+    int steps = int(mix(targetSteps * 0.45, targetSteps,
             clamp(reach / max(holeDistance, 0.001) * 1.6, 0.0, 1.0)));
 
     vec3 accum = vec3(0.0);
@@ -229,8 +230,9 @@ void main() {
         p += d * dt;
         travelledBlocks += dt * rg;
         float travelled = length(p);
-        // Geodesic leapfrog integration
-        d = normalize(d + (-1.5 * h * h * p / pow(travelled, 5.0)) * dt);
+        // Geodesic leapfrog integration (modulated by Gravitational Lensing toggle via SpinAxis.w)
+        float lensMult = SpinAxis.w >= 0.05 ? 1.0 : 0.0;
+        d = normalize(d + (-1.5 * lensMult * h * h * p / pow(travelled, 5.0)) * dt);
 
         if (travelled < GARG_HORIZON) {
             captured = true;
@@ -301,7 +303,7 @@ void main() {
     // The background, read along the ray's new direction.
     // Luminous cosmic starfield & interstellar nebula lensed by the black hole.
     vec3 background = sceneColour;
-    if (!captured && !hitSolid) {
+    if (!captured && !hitSolid && SpinAxis.w >= 0.05) {
         float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
         float edgeFeather = smoothstep(1.0, 0.35, normDist);
         float bent = 1.0 - dot(d, rayDir);

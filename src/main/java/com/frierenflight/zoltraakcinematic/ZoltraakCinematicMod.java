@@ -24,6 +24,9 @@ public class ZoltraakCinematicMod {
 
     public ZoltraakCinematicMod(IEventBus modEventBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.COMMON, ZoltraakCinematicConfig.SPEC, "zoltraak_cinematic-common.toml");
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            container.registerConfig(ModConfig.Type.CLIENT, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.SPEC, "zoltraak_cinematic-client.toml");
+        }
 
         com.frierenflight.zoltraakcinematic.registry.ModCinematicAttributes.register(modEventBus);
         com.frierenflight.zoltraakcinematic.registry.ModCinematicSchools.register(modEventBus);

@@ -6,7 +6,7 @@
 ## 1. Executive Summary & Vision
 
 **Zoltraak: Cinematic Edition** is a visual and mechanical addon for *Iron's Spells 'n Spellbooks (ISS)* on Minecraft 1.21.1 (NeoForge). Its design goal is to deliver a 1:1 anime-accurate recreation of the iconic magic system from *Frieren: Beyond Journey's End* (*Sousou no Frieren*), featuring:
-- **Ordinary Offensive Magic (*Zoltraak / ゾルトラーク*)**: Standard Holy Cyan and Corrupted Black beams, high-yield Great Zoltraak, and supersonic 5-circle rapid barrages.
+- **Ordinary Offensive Magic (*Zoltraak / ゾルトラーク*)**: Standard Holy Cyan and Corrupted Black beams, high-yield Great Zoltraak, and supersonic 24-circle grand celestial barrages.
 - **Defensive Magic (*Defensive Barrier / 防御魔法*)**: Geodesic honeycomb domes and directional aegis shields with procedural hexagonal lattice resonance, chromatic dispersion Fresnel, and dielectric mana sparks.
 - **Human Flight Magic (*Flight / 飛行魔法*)**: Smooth 3D omnidirectional soaring, aerodynamic camera roll, speed boost, hover, and dynamic stamina/mana drain.
 - **The Elder Sage of Corruption: Qual (*腐敗の賢老 クヴァール*)**: Boss fight encounter summoned via the ancient sealing stone ritual, featuring multi-phase combat, barrier-flanking AI, and cataclysmic black magic.
@@ -14,7 +14,7 @@
 
 ### Key Architectural Tenets:
 - **Zero-Vanilla-Particle Ionization**: All vanilla sprite particles (`END_ROD`, `ELECTRIC_SPARK`, `SMOKE`) are completely eliminated in favor of pure procedural mathematical GLSL shaders (`zoltraak_impact.fsh`, `defense_barrier.fsh`, `barrage_fx.fsh`).
-- **Multi-Circle Orbital Array**: 5 runic circles arranged in 3D local coordinate space for continuous rapid barrage with staggered firing cyclers.
+- **24-Circle Grand Celestial Matrix**: 24 runic circles arranged in a dynamic 3D parabolic wing & diamond matrix with focal parallax convergence.
 - **Procedural Core GLSL 150 Shaders**: 17 custom shader programs handling Kerr raymarching, anamorphic flares, chromatic dispersion, volumetric plumes, and hexagonal lattice resonance.
 - **Deferred Render Pass & Screen-Space Pipeline**: Intercepting `GameRenderer#renderLevel` via Mixin and NeoForge render stages for flicker-free translucent depth sorting, post-processor framebuffer blitting, and multi-octave camera dynamics.
 - **Zero-Crash Decoupling & Shader Compatibility**: Dynamic reflection fallback and seamless compatibility with Iris / Oculus / Sodium shader packs.
@@ -193,7 +193,7 @@ zoltraak-cinematic/
     │       ├── CorruptedBarrageSpell.java    # Dark continuous rapid barrage
     │       ├── CorruptedZoltraakSpell.java   # Qual Human-Killing Zoltraak beam
     │       ├── DefensiveMagicSpell.java      # Directional shield & geodesic honeycomb dome
-    │       ├── FernBarrageSpell.java         # Fern 10/s rapid barrage with 5-circle orbital array
+    │       ├── FernBarrageSpell.java         # Fern rapid barrage with 24-circle grand celestial matrix
     │       ├── FlightMagicSpell.java         # Instant toggle omnidirectional flight
     │       ├── GargantuaSpell.java           # Astral Singularity: Gargantua
     │       └── ZoltraakCinematicSpell.java   # Standard Frieren Zoltraak beam
@@ -243,9 +243,9 @@ zoltraak-cinematic/
 
 | Spell ID | Class | Cast Type | Mana Cost | Cooldown | Key Features |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `zoltraak` | `ZoltraakCinematicSpell` | `INSTANT` | 40 (+6/lvl) | 4.0s | 64m piercing photonic beam, 12m terminal blast, shield breaking, crater carving. |
+| `zoltraak` | `ZoltraakCinematicSpell` | `INSTANT` | 40 (+6/lvl) | 4.0s | 64m piercing photonic beam, 12m terminal blast, shield breaking, claim-safe griefless impact. |
 | `corrupted_zoltraak` | `CorruptedZoltraakSpell` | `INSTANT` | 48 (+7/lvl) | 4.5s | Dark void beam, armor bypass, inflicts Wither & Slowness, electric magenta flares. |
-| `zoltraak_barrage` | `FernBarrageSpell` | `CONTINUOUS` (3s) | 22 (+3/lvl) | 1.0s | 10 shots/s across 5-circle orbital array, 56 m/s supersonic projectiles, micro-stagger. |
+| `zoltraak_barrage` | `FernBarrageSpell` | `CONTINUOUS` (10s) | 250 (+4/lvl) | 1.5s | 24-circle grand celestial matrix, supersonic guided light lances, aerodynamic homing. |
 | `corrupted_barrage` | `CorruptedBarrageSpell` | `CONTINUOUS` (3s) | 28 (+4/lvl) | 1.2s | High-frequency dark thorn projectiles, dark decay, shield bypass. |
 | `defense` | `DefensiveMagicSpell` | `INSTANT` | 200 (+10/lvl) | 10.0s | Dual-mode barrier: Directional Aegis (standing) & Geodesic Dome (crouching), damage absorption, projectile interception. |
 | `flight` | `FlightMagicSpell` | `INSTANT` (Toggle) | 25 (drain 50→40/s) | 1.0s | Omnidirectional 3D soaring, aerodynamic roll, speed boost, altitude stamina scaling. |
@@ -376,7 +376,7 @@ The singularity executes an exact 1,200-tick (60.0s) timeline:
 | **2. Active Accretion Vortex** | $60 < t \le 1060$ | $3.0\text{s} - 53.0\text{s}$ | **Periodic Audio:** `ModCinematicSounds.SINGULARITY_ACTIVE` played every 40 ticks.<br>Continuous camera rumble $(0.20 + 3.8\,\text{crit}^2) \times (1 - d/80)$.<br>Surface terrain tearing every 4 ticks (capped at 180 blocks).<br>Relativistic inward pull ($100\text{m}$) + frame-dragging swirl.<br>Dual-zone damage applied every 8 ticks ($0.4\text{s}$). |
 | **3. Gravitational Implosion** | $1060 < t \le 1100$ | $53.0\text{s} - 55.0\text{s}$ | **Criticality:** $\text{crit}(t) = \text{smoothstep}((t - 1060) / 40) \in [0.0, 1.0]$.<br>Core compresses inward: $r_g(t) = 4.0 - 2.2\,\text{crit}(t)$ ($4.0\text{m} \to 1.8\text{m}$).<br>Brightness surges: $\text{brightness}(t) = 1.0 + 3.0\,\text{crit}(t)$ ($1.0 \to 4.0$).<br>Camera vibration escalates quadratically with $\text{crit}^2$. Disk emission boosted $1.8\times$. |
 | **4. Supernova Detonation** | $t = 1100$ | $55.0\text{s}$ | **Audio Detonation:** `ModCinematicSounds.SINGULARITY_EXPLODE` (Vol 8.0) + `ModCinematicSounds.TINNITUS` (Vol 5.0).<br>Blinding screen flash for 45 ticks (`triggerFlash(45, 1.0f)`).<br>Massive shockwave camera shake: Strength 18.0 across 128m decaying over 55 ticks via $18.0 \times (1 - t_{\text{elapsed}}/55)^2 \times (1 - d/128)$.<br>Core expands: $1.8\text{m} \to 8.8\text{m}$. Swirling debris vaporized. |
-| **5. Pristine World Restoration** | $1108 \le t \le 1200$ | $55.4\text{s} - 60.0\text{s}$ | **Pristine Reconstruction:** Restores all `tornBlocks` bottom-up ($Y$ ascending) with `BlockParticleOption` bursts in dynamic batches: $\text{batch} = \max(3, \lceil 2|\text{torn}| / (1200 - t) \rceil)$.<br>Spacetime heals: $\text{opened}(t) \to 0.0$ between ticks 1115 and 1200.<br>Tick 1200: Entity `discard()`. |
+| **5. Singularity Dissipation & Spacetime Healing** | $1108 \le t \le 1200$ | $55.4\text{s} - 60.0\text{s}$ | **Zero-Lag Dissipation:** Spacetime heals smoothly: $\text{opened}(t) \to 0.0$ between ticks 1115 and 1200.<br>Tick 1200: Entity `discard()`. Zero block reconstruction overhead or chunk churn on server. |
 
 #### 5.6.3 Physical Inward Gravity & Item Safety Mechanics
 - **Inward Acceleration Field ($d > 7.2\text{m}$):**
@@ -411,13 +411,13 @@ The singularity executes an exact 1,200-tick (60.0s) timeline:
   $$\text{Falloff} = \max\left(0.25,\, 1.0 - \frac{d}{32.0}\right), \quad \text{FinalDamage} = \text{BaseDamage} \times \text{Falloff}$$
   Radial knockback impulse: $\vec{v}_{\text{impulse}} = \hat{r}_{\text{outward}} \times (3.2 \times \text{Falloff})$.
 
-#### 5.6.5 Pristine World Auto-Reconstruction Engine
-- **Terrain Tearing Envelope (`tearSurfaceBlocks`):**
-  Tears blocks within $2.5\text{m} \le r \le 18.0\text{m}$ every 4 ticks, capped at 180 blocks maximum to maintain 20.0 TPS. Crater depth is parabolically bounded: $\text{maxDepth} = \max(1.0, 4.0 \times (1 - (r/18)^2))$.
-- **Reconstruction Mechanics (`reconstructBlocks`):**
-  Between ticks 1108 and 1200, all records in `tornBlocks` are sorted bottom-up ($Y$ ascending) and restored in batches with block particle effects.
-- **Emergency Cleanup Safety (`remove()`):**
-  If `GargantuaEntity` is terminated prematurely by `/kill` or chunk unload, `restoreAllRemainingBlocks()` executes synchronously, ensuring terrain is never left permanently cratered.
+#### 5.6.5 Server TPS Optimization & Land Claim Compatibility
+- **Decommissioned Volatile Memory Queues:**
+  The legacy in-memory block tracking queue (`tornBlocks`) and batch restoration routines (`reconstructBlocks`, `restoreAllRemainingBlocks`) were completely removed.
+- **Multiplayer & Land Protection Compatibility:**
+  Players in modern modpacks rely on claim protection (FTB Chunks, WorldGuard, OpenPartiesAndClaims) to safeguard areas. Removing server-side block restoration eliminates all memory queues, prevents chunk churn during unloads, and ensures 20.0 TPS stability even on low-spec dedicated servers.
+- **Controlled Surface Debris:**
+  Surface tearing operates as a lightweight, bounded cosmetic effect capped at 180 debris blocks maximum without holding references in RAM.
 
 #### 5.6.6 Client-Side Relativistic Geodesic Raymarching (`gargantua.fsh` & `GargantuaPostProcessor`)
 - **Pipeline Stage:** Hooked into `RenderLevelStageEvent.Stage.AFTER_LEVEL` with dual-buffered FBO ping-ponging (`sceneCopy` $\to$ `postTarget` $\to$ `activeDrawFbo`) to prevent OpenGL sampling feedback loops.
@@ -544,7 +544,32 @@ Custom networking is implemented via NeoForge 1.21.1 Network Registry:
 
 ---
 
-## 8. Build & Deployment Architecture
+## 8. Configuration Architecture (Dual-Tier Common & Client)
+
+The mod incorporates a dual-tier configuration system designed for seamless multiplayer balance and client accessibility:
+
+- **`zoltraak_cinematic-common.toml` (`ModConfig.Type.COMMON`)**:
+  - Authoritative gameplay balance evaluated on server and synced to connected clients.
+  - Controls:
+    - **Astral Singularity (`[gargantua]`)**: Pull radius, acceleration, tidal damage %, supernova blast damage/radius, and debris limits.
+    - **Flight Magic (`[flight_system]`)**: Base mana drain (50 -> 40 mana/s), speed & altitude exponential scaling, and emergency slow-fall buffer.
+    - **Zoltraak Beams (`[spells_and_beams]`)**: Standard/large beam ranges, global damage multiplier, shield disabling, and friendly-fire safety.
+    - **Fern Barrage (`[barrage_matrix]`)**: Homing aerodynamic steering factor, projectile velocity, and salvo cadence.
+    - **Defensive Barrier (`[defense_barrier]`)**: Shield HP capacity multiplier, duration, and arrow/magic deflection flags.
+    - **Qual Boss (`[qual_boss]`)**: Base max health, multiplayer health scaling per player, and recovery window pacing.
+    - **Relics (`[artifacts_and_relics]`)**: Staff bonuses and Chronos watch dilation bubble radius/duration.
+- **`zoltraak_cinematic-client.toml` (`ModConfig.Type.CLIENT`)**:
+  - Local client preferences for accessibility and hardware scalability.
+  - Controls:
+    - **Visual Accessibility (`[visual_accessibility]`)**: Master toggle for fullscreen white flashes, flash opacity slider, camera shake toggle, and flight banking roll.
+    - **Shader Performance (`[shader_performance]`)**: Accretion disk raymarching step presets (`LOW (32)`, `MEDIUM (64)`, `HIGH (96)`, `ULTRA (128)`), lens flares, and chromatic aberration.
+    - **Audio Accessibility (`[audio_accessibility]`)**: Tinnitus high-frequency ringing toggle and volume factor.
+
+*For full key-by-key specifications and modpack presets, refer to [CONFIG.md](file:///c:/Users/vivo9/Desktop/Minecraft%20my%20mod/Zoltraak%20Cinematic%20-%20NeoForge%201.21.1/CONFIG.md).*
+
+---
+
+## 9. Build & Deployment Architecture
 
 The project features a dedicated Python orchestration script (`build.py`):
 1. **Compilation**: Invokes JDK 21 `javac` directly against `libs/neoforge-21.1.248-client.jar`, `libs/neoforge-21.1.248-universal.jar`, and supporting libraries.
@@ -558,19 +583,21 @@ The project features a dedicated Python orchestration script (`build.py`):
 
 ---
 
-## 9. Summary of Mod Systems
+## 10. Summary of Mod Systems
 
 | System | Primary Files | Role |
 | :--- | :--- | :--- |
 | **Mod Initialization** | `ZoltraakCinematicMod.java`, `GargantuaCommands.java` | Coordinates event buses, registries, creative tabs, and debug commands (`/singularity`, `/gargantua`). |
+| **Configuration** | `config/ZoltraakCinematicConfig.java`, `CONFIG.md` | Dual-tier Common and Client configuration system governing balance, accessibility, and shaders. |
 | **Registries** | `registry/ModCinematic*` | Declares spells, entities, blocks, items, sounds, mob effects, attributes, and magic schools. |
 | **Combat & Entities** | `entity/*`, `ZoltraakDamage.java`, `GargantuaDamage.java` | Continuous piercing beams, supersonic barrages, defensive barrier absorption, and Kerr black holes. |
 | **Boss & AI System** | `entity/boss/*`, `entity/boss/ai/*` | Elder Sage of Corruption (Qual) boss fight, barrier-flanking AI, and cataclysmic spell charging. |
 | **Sealing Ritual** | `block/*`, `client/renderer/QualSealingStoneRenderer.java` | Qual sealing stone ritual, rotating runic rings, fire pillar, and boss awakening. |
 | **Flight System** | `spell/FlightMagicSpell.java`, `effect/FlightMobEffect.java`, `event/FlightEvents.java` | Omnidirectional 3D soaring, aerodynamic camera roll, speed boost, and altitude stamina/mana drain. |
 | **Spells** | `spell/*` | Implements all 7 ISS `AbstractSpell` lifecycles (Beams, Barrages, Defense, Flight, Gargantua). |
-| **Renderers** | `client/renderer/*` | Blaze3D tessellation, geodesic dome math, 5-circle orbital array, and GeckoLib boss rendering. |
+| **Renderers** | `client/renderer/*` | Blaze3D tessellation, geodesic dome math, 24-circle grand celestial matrix, and GeckoLib boss rendering. |
 | **Post-Processing** | `GargantuaPostProcessor.java`, `GargantuaShake.java` | Fullscreen Kerr black hole raymarching, Doppler beaming, and multi-octave camera dynamics. |
 | **Render Pass & Mixin** | `ZoltraakRenderPass.java`, `GameRendererMixin.java`, `SceneLens.java` | Deferred rendering pass and screen-space distortion. |
 | **Core Shaders** | `assets/.../shaders/core/*` | 17 GLSL 150 procedural effects, Kerr raymarching, pure math impact spheres, and lattice resonance. |
 | **Client Events & Controls**| `ZoltraakCinematicClientEvents.java`, `network/*` | Camera kickback, rumble, exposure flash overlays, and quick-cast keybindings (`X`, `V`). |
+

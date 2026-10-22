@@ -204,8 +204,9 @@ public final class GargantuaPostProcessor {
                 shader.setSampler("DepthSampler", depthSamplerId);
                 shader.setSampler("NoiseSampler", noiseId);
 
+                float lensMult = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isGravitationalLensingEnabled() ? 1.0f : 0.0f;
                 shader.safeGetUniform("HoleCentre").set(eyeCenter.x, eyeCenter.y, eyeCenter.z, rg);
-                shader.safeGetUniform("SpinAxis").set(eyeAxis.x, eyeAxis.y, eyeAxis.z, 0.6f);
+                shader.safeGetUniform("SpinAxis").set(eyeAxis.x, eyeAxis.y, eyeAxis.z, lensMult);
 
                 float opened = entity.opened(partialTicks);
                 float crit = entity.criticality(partialTicks);
@@ -213,7 +214,8 @@ public final class GargantuaPostProcessor {
                 float blast = entity.blastFlash(partialTicks);
                 shader.safeGetUniform("HoleState").set(opened, crit, timeSec, blast);
 
-                shader.safeGetUniform("DiskShape").set(2.20f, 22.5f, 0.004f, brightness);
+                float raymarchSteps = (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getRaymarchStepCount();
+                shader.safeGetUniform("DiskShape").set(2.20f, 22.5f, raymarchSteps, brightness);
                 shader.safeGetUniform("InverseProjectionMat").set(invProj);
 
                 RenderSystem.setShader(() -> shader);

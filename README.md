@@ -72,6 +72,7 @@ python build.py
 
 ## Documentation & Architecture
 
+- **[Task Board & Hotfix Scratchpad](TODO.md)**: กระดานทดเลขสำหรับงานย่อยและบั๊กฉุกเฉินระยะสั้น
 - **[Changelog (ประวัติการอัปเดต)](CHANGELOG.md)**: บันทึกการเพิ่มฟีเจอร์และการแก้ไขบั๊กอย่างละเอียดในแต่ละเวอร์ชัน
 - **[Roadmap (แผนงานระดับมหภาค)](ROADMAP.md)**: แผนการพัฒนาและสถาปัตยกรรมสู่อนาคต เช่น การย้ายสู่ Vulkan
 - **[Architectural Limitations & Gaps](GAPS.md)**: ข้อจำกัดทางสถาปัตยกรรมและข้อแลกเปลี่ยนทางเทคนิค
