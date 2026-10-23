@@ -17,33 +17,38 @@ void main() {
     float r = length(p);
     float t = GameTime * 2.5;
 
-    // 1. Expanding High-Energy Shockwave Wavefront Ring
-    float shockRadius = 0.72;
-    float wave = exp(-pow((r - shockRadius) * 14.0, 2.0));
+    // 1. High-Velocity Staccato Supersonic Shockwave Ring
+    // Sharp, condensed compression wavefront crest matching Fern's rapid fire
+    float shockRadius = 0.74;
+    float ringDist = abs(r - shockRadius);
+    float shockPeak = exp(-pow(ringDist * 28.0, 2.0)) * 1.75;
 
-    // 2. Thermal Heat Wave Distortion & Secondary Trailing Ripples
-    float ripple = sin(r * 28.0 - t * 14.0) * exp(-pow(r * 2.0, 2.0)) * 0.32;
+    // 2. Transonic Condensation Disc & Trailing Mana Echoes
+    float condensationDisc = exp(-pow(r * 3.6, 2.0)) * 0.55;
+    float microRipples = sin(r * 36.0 - t * 16.0) * exp(-pow(r * 2.5, 2.0)) * 0.22;
 
-    // 3. Center Muzzle Plasma Eruption Burst
-    float centerBurst = exp(-r * 7.5) * 1.15;
+    // 3. Center Muzzle Plasma Eruption Pop
+    float corePop = exp(-r * 11.5) * 1.85;
 
     // 4. Sample Texture Mask (Multiply by texture alpha to avoid rectangular edge leakage)
     vec4 texSample = texture(Sampler0, uv);
     float texLuma = texSample.r * texSample.a;
 
-    // Combined explosive shockwave density
-    float density = max(wave * 1.35 + ripple + centerBurst, texLuma * (1.0 + wave * 0.8));
+    // Combined staccato shockwave density
+    float density = max(shockPeak + condensationDisc + microRipples + corePop, texLuma * (1.1 + shockPeak * 0.9));
 
-    // Smooth boundary vignette preventing quad edge cutoffs
-    float boundaryFade = 1.0 - smoothstep(0.85, 1.0, r);
-    density *= boundaryFade;
+    // Smooth sub-pixel circular boundary preventing quad edge cutoffs
+    float boundary = 1.0 - smoothstep(0.86, 0.98, r);
+    density *= boundary;
 
-    // 5. Chromatic Shockwave Palette (Theme-aware: Cyan, Amber/Gold, Violet)
+    // 5. Chromatic Shockwave Palette (Theme-aware: Cyan or Muted Ash Violet)
     vec3 baseTheme = vertexColor.rgb;
-    vec3 whiteHot = vec3(1.0, 0.99, 0.94);
+    bool isDarkTheme = (baseTheme.g < 0.35 && baseTheme.r < 0.45);
+    vec3 crestColor = isDarkTheme ? vec3(0.28, 0.18, 0.36) : vec3(1.0, 1.0, 1.0);
 
-    // Wavefront shifts to white-hot at the sharpest pressure edge
-    vec3 color = mix(baseTheme, whiteHot, smoothstep(0.48, 0.92, density));
+    // Wavefront crest shifts to peak pressure color
+    float crestMix = clamp(shockPeak * 0.85 + corePop * 0.75, 0.0, 1.0);
+    vec3 color = mix(baseTheme, crestColor, crestMix);
 
     // 6. Alpha & Output
     float alpha = density * vertexColor.a * ColorModulator.a;
@@ -55,3 +60,4 @@ void main() {
 
     fragColor = vec4(color, clamp(alpha, 0.0, 1.0));
 }
+

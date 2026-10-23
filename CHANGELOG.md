@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-10-23
+
+### 1:1 Anime Visual Fidelity Overhaul & Magic Circle Refactoring (การยกเครื่องเอฟเฟกต์ตามอนิเมะและปรับปรุงวงเวทย์)
+
+#### Added
+- **Dedicated Supersonic Rapid Bullet Shaders (`rapid_zoltraak_bullet.json`, `.vsh`, `.fsh`)**:
+  - Implemented high-velocity aerodynamic laser-needle bullets with super-Gaussian white plasma core and aerodynamic diamond arrowhead taper ($x \in [0.84, 1.0]$).
+  - Multi-tone rendering for Demon-Slaying Zoltraak (Fern: Cyan/White) and Human-Killing Zoltraak (Qual: Obsidian/Violet).
+- **High-Definition Anime Magic Circle Asset**:
+  - Switched magic circle to high-definition 2048x2048 artwork (`Gemini_Generated_Image_bpll5mbpll5mbpll.png` / `zoltraak_magic_circle.png`).
+  - Removed AI watermarks and cleanly extracted luminous alpha transparency for seamless in-game blending.
+
+#### Changed & Refactored
+- **Single Magic Circle Simplification (ลดเหลือวงเวทย์ชั้นเดียวตามอนิเมะ)**:
+  - Removed the secondary coaxial magic circle layer in `ZoltraakRenderer.java`, `BlackZoltraakRenderer.java`, and `GreatZoltraakRenderer.java`, keeping only a single clean magic circle matching the anime.
+- **Center Muzzle Glare & Diffraction Spike Timing (แก้แสงแฟลชจ้าบดบังลายวงเวทย์ตรงกลาง)**:
+  - Restricted the massive horizontal and vertical 4.0x lens flare spikes in `ZoltraakRenderer.java` and `BlackZoltraakRenderer.java` to only trigger upon beam discharge (`shot >= 0.0F`).
+  - During charging (`shot < 0.0F`), replaced blinding glare with a soft, subtle core glint, preserving full visibility of the intricate eye/flower geometry in the magic circle's center.
+- **Anime-Accurate Borehole Block Piercing & Hit Detection (ระบบตรวจจับการกระทบและการเจาะทะลุ)**:
+  - Overhauled continuous swept-cylinder collision detection in `ZoltraakCinematicBeamEntity.java`, preventing beams from tunneling through terrain without interaction.
+  - Implemented cylindrical borehole terrain penetration matching the anime: blocks along the beam path are drilled and pulverized into fine debris without spawning entity items, strictly respecting `mobGriefing` and stop conditions on bedrock or defensive barrier magic.
+
+#### Removed & Fixed
+- **Floating Perimeter Ribbon Ring Purged (ลบขอบริบบิ้นลอยสีเขียว/ม่วง)**:
+  - Completely purged the 18-polygon perimeter ember loop from `ZoltraakRenderer.java` and `BlackZoltraakRenderer.java`, removing the disconnected green/purple polygonal wireframe ring that hovered above the magic circle plane.
+- **Moiré Grating & Interference Ripple Elimination (แก้ลายคลื่นริ้วบนวงเวทย์สีม่วง)**:
+  - Purged spatial sinusoidal frequency grating (`sin(theta * 14.0 + r * 26.0 - t * 5.0)`) from `black_magic_circle.fsh` and `magic_circle.fsh`, replacing it with smooth temporal pulsation to eliminate aliasing, zebra stripes, and moiré patterns.
+  - Replaced stepped color clamps with smooth cubic color ramps (`smoothstep`) across dark obsidian violet, royal purple, and luminous silver-lavender.
+  - Removed synthetic blurry outer rings (`outerRing`) and procedural center needle crosses that clashed with the texture's native mandala.
+- **Non-Canon Impact & Muzzle Rings Purged (ลบวงแหวนคลื่นกระแทกที่ไม่ตรงกับอนิเมะ)**:
+  - Completely removed expanding spherical donut rings (`ringWave` / `abs(r - waveR)`) from `zoltraak_impact.fsh` and muzzle rings in `ZoltraakBarrageArrayRenderer.java`. Impact now displays cel-shaded billowing dust clouds, plasma bursts, and shattered dielectric sparks.
+  - Fixed color corruption on impact surfaces from magenta to pure cyan or demonic obsidian/purple.
+
+---
+
 ## [1.0.3] - 2026-10-22
 
 ### Dual-Tier Configuration Engine & Critical Stability Overhaul

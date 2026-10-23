@@ -76,12 +76,11 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
          radius *= 0.6;
       }
 
+      float formation = Mth.clamp(t / 4.5F, 0.0F, 1.0F);
       if (circleAlpha > 0.001) {
          VertexConsumer b = buffers.getBuffer(ZoltraakRenderTypes.BLACK_CIRCLE);
-         double rotation = 0.016 * Math.sin(t * 0.08);
-         Vec3 ru = ring(u, v, rotation, 1.0);
-         Vec3 rv = ring(u, v, rotation + (Math.PI / 2), 1.0);
-         quad(b, mat, dir.scale(first && e.mode() == ZoltraakMode.SINGLE ? 0.7 : 0.03), ru.scale(radius), rv.scale(radius), 1.0F, 1.0F, 1.0F, circleAlpha);
+         Vec3 primaryCenter = dir.scale(first && e.mode() == ZoltraakMode.SINGLE ? 0.7 : 0.03);
+         quad(b, mat, primaryCenter, u.scale(radius), v.scale(radius), formation, 1.0F, 1.0F, circleAlpha);
          flush(buffers, ZoltraakRenderTypes.BLACK_CIRCLE);
       }
 
@@ -94,14 +93,19 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
             muzzle *= 0.75F;
          }
 
-         quad(glow, mat, Vec3.ZERO, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.008F, 0.006F, 0.014F, muzzle * 0.55F);
-         quad(glow, mat, dir.scale(0.045), camRight.scale(size), camUp.scale(size), 0.008F, 0.006F, 0.014F, muzzle);
-         quad(glow, mat, Vec3.ZERO, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.008F, 0.006F, 0.014F, muzzle);
-         quad(glow, mat, Vec3.ZERO, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.008F, 0.006F, 0.014F, muzzle * 0.7F);
+         if (shot >= 0.0F) {
+            quad(glow, mat, Vec3.ZERO, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.008F, 0.006F, 0.014F, muzzle * 0.55F);
+            quad(glow, mat, dir.scale(0.045), camRight.scale(size), camUp.scale(size), 0.008F, 0.006F, 0.014F, muzzle);
+            quad(glow, mat, Vec3.ZERO, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.008F, 0.006F, 0.014F, muzzle);
+            quad(glow, mat, Vec3.ZERO, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.008F, 0.006F, 0.014F, muzzle * 0.7F);
+         } else {
+            quad(glow, mat, dir.scale(0.02), camRight.scale(size * 0.4), camUp.scale(size * 0.4), 0.25F, 0.12F, 0.35F, muzzle * 0.35F);
+         }
       }
 
       flush(buffers, ZoltraakRenderTypes.BLACK_GLOW);
       VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
+
       if (shot < 0.0F) {
          for (int k = 0; k < 5; k++) {
             for (int j = 0; j < 18; j++) {
@@ -208,11 +212,18 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
          flush(buffers, ZoltraakRenderTypes.BLACK_GLOW);
 
          float progress = Mth.clamp(dt / 26.0F, 0.0F, 1.0F);
-         VertexConsumer impact = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
-         double sparkSize   = (3.0 + dt * 0.28) * 1.2 * e.scale();
+         VertexConsumer impact = buffers.getBuffer(ZoltraakRenderTypes.BLACK_IMPACT);
+
+         // 1. Surface Planar Shockwave Disk & Corrupted Void Ground Cracks
+         double surfRadius = (2.4 + dt * 0.28) * 1.25 * e.scale();
+         Vec3 surfCenter = center.add(normal.scale(0.03));
+         quad(impact, mat, surfCenter, iu.scale(surfRadius), iv.scale(surfRadius), progress, 1.0F, 1.0F, fade);
+
+         // 2. Camera-Facing Volumetric Soot Smoke Cloud & Shockwave Crest
+         double sparkSize = (3.0 + dt * 0.34) * 1.2 * e.scale();
          Vec3 sphereCenter = center.add(normal.scale(sparkSize * 0.35));
          quad(impact, mat, sphereCenter, camRight.scale(sparkSize), camUp.scale(sparkSize), progress, 1.0F, 0.0F, fade);
-         flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
+         flush(buffers, ZoltraakRenderTypes.BLACK_IMPACT);
       } else {
          flush(buffers, ZoltraakRenderTypes.LIGHT);
       }

@@ -9,6 +9,7 @@ import com.frierenflight.zoltraakcinematic.registry.ModCinematicSpells;
 import net.minecraft.sounds.SoundEvents;
 import io.redspace.ironsspellbooks.damage.DamageSources;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -29,6 +30,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import com.frierenflight.zoltraakcinematic.ZoltraakDamage;
@@ -48,6 +50,16 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
             SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> DATA_MODE =
             SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DATA_DID_IMPACT =
+            SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_DIST =
+            SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_NORMAL_X =
+            SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_NORMAL_Y =
+            SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_NORMAL_Z =
+            SynchedEntityData.defineId(ZoltraakCinematicBeamEntity.class, EntityDataSerializers.FLOAT);
 
     public static final int LIFETIME = 46; // Full 2.3 seconds duration
     public static final int FIRE_TICK = 14; // Exact 0.70 seconds charge matching frierenvoid
@@ -89,6 +101,23 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
         builder.define(DATA_OWNER_ID, -1);
         builder.define(DATA_COLOR_THEME, 0);
         builder.define(DATA_MODE, 0);
+        builder.define(DATA_DID_IMPACT, false);
+        builder.define(DATA_IMPACT_DIST, 64.0f);
+        builder.define(DATA_IMPACT_NORMAL_X, 0.0f);
+        builder.define(DATA_IMPACT_NORMAL_Y, 1.0f);
+        builder.define(DATA_IMPACT_NORMAL_Z, 0.0f);
+    }
+
+    public float getImpactDist() {
+        return this.entityData.get(DATA_IMPACT_DIST);
+    }
+
+    public Vec3 getImpactNormal() {
+        return new Vec3(
+            this.entityData.get(DATA_IMPACT_NORMAL_X),
+            this.entityData.get(DATA_IMPACT_NORMAL_Y),
+            this.entityData.get(DATA_IMPACT_NORMAL_Z)
+        );
     }
 
     public int getColorTheme() {
@@ -170,26 +199,37 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
 
     @Override
     public boolean impact() {
-        return true;
+        return this.entityData.get(DATA_DID_IMPACT);
     }
 
     @Override
     public float impactAge() {
-        return mode() == ZoltraakMode.LARGE ? largeImpactTime() : 14.0F + (float)(length() / 12.0);
+        float dist = impact() ? getImpactDist() : (float) length();
+        return mode() == ZoltraakMode.LARGE ? largeImpactTime() : 14.0F + (dist / 12.0F);
     }
 
     @Override
     public float largeImpactTime() {
-        return 20.0F + (float)(length() / 2.5);
+        float dist = impact() ? getImpactDist() : (float) length();
+        return 20.0F + (dist / 2.5F);
     }
 
     @Override
     public Vec3 end() {
+        if (impact()) {
+            return visualOrigin(1.0f).add(visualDirection(1.0f).scale((double) getImpactDist()));
+        }
         return visualOrigin(1.0f).add(visualDirection(1.0f).scale(length()));
     }
 
     @Override
     public Vec3 normal() {
+        if (impact()) {
+            Vec3 n = getImpactNormal();
+            if (n.lengthSqr() > 0.001) {
+                return n.normalize();
+            }
+        }
         return visualDirection(1.0f).scale(-1.0);
     }
 
@@ -300,6 +340,20 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
                                             0.22 + random.nextDouble() * 0.30,
                                             (random.nextDouble() - 0.5) * 0.32);
                                 }
+                                if (random.nextFloat() < 0.35f) {
+                                    level().addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE,
+                                            bpWorld.x + (random.nextDouble() - 0.5) * 0.4,
+                                            groundY + 0.15,
+                                            bpWorld.z + (random.nextDouble() - 0.5) * 0.4,
+                                            (random.nextDouble() - 0.5) * 0.08,
+                                            0.06 + random.nextDouble() * 0.08,
+                                            (random.nextDouble() - 0.5) * 0.08);
+                                }
+                                if (random.nextFloat() < 0.25f) {
+                                    level().addParticle(black() ? ParticleTypes.PORTAL : ParticleTypes.ELECTRIC_SPARK,
+                                            bpWorld.x, groundY + 0.1, bpWorld.z,
+                                            (random.nextDouble() - 0.5) * 0.2, 0.15, (random.nextDouble() - 0.5) * 0.2);
+                                }
                             }
                             break;
                         }
@@ -330,13 +384,19 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
                 level().playSound(null, getX(), getY(), getZ(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, isLarge ? 2.5f : 1.8f, boomPitch);
                 level().playSound(null, getX(), getY(), getZ(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, isLarge ? 1.8f : 1.3f, lightningPitch);
 
-                // Target impact explosion sounds
-                level().playSound(null, end.x, end.y, end.z,
-                        ModCinematicSounds.ZOLTRAAK_IMPACT.get(),
-                        SoundSource.PLAYERS, isLarge ? 2.5f : 1.3f,
-                        (black() ? 0.75f : 1.0f) * (isLarge ? 0.65f : 1.0f));
-                level().playSound(null, end.x, end.y, end.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, isLarge ? 3.0f : 2.0f, isLarge ? 0.9f : 1.15f);
-                level().playSound(null, end.x, end.y, end.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, isLarge ? 2.5f : 1.8f, isLarge ? 0.95f : 1.25f);
+                boolean didImpact = this.entityData.get(DATA_DID_IMPACT);
+                float impactDist = this.entityData.get(DATA_IMPACT_DIST);
+                Vec3 impactPos = start.add(look.scale(impactDist));
+
+                // Target impact explosion sounds ONLY if an obstacle was hit
+                if (didImpact) {
+                    level().playSound(null, impactPos.x, impactPos.y, impactPos.z,
+                            ModCinematicSounds.ZOLTRAAK_IMPACT.get(),
+                            SoundSource.PLAYERS, isLarge ? 2.5f : 1.3f,
+                            (black() ? 0.75f : 1.0f) * (isLarge ? 0.65f : 1.0f));
+                    level().playSound(null, impactPos.x, impactPos.y, impactPos.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, isLarge ? 3.0f : 2.0f, isLarge ? 0.9f : 1.15f);
+                    level().playSound(null, impactPos.x, impactPos.y, impactPos.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, isLarge ? 2.5f : 1.8f, isLarge ? 0.95f : 1.25f);
+                }
 
                 if (owner != null) {
                     Vec3 recoil = look.scale(mode() == ZoltraakMode.LARGE ? -0.32 : -0.16);
@@ -346,63 +406,115 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
 
                 if (level() instanceof ServerLevel serverLevel) {
 
-                    double blastRadius = mode() == ZoltraakMode.LARGE ? 21.0 : 12.0;
-                    AABB blastBox = new AABB(end.x - blastRadius, end.y - blastRadius, end.z - blastRadius,
-                            end.x + blastRadius, end.y + blastRadius, end.z + blastRadius);
-                    List<LivingEntity> blastTargets = serverLevel.getEntitiesOfClass(LivingEntity.class, blastBox,
-                            e -> e != owner && e.isAlive() && (owner == null || !DamageSources.isFriendlyFireBetween(owner, e))
-                    );
+                    if (didImpact) {
+                        double blastRadius = mode() == ZoltraakMode.LARGE ? 21.0 : 12.0;
+                        AABB blastBox = new AABB(impactPos.x - blastRadius, impactPos.y - blastRadius, impactPos.z - blastRadius,
+                                impactPos.x + blastRadius, impactPos.y + blastRadius, impactPos.z + blastRadius);
+                        List<LivingEntity> blastTargets = serverLevel.getEntitiesOfClass(LivingEntity.class, blastBox,
+                                e -> e != owner && e.isAlive() && (owner == null || !DamageSources.isFriendlyFireBetween(owner, e))
+                        );
 
-                    float directBeamDamage = damage * (mode() == ZoltraakMode.LARGE ? 2.0f : 1.0f) * (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamDamageMultiplier();
-                    net.minecraft.world.damagesource.DamageSource spellSource = getSpellDamageSource();
+                        float directBeamDamage = damage * (mode() == ZoltraakMode.LARGE ? 2.0f : 1.0f) * (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamDamageMultiplier();
+                        net.minecraft.world.damagesource.DamageSource spellSource = getSpellDamageSource();
 
-                    for (LivingEntity target : blastTargets) {
-                        if (barrierAbsorbed) {
-                            List<DefenseBarrierEntity> prot = serverLevel.getEntitiesOfClass(
-                                    DefenseBarrierEntity.class, target.getBoundingBox().inflate(3.5),
-                                    b -> b.active() && b.friendly(target));
-                            if (!prot.isEmpty()) {
-                                continue;
+                        for (LivingEntity target : blastTargets) {
+                            if (barrierAbsorbed) {
+                                List<DefenseBarrierEntity> prot = serverLevel.getEntitiesOfClass(
+                                        DefenseBarrierEntity.class, target.getBoundingBox().inflate(3.5),
+                                        b -> b.active() && b.friendly(target));
+                                if (!prot.isEmpty()) {
+                                    continue;
+                                }
+                            }
+
+                            double dist = target.position().distanceTo(impactPos);
+                            if (dist <= blastRadius) {
+                                if (hitEntityIds.contains(target.getId())) {
+                                    continue; // Already took full direct core beam damage
+                                }
+                                hitEntityIds.add(target.getId());
+
+                                float factor = (float) (1.0 - (dist / blastRadius));
+                                float blastDmg = Math.max(12.0f, directBeamDamage * factor);
+
+                                if (owner != null) {
+                                    ZoltraakDamage.apply(target, blastDmg, spellSource, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
+                                } else {
+                                    target.hurt(damageSources().magic(), blastDmg);
+                                }
+
+                                if (black()) {
+                                    int witherTicks = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getCorruptedWitherDuration();
+                                    target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.WITHER, witherTicks, 1));
+                                    target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
+                                }
+
+                                if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isDisableShieldOnHit() && target.isBlocking() && target instanceof Player p) {
+                                    p.disableShield();
+                                }
+
+                                Vec3 knockVec = target.position().subtract(impactPos);
+                                if (knockVec.lengthSqr() > 0.001) {
+                                    double knockFactor = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamKnockbackFactor();
+                                    knockVec = knockVec.normalize().scale(Math.max(0.4, factor * knockFactor));
+                                    target.push(knockVec.x, factor * 0.45, knockVec.z);
+                                    target.hurtMarked = true;
+                                }
                             }
                         }
 
-                        double dist = target.position().distanceTo(end);
-                        if (dist <= blastRadius) {
-                            if (hitEntityIds.contains(target.getId())) {
-                                continue; // Already took full direct core beam damage
-                            }
-                            hitEntityIds.add(target.getId());
-
-                            float factor = (float) (1.0 - (dist / blastRadius));
-                            float blastDmg = Math.max(12.0f, directBeamDamage * factor);
-
-                            if (owner != null) {
-                                ZoltraakDamage.apply(target, blastDmg, spellSource, ModCinematicSchools.ORDINARY_MAGIC.get(), true);
-                            } else {
-                                target.hurt(damageSources().magic(), blastDmg);
-                            }
-
-                            if (black()) {
-                                int witherTicks = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getCorruptedWitherDuration();
-                                target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.WITHER, witherTicks, 1));
-                                target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 80, 1));
-                            }
-
-                            if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isDisableShieldOnHit() && target.isBlocking() && target instanceof Player p) {
-                                p.disableShield();
-                            }
-
-                            Vec3 knockVec = target.position().subtract(end);
-                            if (knockVec.lengthSqr() > 0.001) {
-                                double knockFactor = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamKnockbackFactor();
-                                knockVec = knockVec.normalize().scale(Math.max(0.4, factor * knockFactor));
-                                target.push(knockVec.x, factor * 0.45, knockVec.z);
-                                target.hurtMarked = true;
-                            }
+                        // Impact explosion particles at the real obstacle contact point
+                        if (black()) {
+                            serverLevel.sendParticles(ParticleTypes.WITCH, impactPos.x, impactPos.y, impactPos.z, 28, 1.2, 1.2, 1.2, 0.35);
+                            serverLevel.sendParticles(ParticleTypes.SMOKE, impactPos.x, impactPos.y, impactPos.z, 20, 0.8, 0.8, 0.8, 0.08);
+                            serverLevel.sendParticles(ParticleTypes.LARGE_SMOKE, impactPos.x, impactPos.y, impactPos.z, 10, 0.6, 0.6, 0.6, 0.05);
+                        } else {
+                            serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, impactPos.x, impactPos.y, impactPos.z, 36, 1.2, 1.2, 1.2, 0.45);
+                            serverLevel.sendParticles(ParticleTypes.POOF, impactPos.x, impactPos.y, impactPos.z, 16, 0.8, 0.8, 0.8, 0.12);
+                            serverLevel.sendParticles(ParticleTypes.FLASH, impactPos.x, impactPos.y, impactPos.z, 1, 0.0, 0.0, 0.0, 0.0);
                         }
                     }
 
-                    // Block destruction removed to eliminate server load, prevent lag, and respect claim protection (FTB Chunks)
+                    // 1:1 Anime Piercing Borehole (เจาะบล็อกเป็นรูทรงกระบอกตามแนวลำแสง)
+                    boolean canGrief = serverLevel.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+                    if (!barrierAbsorbed && canGrief && com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isBeamDrillBlocks()) {
+                        double drillR = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamDrillRadius()
+                                * (mode() == ZoltraakMode.LARGE ? 1.85 : 1.0);
+                        int rInt = (int) Math.ceil(drillR);
+                        float stepD = 0.85f;
+                        Set<BlockPos> drilledPositions = new HashSet<>();
+
+                        for (float d = 0.5f; d < currentLength; d += stepD) {
+                            Vec3 rayPoint = start.add(look.scale(d));
+                            BlockPos centerBp = BlockPos.containing(rayPoint);
+
+                            for (int dx = -rInt; dx <= rInt; dx++) {
+                                for (int dy = -rInt; dy <= rInt; dy++) {
+                                    for (int dz = -rInt; dz <= rInt; dz++) {
+                                        Vec3 checkV = new Vec3(centerBp.getX() + dx + 0.5, centerBp.getY() + dy + 0.5, centerBp.getZ() + dz + 0.5);
+                                        Vec3 diff = checkV.subtract(start);
+                                        double proj = diff.dot(look);
+                                        if (proj >= 0.0 && proj <= currentLength) {
+                                            Vec3 closestOnRay = start.add(look.scale(proj));
+                                            if (checkV.distanceToSqr(closestOnRay) <= drillR * drillR) {
+                                                BlockPos bp = centerBp.offset(dx, dy, dz);
+                                                if (drilledPositions.add(bp)) {
+                                                    BlockState state = serverLevel.getBlockState(bp);
+                                                    if (!state.isAir() && state.getDestroySpeed(serverLevel, bp) >= 0.0f && state.getDestroySpeed(serverLevel, bp) < 55.0f) {
+                                                        if (random.nextFloat() < 0.20f) {
+                                                            serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state),
+                                                                    bp.getX() + 0.5, bp.getY() + 0.5, bp.getZ() + 0.5, 6, 0.25, 0.25, 0.25, 0.15);
+                                                        }
+                                                        serverLevel.setBlock(bp, Blocks.AIR.defaultBlockState(), 3);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -468,13 +580,15 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
 
     private float calculatePiercingDistance(Vec3 start, Vec3 look, float maxDist) {
         Vec3 end = start.add(look.scale(maxDist));
+
+        // 1. Check Defense Barriers
         List<DefenseBarrierEntity> barriers = level().getEntitiesOfClass(
                 DefenseBarrierEntity.class,
                 new AABB(start, end).inflate(3.0),
                 b -> b.active() && !b.friendly(owner)
         );
 
-        float barrierHitDist = maxDist;
+        float barrierHitDist = Float.MAX_VALUE;
         DefenseBarrierEntity hitBarrier = null;
         Vec3 barrierContact = null;
 
@@ -490,24 +604,89 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
             }
         }
 
-        if (hitBarrier != null && barrierContact != null) {
+        // 2. Check Solid Blocks using Minecraft native voxel raycaster
+        ClipContext clipContext = new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this);
+        BlockHitResult blockHit = level().clip(clipContext);
+
+        float blockHitDist = Float.MAX_VALUE;
+        Vec3 blockHitPos = null;
+        Vec3 blockNormal = null;
+        if (blockHit.getType() == HitResult.Type.BLOCK) {
+            blockHitPos = blockHit.getLocation();
+            blockHitDist = (float) start.distanceTo(blockHitPos);
+            Direction dir = blockHit.getDirection();
+            blockNormal = new Vec3(dir.getStepX(), dir.getStepY(), dir.getStepZ());
+        }
+
+        // 3. Determine first contact surface
+        boolean hitAnyObstacle = false;
+        float firstHitDist = maxDist;
+        Vec3 firstHitNormal = look.scale(-1.0);
+
+        if (hitBarrier != null && barrierHitDist <= blockHitDist) {
+            hitAnyObstacle = true;
+            firstHitDist = barrierHitDist;
+            Vec3 bNorm = hitBarrier.normal();
+            firstHitNormal = (bNorm != null && bNorm.lengthSqr() > 0.001) ? bNorm : look.scale(-1.0);
+
             float beamDamage = this.damage * (mode() == ZoltraakMode.LARGE ? 2.0f : 1.0f);
             float absorbed = hitBarrier.absorb(beamDamage, barrierContact);
             if (absorbed >= beamDamage || hitBarrier.active()) {
                 this.barrierAbsorbed = true;
             }
-            return barrierHitDist;
+
+            this.entityData.set(DATA_DID_IMPACT, true);
+            this.entityData.set(DATA_IMPACT_DIST, firstHitDist);
+            this.entityData.set(DATA_IMPACT_NORMAL_X, (float) firstHitNormal.x);
+            this.entityData.set(DATA_IMPACT_NORMAL_Y, (float) firstHitNormal.y);
+            this.entityData.set(DATA_IMPACT_NORMAL_Z, (float) firstHitNormal.z);
+
+            return firstHitDist;
+        } else if (blockHitPos != null && blockHitDist < maxDist) {
+            hitAnyObstacle = true;
+            firstHitDist = blockHitDist;
+            firstHitNormal = blockNormal;
         }
 
+        if (!hitAnyObstacle) {
+            // Empty sky / air - clean laser traversal with NO fake impact
+            this.entityData.set(DATA_DID_IMPACT, false);
+            this.entityData.set(DATA_IMPACT_DIST, maxDist);
+            this.entityData.set(DATA_IMPACT_NORMAL_X, (float) -look.x);
+            this.entityData.set(DATA_IMPACT_NORMAL_Y, (float) -look.y);
+            this.entityData.set(DATA_IMPACT_NORMAL_Z, (float) -look.z);
+            return maxDist;
+        }
+
+        // Real block obstacle was struck:
+        this.entityData.set(DATA_DID_IMPACT, true);
+        this.entityData.set(DATA_IMPACT_DIST, firstHitDist);
+        this.entityData.set(DATA_IMPACT_NORMAL_X, (float) firstHitNormal.x);
+        this.entityData.set(DATA_IMPACT_NORMAL_Y, (float) firstHitNormal.y);
+        this.entityData.set(DATA_IMPACT_NORMAL_Z, (float) firstHitNormal.z);
+
+        boolean canDrill = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.isBeamDrillBlocks();
+        if (level() instanceof ServerLevel sl) {
+            canDrill = canDrill && sl.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+        }
+
+        if (!canDrill) {
+            return firstHitDist;
+        }
+
+        // In drilling mode, find how far the beam penetrates through destructible blocks
         float step = 0.5f;
-        for (float d = 1.0f; d < maxDist; d += step) {
+        for (float d = firstHitDist; d < maxDist; d += step) {
             Vec3 checkPos = start.add(look.scale(d));
             BlockPos bp = BlockPos.containing(checkPos);
             BlockState bs = level().getBlockState(bp);
             if (!bs.isAir() && bs.blocksMotion()) {
-                return d;
+                if (bs.getDestroySpeed(level(), bp) < 0.0f || bs.getDestroySpeed(level(), bp) >= 55.0f) {
+                    return d;
+                }
             }
         }
+
         return maxDist;
     }
 

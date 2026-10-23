@@ -41,6 +41,8 @@ public class ZoltraakCinematicConfig {
     public static final ModConfigSpec.DoubleValue BEAM_KNOCKBACK_FACTOR;
     public static final ModConfigSpec.IntValue CORRUPTED_WITHER_DURATION;
     public static final ModConfigSpec.BooleanValue RESPECT_FRIENDLY_FIRE;
+    public static final ModConfigSpec.BooleanValue BEAM_DRILL_BLOCKS;
+    public static final ModConfigSpec.DoubleValue BEAM_DRILL_RADIUS;
 
     // --- Barrage Matrix ---
     public static final ModConfigSpec.DoubleValue BARRAGE_HOMING_STRENGTH;
@@ -163,6 +165,12 @@ public class ZoltraakCinematicConfig {
         RESPECT_FRIENDLY_FIRE = builder
                 .comment("Prevents beams from damaging team members, party members, or tamed pets of the caster.")
                 .define("respectFriendlyFire", true);
+        BEAM_DRILL_BLOCKS = builder
+                .comment("If true and mobGriefing is enabled, Zoltraak beams physically drill/blast a cylindrical hole through blocks along their trajectory.")
+                .define("beamDrillBlocks", true);
+        BEAM_DRILL_RADIUS = builder
+                .comment("Base radius in blocks of the borehole drilled by standard Zoltraak (Great Zoltraak scales by 2x).")
+                .defineInRange("beamDrillRadius", 1.25d, 0.5d, 4.0d);
         builder.pop();
 
         // 4. Barrage Matrix
@@ -355,6 +363,14 @@ public class ZoltraakCinematicConfig {
 
     public static boolean isRespectFriendlyFire() {
         return !SPEC.isLoaded() || RESPECT_FRIENDLY_FIRE.get();
+    }
+
+    public static boolean isBeamDrillBlocks() {
+        return !SPEC.isLoaded() || BEAM_DRILL_BLOCKS.get();
+    }
+
+    public static double getBeamDrillRadius() {
+        return SPEC.isLoaded() ? BEAM_DRILL_RADIUS.get() : 1.25d;
     }
 
     // --- Barrage Getters ---

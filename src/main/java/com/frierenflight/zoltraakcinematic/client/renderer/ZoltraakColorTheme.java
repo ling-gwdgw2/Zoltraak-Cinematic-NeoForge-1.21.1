@@ -34,30 +34,30 @@ public enum ZoltraakColorTheme {
             255, 255, 255
     ),
     HUMAN_KILLING(
-            // Core Beam (Deep Void / Event Horizon)
-            35, 5, 50, 255,
-            // Inner Sheath (Electric Neon Magenta)
-            235, 15, 220, 230,
-            // Outer Halo (Deep Abyssal Purple)
-            60, 0, 110, 160,
-            // Spiral 1 (Crimson Scarlet Flare)
-            255, 30, 80, 240,
-            // Spiral 2 (Dark Magenta Helix)
-            170, 0, 255, 200,
-            // Anamorphic Blade Flare (Blinding Neon Magenta)
-            255, 100, 240, 255,
-            // Radial Starburst (Vivid Magenta / Violet)
-            255, 80, 230, 255,
-            // Shockwave Halo Ring (Dark Purple with Magenta Rim)
-            200, 30, 240, 240,
-            // Electric Arcs & Motes (High-Voltage Violet)
-            255, 60, 240, 230,
-            // Muzzle Flash (Crimson Flash)
-            255, 40, 120, 255,
+            // Core Beam (Obsidian Void Black)
+            3, 4, 8, 255,
+            // Inner Sheath (Dark Charcoal Soot)
+            45, 35, 55, 230,
+            // Outer Halo (Deep Sinister Violet Ash)
+            28, 16, 38, 160,
+            // Spiral 1 (Dark Soot Violet)
+            60, 35, 85, 240,
+            // Spiral 2 (Muted Demonic Violet)
+            40, 24, 60, 200,
+            // Anamorphic Blade Flare (Dark Ash Violet)
+            70, 42, 95, 255,
+            // Radial Starburst (Muted Ash Star)
+            75, 48, 100, 255,
+            // Shockwave Halo Ring (Dark Soot / Muted Charcoal Ring)
+            55, 34, 75, 220,
+            // Electric Arcs & Motes (Demonic Violet Arcs)
+            70, 42, 95, 230,
+            // Muzzle Flash (Dark Charcoal Eruption)
+            45, 28, 65, 255,
             // Absorption Core (Super-Black Singularity)
-            10, 0, 20, 240,
-            // Accretion Ring Tint (Crimson-Purple)
-            255, 60, 220
+            2, 2, 4, 240,
+            // Accretion Ring Tint (Pure Neutral for Anime Shading)
+            255, 255, 255
     );
 
     // RGB + A components

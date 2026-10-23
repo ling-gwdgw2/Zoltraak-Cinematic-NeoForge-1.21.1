@@ -72,6 +72,8 @@ Controls beam range, damage multipliers, and shield-penetration properties.
 | `beamKnockbackFactor` | Double | `1.5` | `0.0` – `5.0` | Knockback impulse applied to targets caught in the beam shockwave. |
 | `corruptedWitherDuration` | Integer | `120` | `0` – `600` | Wither debuff duration in ticks (120 ticks = 6.0s) applied by Corrupted/Black Zoltraak. |
 | `respectFriendlyFire` | Boolean | `true` | `true` / `false` | Prevents beams from damaging team members, party members, or tamed pets of the caster. |
+| `beamDrillBlocks` | Boolean | `true` | `true` / `false` | If `true` and `mobGriefing` is enabled, Zoltraak beams physically drill/blast a cylindrical hole through blocks along their trajectory. |
+| `beamDrillRadius` | Double | `1.25` | `0.5` – `4.0` | Base radius in blocks of the borehole drilled by standard Zoltraak (Great Zoltraak scales by 1.85x). |
 
 ---
 

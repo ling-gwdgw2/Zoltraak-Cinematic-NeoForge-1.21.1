@@ -27,6 +27,7 @@ public final class ZoltraakCinematicShaders {
    public static ShaderInstance cinematicFlare;
    public static ShaderInstance zoltraakImpact;
    public static ShaderInstance barrageFx;
+   public static ShaderInstance rapidBullet;
    public static ShaderInstance gargantua;
 
    @SubscribeEvent
@@ -47,6 +48,7 @@ public final class ZoltraakCinematicShaders {
       registerSafe(e, "cinematic_flare", s -> cinematicFlare = s);
       registerSafe(e, "zoltraak_impact", s -> zoltraakImpact = s);
       registerSafe(e, "barrage_fx", s -> barrageFx = s);
+      registerSafe(e, "rapid_zoltraak_bullet", s -> rapidBullet = s);
       registerSafe(e, "gargantua", DefaultVertexFormat.POSITION_TEX, s -> gargantua = s);
    }
 

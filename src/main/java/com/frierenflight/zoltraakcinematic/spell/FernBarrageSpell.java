@@ -239,7 +239,7 @@ public class FernBarrageSpell extends AbstractSpell {
                     .add(flatLook.scale(localOffset.z));
 
             // Micro polar spread around the convergence focal point
-            float spreadRadius = 0.006f;
+            float spreadRadius = 0.012f;
             float theta = entity.getRandom().nextFloat() * ((float) Math.PI * 2.0f);
             float r = (float) Math.sqrt(entity.getRandom().nextFloat()) * spreadRadius;
 
@@ -254,7 +254,8 @@ public class FernBarrageSpell extends AbstractSpell {
             bullet.setSpawnOrigin(spawnPos);
             bullet.setCircleIndex(i);
             bullet.setTargetEntity(lockedTarget); // Guided homing lock-on!
-            bullet.setDeltaMovement(finalDir.scale(3.2)); // 64 m/s hyper-velocity
+            double speed = 3.12 + (entity.getRandom().nextDouble() * 0.16); // Organic hypersonic swarm velocity
+            bullet.setDeltaMovement(finalDir.scale(speed));
 
             serverLevel.addFreshEntity(bullet);
         }

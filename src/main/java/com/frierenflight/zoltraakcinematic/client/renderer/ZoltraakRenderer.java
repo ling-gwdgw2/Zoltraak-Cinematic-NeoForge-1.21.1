@@ -94,16 +94,18 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                radius *= 0.6;
             }
 
+            float formation = Mth.clamp(t / 4.5F, 0.0F, 1.0F);
             if (circleAlpha > 0.001) {
-               VertexConsumer b = buffers.getBuffer(ZoltraakRenderTypes.ZOL_CIRCLE);
-               double rotation = 0.016 * Math.sin(t * 0.08);
-               Vec3 ru = ring(u, v, rotation, 1.0);
-               Vec3 rv = ring(u, v, rotation + (Math.PI / 2), 1.0);
-               quad(b, mat, dir.scale(first && e.mode() == ZoltraakMode.SINGLE ? 0.7 : 0.03), ru.scale(radius), rv.scale(radius), 1.0F, 1.0F, 1.0F, circleAlpha);
-               flush(buffers, ZoltraakRenderTypes.ZOL_CIRCLE);
+               RenderType circleType = e.black() ? ZoltraakRenderTypes.BLACK_CIRCLE : ZoltraakRenderTypes.ZOL_CIRCLE;
+               VertexConsumer b = buffers.getBuffer(circleType);
+               Vec3 primaryCenter = dir.scale(first && e.mode() == ZoltraakMode.SINGLE ? 0.7 : 0.03);
+               // Single magic circle
+               quad(b, mat, primaryCenter, u.scale(radius), v.scale(radius), formation, 1.0F, 1.0F, circleAlpha);
+               flush(buffers, circleType);
             }
 
-            VertexConsumer glow = buffers.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
+            RenderType glowType = e.black() ? ZoltraakRenderTypes.BLACK_GLOW : ZoltraakRenderTypes.ZOL_GLOW;
+            VertexConsumer glow = buffers.getBuffer(glowType);
             float charge = ease(t / 14.0F);
             float muzzle = shot < 0.0F ? charge * 0.55F : (float)Math.exp(-Math.max(0.0F, shot) * 0.24);
             if (muzzle > 0.003) {
@@ -112,14 +114,30 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                   muzzle *= 0.75F;
                }
 
-               quad(glow, mat, Vec3.ZERO, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.44F, 0.72F, 1.0F, muzzle * 0.55F);
-               quad(glow, mat, dir.scale(0.045), camRight.scale(size), camUp.scale(size), 1.0F, 1.0F, 1.0F, muzzle);
-               quad(glow, mat, Vec3.ZERO, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.8F, 0.93F, 1.0F, muzzle);
-               quad(glow, mat, Vec3.ZERO, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.9F, 0.97F, 1.0F, muzzle * 0.7F);
+               if (e.black()) {
+                  if (shot >= 0.0F) {
+                     quad(glow, mat, Vec3.ZERO, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.008F, 0.006F, 0.014F, muzzle * 0.55F);
+                     quad(glow, mat, dir.scale(0.045), camRight.scale(size), camUp.scale(size), 0.008F, 0.006F, 0.014F, muzzle);
+                     quad(glow, mat, Vec3.ZERO, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.008F, 0.006F, 0.014F, muzzle);
+                     quad(glow, mat, Vec3.ZERO, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.008F, 0.006F, 0.014F, muzzle * 0.7F);
+                  } else {
+                     quad(glow, mat, dir.scale(0.02), camRight.scale(size * 0.4), camUp.scale(size * 0.4), 0.25F, 0.12F, 0.35F, muzzle * 0.35F);
+                  }
+               } else {
+                  if (shot >= 0.0F) {
+                     quad(glow, mat, Vec3.ZERO, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.44F, 0.72F, 1.0F, muzzle * 0.55F);
+                     quad(glow, mat, dir.scale(0.045), camRight.scale(size), camUp.scale(size), 1.0F, 1.0F, 1.0F, muzzle);
+                     quad(glow, mat, Vec3.ZERO, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.8F, 0.93F, 1.0F, muzzle);
+                     quad(glow, mat, Vec3.ZERO, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.9F, 0.97F, 1.0F, muzzle * 0.7F);
+                  } else {
+                     quad(glow, mat, dir.scale(0.02), camRight.scale(size * 0.4), camUp.scale(size * 0.4), 0.65F, 0.88F, 1.0F, muzzle * 0.35F);
+                  }
+               }
             }
 
-            flush(buffers, ZoltraakRenderTypes.ZOL_GLOW);
+            flush(buffers, glowType);
             VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
+
             if (shot < 0.0F) {
                for (int k = 0; k < 5; k++) {
                   for (int j = 0; j < 18; j++) {
@@ -183,14 +201,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                         );
                      }
                   }
-
-                  for (int k = 0; k < 3; k++) {
-                     double z = shot * 3.2 - k * 6;
-                     if (!(z < 0.0) && !(z > head)) {
-                        double r = (0.35 + Math.max(0.0F, shot - k * 2) * 0.07) * e.scale();
-                        arc(lines, mat, dir.scale(z), u, v, r, 0.015F, energy * 0.35F, 0.7F, 0.9F, 1.0F, Math.PI * 2);
-                     }
-                  }
                }
 
                if (shot > 7.0F && shot < 25.0F) {
@@ -223,20 +233,37 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                }
 
                flush(buffers, ZoltraakRenderTypes.LIGHT);
-               glow = buffers.getBuffer(ZoltraakRenderTypes.ZOL_GLOW);
+               RenderType impactGlowType = e.black() ? ZoltraakRenderTypes.BLACK_GLOW : ZoltraakRenderTypes.ZOL_GLOW;
+               glow = buffers.getBuffer(impactGlowType);
                float burst = (float)Math.exp(-dt * 0.27);
-               quad(glow, mat, center, iu.scale((3.0 + dt * 0.18) * e.scale()), iv.scale((3.0 + dt * 0.18) * e.scale()), 0.4F, 0.67F, 1.0F, burst * 0.7F);
-               quad(glow, mat, center, iu.scale((1.2 + dt * 0.05) * e.scale()), iv.scale((1.2 + dt * 0.05) * e.scale()), 1.0F, 1.0F, 1.0F, burst);
-               quad(glow, mat, center, iu.scale((5.0 + dt * 0.2) * e.scale()), iv.scale(0.13 * e.scale()), 0.8F, 0.95F, 1.0F, burst);
-               quad(glow, mat, center, iu.scale(0.08 * e.scale()), iv.scale(3.0 * e.scale()), 1.0F, 1.0F, 1.0F, burst);
-               flush(buffers, ZoltraakRenderTypes.ZOL_GLOW);
+               if (e.black()) {
+                  quad(glow, mat, center, iu.scale((3.0 + dt * 0.18) * e.scale()), iv.scale((3.0 + dt * 0.18) * e.scale()), 0.008F, 0.006F, 0.014F, burst * 0.7F);
+                  quad(glow, mat, center, iu.scale((1.2 + dt * 0.05) * e.scale()), iv.scale((1.2 + dt * 0.05) * e.scale()), 0.008F, 0.006F, 0.014F, burst);
+                  quad(glow, mat, center, iu.scale((5.0 + dt * 0.2) * e.scale()), iv.scale(0.13 * e.scale()), 0.008F, 0.006F, 0.014F, burst);
+                  quad(glow, mat, center, iu.scale(0.08 * e.scale()), iv.scale(3.0 * e.scale()), 0.008F, 0.006F, 0.014F, burst);
+               } else {
+                  quad(glow, mat, center, iu.scale((3.0 + dt * 0.18) * e.scale()), iv.scale((3.0 + dt * 0.18) * e.scale()), 0.4F, 0.67F, 1.0F, burst * 0.7F);
+                  quad(glow, mat, center, iu.scale((1.2 + dt * 0.05) * e.scale()), iv.scale((1.2 + dt * 0.05) * e.scale()), 1.0F, 1.0F, 1.0F, burst);
+                  quad(glow, mat, center, iu.scale((5.0 + dt * 0.2) * e.scale()), iv.scale(0.13 * e.scale()), 0.8F, 0.95F, 1.0F, burst);
+                  quad(glow, mat, center, iu.scale(0.08 * e.scale()), iv.scale(3.0 * e.scale()), 1.0F, 1.0F, 1.0F, burst);
+               }
+               flush(buffers, impactGlowType);
 
                float progress = Mth.clamp(dt / 26.0F, 0.0F, 1.0F);
-               VertexConsumer impact = buffers.getBuffer(ZoltraakRenderTypes.ZOL_IMPACT);
-               double sparkSize   = (3.0 + dt * 0.28) * (e.mode() == ZoltraakMode.LARGE ? 2.4 : 1.2) * e.scale();
+               RenderType impactType = e.black() ? ZoltraakRenderTypes.BLACK_IMPACT : ZoltraakRenderTypes.ZOL_IMPACT;
+               VertexConsumer impact = buffers.getBuffer(impactType);
+               float isBlackVal = e.black() ? 1.0F : 0.0F;
+
+               // 1. Surface Planar Shockwave Disk & Ground Scorch/Fracture Lines
+               double surfRadius = (2.4 + dt * 0.28) * (e.mode() == ZoltraakMode.LARGE ? 2.5 : 1.25) * e.scale();
+               Vec3 surfCenter = center.add(normal.scale(0.03));
+               quad(impact, mat, surfCenter, iu.scale(surfRadius), iv.scale(surfRadius), progress, isBlackVal, 1.0F, fade);
+
+               // 2. Camera-Facing Volumetric Billowing Anime Dust/Smoke Cloud & Shockwave Crest
+               double sparkSize = (3.0 + dt * 0.34) * (e.mode() == ZoltraakMode.LARGE ? 2.4 : 1.2) * e.scale();
                Vec3 sphereCenter = center.add(normal.scale(sparkSize * 0.35));
-               quad(impact, mat, sphereCenter, camRight.scale(sparkSize), camUp.scale(sparkSize), progress, e.black() ? 1.0F : 0.0F, 0.0F, fade);
-               flush(buffers, ZoltraakRenderTypes.ZOL_IMPACT);
+               quad(impact, mat, sphereCenter, camRight.scale(sparkSize), camUp.scale(sparkSize), progress, isBlackVal, 0.0F, fade);
+               flush(buffers, impactType);
             } else {
                flush(buffers, ZoltraakRenderTypes.LIGHT);
             }

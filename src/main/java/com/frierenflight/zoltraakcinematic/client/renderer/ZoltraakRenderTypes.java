@@ -151,6 +151,23 @@ public final class ZoltraakRenderTypes extends RenderType {
          .createCompositeState(false)
    );
 
+   public static final RenderType BLACK_IMPACT = create(
+      "black_zol_impact",
+      DefaultVertexFormat.POSITION_TEX_COLOR,
+      Mode.QUADS,
+      16384,
+      false,
+      false,
+      CompositeState.builder()
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.zoltraakImpact))
+         .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
+         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+         .setCullState(NO_CULL)
+         .setDepthTestState(LEQUAL_DEPTH_TEST)
+         .setWriteMaskState(COLOR_WRITE)
+         .createCompositeState(false)
+   );
+
    public static final RenderType ZOL_BEAM = create(
       "zol_beam",
       DefaultVertexFormat.POSITION_TEX_COLOR,
@@ -244,6 +261,40 @@ public final class ZoltraakRenderTypes extends RenderType {
       false,
       CompositeState.builder()
          .setShaderState(safeShader(() -> ZoltraakCinematicShaders.greatPlume))
+         .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
+         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+         .setCullState(NO_CULL)
+         .setDepthTestState(LEQUAL_DEPTH_TEST)
+         .setWriteMaskState(COLOR_WRITE)
+         .createCompositeState(false)
+   );
+
+   public static final RenderType RAPID_BULLET = create(
+      "rapid_zol_bullet",
+      DefaultVertexFormat.POSITION_TEX_COLOR,
+      Mode.QUADS,
+      8192,
+      false,
+      false,
+      CompositeState.builder()
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.rapidBullet))
+         .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
+         .setTransparencyState(ADD)
+         .setCullState(NO_CULL)
+         .setDepthTestState(LEQUAL_DEPTH_TEST)
+         .setWriteMaskState(COLOR_WRITE)
+         .createCompositeState(false)
+   );
+
+   public static final RenderType BLACK_RAPID_BULLET = create(
+      "black_rapid_zol_bullet",
+      DefaultVertexFormat.POSITION_TEX_COLOR,
+      Mode.QUADS,
+      8192,
+      false,
+      false,
+      CompositeState.builder()
+         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.rapidBullet))
          .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
          .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
          .setCullState(NO_CULL)

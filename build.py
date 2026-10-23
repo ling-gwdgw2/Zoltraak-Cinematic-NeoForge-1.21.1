@@ -19,8 +19,8 @@ def build():
     print("  BUILDING: ZOLTRAAK CINEMATIC EDITION (NEOFORGE 1.21.1)")
     print("==================================================")
 
-    out_jar = os.path.join(base_dir, 'zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar')
-    parent_jar = os.path.join(base_dir, '..', 'zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar')
+    out_jar = os.path.join(base_dir, 'zoltraak_cinematic-neoforge-1.21.1-1.0.4.jar')
+    parent_jar = os.path.join(base_dir, '..', 'zoltraak_cinematic-neoforge-1.21.1-1.0.4.jar')
     bin_dir = os.path.join(base_dir, 'build', 'classes')
     nf_client = os.path.join(base_dir, 'libs', 'neoforge-21.1.248-client.jar')
     nf_univ = os.path.join(base_dir, 'libs', 'neoforge-21.1.248-universal.jar')
@@ -96,7 +96,7 @@ def build():
                 shutil.copy2(out_jar, dest)
                 print(f"[SUCCESS] Copied to instance: {dest}")
                 # Clean up previous versions to prevent duplicate mod conflict
-                for old_ver in ["zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar", "zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar"]:
+                for old_ver in ["zoltraak_cinematic-neoforge-1.21.1-1.0.0.jar", "zoltraak_cinematic-neoforge-1.21.1-1.0.2.jar", "zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar"]:
                     old_jar = os.path.join(target_dir, old_ver)
                     if os.path.exists(old_jar):
                         try:

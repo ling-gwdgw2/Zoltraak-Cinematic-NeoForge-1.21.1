@@ -54,6 +54,12 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
             SynchedEntityData.defineId(ZoltraakBarrageProjectileEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> DATA_TARGET_ID =
             SynchedEntityData.defineId(ZoltraakBarrageProjectileEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_NORMAL_X =
+            SynchedEntityData.defineId(ZoltraakBarrageProjectileEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_NORMAL_Y =
+            SynchedEntityData.defineId(ZoltraakBarrageProjectileEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DATA_IMPACT_NORMAL_Z =
+            SynchedEntityData.defineId(ZoltraakBarrageProjectileEntity.class, EntityDataSerializers.FLOAT);
 
     public static final int MAX_LIFETIME = 35; // ~1.75 seconds flight time
     private float damage = 8.5f;
@@ -65,6 +71,7 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
     }
     private LivingEntity targetEntity;
     private final List<Vec3> pathHistory = new ArrayList<>();
+    private Vec3 impactNormal = new Vec3(0, 1, 0);
 
     public boolean markClientEffectsTriggered() {
         if (!clientEffectsTriggered) {
@@ -125,6 +132,9 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
         builder.define(DATA_TARGET_ID, -1);
         builder.define(DATA_DONE_AGE, -1.0f);
         builder.define(DATA_IMPACT_STOPPED, false);
+        builder.define(DATA_IMPACT_NORMAL_X, 0.0f);
+        builder.define(DATA_IMPACT_NORMAL_Y, 1.0f);
+        builder.define(DATA_IMPACT_NORMAL_Z, 0.0f);
     }
 
     public boolean isImpactStopped() {
@@ -276,7 +286,29 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
 
     @Override
     public Vec3 normal() {
-        return visualDirection(1.0f).scale(-1.0);
+        if (isImpactStopped()) {
+            Vec3 synched = new Vec3(
+                this.entityData.get(DATA_IMPACT_NORMAL_X),
+                this.entityData.get(DATA_IMPACT_NORMAL_Y),
+                this.entityData.get(DATA_IMPACT_NORMAL_Z)
+            );
+            if (synched.lengthSqr() > 0.001) {
+                return synched.normalize();
+            }
+        }
+        if (impactNormal != null && impactNormal.lengthSqr() > 0.001) {
+            return impactNormal;
+        }
+        if (pathHistory.size() >= 2) {
+            Vec3 pLast = pathHistory.get(pathHistory.size() - 1);
+            Vec3 pPrev = pathHistory.get(pathHistory.size() - 2);
+            Vec3 seg = pLast.subtract(pPrev);
+            if (seg.lengthSqr() > 0.001) {
+                return seg.normalize().scale(-1.0);
+            }
+        }
+        Vec3 vel = getDeltaMovement();
+        return vel.lengthSqr() > 0.001 ? vel.normalize().scale(-1.0) : new Vec3(0, 1, 0);
     }
 
     @Override
@@ -353,7 +385,7 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
         int maxLife = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBarrageMaxLifetimeTicks();
         if (spawnOrigin.distanceTo(pos) >= 64.0 || tickCount >= maxLife) {
             if (!level().isClientSide) {
-                stopOnImpact(pos);
+                discard();
             }
             return;
         }
@@ -406,6 +438,20 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
         Vec3 hitPos = hitResult.getLocation();
         boolean isPurple = getColorTheme() == 1;
 
+        if (hitResult instanceof BlockHitResult bhr) {
+            this.impactNormal = new Vec3(bhr.getDirection().getStepX(), bhr.getDirection().getStepY(), bhr.getDirection().getStepZ());
+        } else {
+            Vec3 move = getDeltaMovement();
+            if (move.lengthSqr() > 0.001) {
+                this.impactNormal = move.normalize().scale(-1.0);
+            } else {
+                this.impactNormal = new Vec3(0, 1, 0);
+            }
+        }
+        this.entityData.set(DATA_IMPACT_NORMAL_X, (float) this.impactNormal.x);
+        this.entityData.set(DATA_IMPACT_NORMAL_Y, (float) this.impactNormal.y);
+        this.entityData.set(DATA_IMPACT_NORMAL_Z, (float) this.impactNormal.z);
+
         if (!level().isClientSide) {
             stopOnImpact(hitPos);
 
@@ -414,8 +460,21 @@ public class ZoltraakBarrageProjectileEntity extends ThrowableProjectile impleme
                     BlockState state = serverLevel.getBlockState(blockHit.getBlockPos());
                     if (!state.isAir()) {
                         serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, state),
-                            hitPos.x, hitPos.y, hitPos.z, 16, 0.2, 0.2, 0.2, 0.2);
+                            hitPos.x, hitPos.y, hitPos.z, 16, 0.25, 0.25, 0.25, 0.15);
                     }
+                }
+
+                // Explosive dielectric sparks & anime dust smoke puff on impact
+                if (isPurple) {
+                    serverLevel.sendParticles(ParticleTypes.WITCH,
+                        hitPos.x, hitPos.y, hitPos.z, 12, 0.18, 0.18, 0.18, 0.18);
+                    serverLevel.sendParticles(ParticleTypes.SMOKE,
+                        hitPos.x, hitPos.y, hitPos.z, 6, 0.14, 0.14, 0.14, 0.03);
+                } else {
+                    serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK,
+                        hitPos.x, hitPos.y, hitPos.z, 14, 0.22, 0.22, 0.22, 0.28);
+                    serverLevel.sendParticles(ParticleTypes.POOF,
+                        hitPos.x, hitPos.y, hitPos.z, 4, 0.14, 0.14, 0.14, 0.04);
                 }
             }
 

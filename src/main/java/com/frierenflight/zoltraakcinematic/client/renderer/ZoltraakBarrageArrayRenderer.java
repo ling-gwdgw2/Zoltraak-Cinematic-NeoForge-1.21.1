@@ -263,71 +263,17 @@ public class ZoltraakBarrageArrayRenderer {
                 poseStack.mulPose(Axis.ZP.rotationDegrees(spin));
 
                 float currentRadius = baseR * scaleEase;
-                int alpha = (int) (245 * scaleEase);
+                int alpha = (int) (140 * scaleEase);
+                int formationR = (int) (Mth.clamp(introProgress, 0.0f, 1.0f) * 255.0f);
 
-                renderDisc(poseStack, circleBuilder, currentRadius, alpha, theme.ringR, theme.ringG, theme.ringB);
+                renderDisc(poseStack, circleBuilder, currentRadius, alpha, formationR, theme.ringG, theme.ringB);
                 poseStack.popPose();
             }
         }
         bufferSource.endBatch(ZoltraakRenderTypes.ZOL_CIRCLE);
         bufferSource.endBatch(ZoltraakRenderTypes.BLACK_CIRCLE);
 
-        // Pass 2: Render All Muzzle Flash Shockwave Expanding Rings
-        VertexConsumer atlasBuilder = bufferSource.getBuffer(ZoltraakRenderTypes.BARRAGE_ATLAS);
-        for (LivingEntity living : checkEntities) {
-            ArrayState state = ACTIVE_ARRAYS.get(living.getUUID());
-            if (state == null || state.introTicks <= 0) continue;
-
-            Vec3 eyePos = living.getEyePosition(partialTick);
-            float yRot = living.getViewYRot(partialTick);
-            float xRot = living.getViewXRot(partialTick);
-
-            Vec3 flatLook = Vec3.directionFromRotation(0, yRot);
-            Vec3 right = Vec3.directionFromRotation(0, yRot + 90);
-            Vec3 worldUp = new Vec3(0, 1, 0);
-
-            ZoltraakColorTheme theme = ZoltraakColorTheme.fromId(state.colorTheme);
-            boolean isFirstPerson = (living == mc.player && mc.options.getCameraType().isFirstPerson());
-
-            for (int i = 0; i < FernBarrageSpell.BARRAGE_CIRCLE_COUNT; i++) {
-                int muzTick = state.muzzleTicks[i];
-                if (muzTick <= 0) continue;
-
-                float muzT = 1.0f - Math.max(0.0f, (muzTick - partialTick) / 4.0f);
-                if (muzT < 0.0f || muzT > 1.0f) continue;
-
-                Vec3 local = FernBarrageSpell.BARRAGE_CIRCLE_OFFSETS[i];
-                float baseR = FernBarrageSpell.BARRAGE_CIRCLE_SCALES[i];
-
-                double fwd = isFirstPerson ? Math.max(1.15, local.z + 1.25) : local.z;
-                double xPos = isFirstPerson ? local.x * 1.30 : local.x;
-                double yPos = isFirstPerson ? local.y * 1.15 : local.y;
-
-                Vec3 circlePos = eyePos
-                        .add(right.scale(xPos))
-                        .add(worldUp.scale(yPos))
-                        .add(flatLook.scale(fwd));
-
-                float aimDist = 48.0f;
-                float pitchTilt = (float) Math.toDegrees(Math.atan2(-yPos, aimDist));
-                float yawTilt = (float) Math.toDegrees(Math.atan2(xPos, aimDist));
-
-                float ringRadius = baseR * (0.8f + muzT * 1.8f);
-                int ringAlpha = (int) ((1.0f - muzT) * 250);
-
-                poseStack.pushPose();
-                poseStack.translate(circlePos.x - camPos.x, circlePos.y - camPos.y, circlePos.z - camPos.z);
-                poseStack.mulPose(Axis.YP.rotationDegrees(-yRot + yawTilt));
-                poseStack.mulPose(Axis.XP.rotationDegrees(xRot + pitchTilt));
-                poseStack.translate(0, 0, 0.06f + muzT * 0.22f);
-                poseStack.mulPose(Axis.ZP.rotationDegrees(muzT * 35.0f));
-
-                renderTexturedPlane(poseStack, atlasBuilder, ringRadius, ringRadius,
-                        0.50f, 0.25f, 0.75f, 0.50f, theme.shockR, theme.shockG, theme.shockB, ringAlpha);
-                poseStack.popPose();
-            }
-        }
-        bufferSource.endBatch(ZoltraakRenderTypes.BARRAGE_ATLAS);
+        // (Pass 2 removed: In the anime, magic circles do not emit artificial expanding donut shockwave rings)
     }
 
     private static void renderDisc(PoseStack poseStack, VertexConsumer builder, float radius, int alpha, int r, int g, int b) {

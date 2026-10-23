@@ -17,7 +17,7 @@ vec2 rotateVec(vec2 v, float angle) {
 }
 
 // Sample texture with prismatic chromatic dispersion
-vec4 samplePrismatic(sampler2D tex, vec2 p_rot, float r, vec2 dir, float dispersion) {
+vec4 samplePrismatic(sampler2D tex, vec2 p_rot, vec2 dir, float dispersion) {
     vec2 uv_center = (p_rot + 1.0) * 0.5;
     vec2 uv_r = uv_center - dir * dispersion;
     vec2 uv_g = uv_center;
@@ -34,78 +34,70 @@ vec4 samplePrismatic(sampler2D tex, vec2 p_rot, float r, vec2 dir, float dispers
 void main() {
     vec2 p = uv * 2.0 - 1.0;
     float r = length(p);
-    if (r > 1.02) discard;
+    if (r > 1.015) discard;
 
     vec2 dir = (r > 0.001) ? (p / r) : vec2(0.0);
-    float theta = atan(p.y, p.x);
     float t = (GameTime > 0.001 ? GameTime : 1.0) * 2.5;
 
-    // 1. Concentric Multi-Layer Counter-Rotation:
-    // Inner Elven Core (r < 0.40): clockwise rotation
-    // Middle Arcane Glyph Band (0.40 <= r < 0.76): counter-clockwise rotation
-    // Outer Celestial Ring (r >= 0.76): steady clockwise orbit
-    vec2 p_inner = rotateVec(p,  t * 0.32);
-    vec2 p_mid   = rotateVec(p, -t * 0.22);
-    vec2 p_outer = rotateVec(p,  t * 0.10);
+    // 1. Unified Rigid Arcane Disk Rotation
+    float rotSpeed = t * 0.045;
+    vec2 p_rot = rotateVec(p, rotSpeed);
 
-    vec4 tex_inner = samplePrismatic(Sampler0, p_inner, r, dir, 0.007);
-    vec4 tex_mid   = samplePrismatic(Sampler0, p_mid,   r, dir, 0.005);
-    vec4 tex_outer = samplePrismatic(Sampler0, p_outer, r, dir, 0.003);
+    // 2. Clockwise Circular Compass Sweep (1:1 Anime Manifestation)
+    // vColor.r carries formation progress [0.0 -> 1.0]
+    float formation = clamp(vColor.r, 0.0, 1.0);
+    float drawMask = 1.0;
+    float leadSpark = 0.0;
 
-    float w_mid   = smoothstep(0.36, 0.46, r);
-    float w_outer = smoothstep(0.74, 0.82, r);
+    if (formation < 0.999) {
+        // Clockwise sweep starting from top (0.0 to 1.0)
+        float sweepAngle = fract((atan(-p_rot.x, p_rot.y) + 3.14159265) / 6.2831853);
+        
+        // Outer rune ring (r > 0.60) sweeps clockwise
+        float ringMask = smoothstep(sweepAngle - 0.02, sweepAngle, formation);
+        
+        // Inner petals bloom outward as the outer sweep progresses
+        float petalBloom = smoothstep(0.15, 0.90, formation);
+        float petalRadiusMask = smoothstep(r / 0.62, (r / 0.62) - 0.08, petalBloom);
+        
+        // Combine outer sweep with inner bloom
+        drawMask = mix(petalRadiusMask, ringMask, smoothstep(0.55, 0.65, r));
 
-    vec4 blendedTex = mix(tex_inner, tex_mid, w_mid);
-    blendedTex = mix(blendedTex, tex_outer, w_outer);
+        // Blinding leading spark at the tip of the sweep
+        float headDiff = abs(sweepAngle - formation);
+        leadSpark = exp(-headDiff * headDiff * 1600.0) * smoothstep(0.60, 0.98, r) * 3.5;
+    }
 
-    float runeLuma = max(blendedTex.r, max(blendedTex.g, blendedTex.b)) * blendedTex.a;
+    if (drawMask < 0.005 && leadSpark < 0.01) discard;
 
-    // 2. Traveling Mana Shockwave Surges (Outward radial energy wavefronts)
-    float wave1 = exp(-pow(fract(r * 2.2 - t * 0.65) * 4.5, 2.0)) * 1.5;
-    float wave2 = exp(-pow(fract(r * 3.6 - t * 1.15 + 0.35) * 5.0, 2.0)) * 1.0;
-    float manaSurge = wave1 + wave2;
+    // 3. Sample High-Definition Magic Circle Texture
+    vec4 tex = samplePrismatic(Sampler0, p_rot, dir, 0.0025);
+    float runeLuma = max(tex.r, max(tex.g, tex.b)) * tex.a;
 
-    // 3. High-Frequency Mana Shimmer along Rune Contours
-    float shimmer = 0.86 + 0.14 * sin(theta * 14.0 + r * 26.0 - t * 5.2);
-    float runeIntensity = runeLuma * (1.15 + manaSurge * 1.10) * shimmer;
+    // 4. Smooth Outward Traveling Mana Wave
+    float wave = exp(-pow(fract(r * 2.2 - t * 0.70) * 4.0, 2.0)) * 0.28;
 
-    // 4. Central Blazing Optical Focus Aperture Rim
-    float apertureRim = exp(-pow((r - 0.22) * 26.0, 2.0)) * (0.85 + 0.25 * sin(theta * 10.0 - t * 3.8));
+    // 5. Pure Temporal Shimmer (no spatial moire grating)
+    float shimmer = 0.94 + 0.06 * sin(t * 3.0);
 
-    // 5. 4-Point Rotating Holy Needle Star Glint (Diffraction Spikes at focal center)
-    vec2 st = rotateVec(p, t * 0.25);
-    float crossH = exp(-abs(st.y) * 45.0) * exp(-abs(st.x) * 4.0);
-    float crossV = exp(-abs(st.x) * 45.0) * exp(-abs(st.y) * 4.0);
-    float needleStar = (crossH + crossV) * (0.85 + 0.35 * sin(t * 4.0));
+    // 6. Central Eye Core Glow (subtle, follows texture without washing out center art)
+    float coreFocus = exp(-r * r * 42.0) * 0.35 * runeLuma;
 
-    // 6. Central Searing White-Hot Mana Core
-    float coreFocus = exp(-r * r * 42.0) * 1.6;
+    // 7. Render texture artwork directly with dynamic mana energy
+    vec3 baseArt = tex.rgb;
+    vec3 whiteHotCore = vec3(0.96, 1.00, 1.00);
 
-    // 7. Concentric Holy Energy Arcs (Procedural boundary rings)
-    float innerRuneRing = exp(-pow((r - 0.44) * 36.0, 2.0)) * 0.65 * (0.85 + 0.15 * sin(theta * 8.0 + t * 2.0));
-    float outerRuneRing = exp(-pow((r - 0.94) * 45.0, 2.0)) * 0.90;
+    vec3 finalColor = baseArt * (1.05 + wave * 0.35) * shimmer;
+    finalColor += whiteHotCore * smoothstep(0.65, 0.98, runeLuma) * (0.6 + wave * 0.4);
+    finalColor += whiteHotCore * (coreFocus * 0.5 + leadSpark);
 
-    // 8. Holy Frieren / Fern Color Palette:
-    // Deep Azure Sheath -> Electric Cyan Radiance -> Searing White-Hot Solar Core
-    vec3 deepAzure     = vec3(0.02, 0.42, 0.98);
-    vec3 electricCyan  = vec3(0.12, 0.90, 1.00);
-    vec3 whiteHotCore  = vec3(0.98, 1.00, 1.00);
+    // 8. Anti-Aliased Outer Circular Edge
+    float circleCut = 1.0 - smoothstep(0.985, 1.008, r);
 
-    vec3 finalColor = deepAzure * runeIntensity;
-    finalColor += (electricCyan - deepAzure) * clamp(runeIntensity * 0.85, 0.0, 1.0);
-    finalColor += whiteHotCore * clamp((runeIntensity - 0.65) * 1.3 + manaSurge * 0.45, 0.0, 1.0);
-
-    // Add aperture rim, needle star glint, and concentric rings
-    finalColor += electricCyan * apertureRim * 1.45;
-    finalColor += whiteHotCore * (needleStar + coreFocus) * 1.50;
-    finalColor += electricCyan * (innerRuneRing + outerRuneRing);
-
-    // 9. Sub-Pixel Anti-Aliased Circular Boundary
-    float circleCut = 1.0 - smoothstep(0.96, 1.0, r);
-
-    // Alpha channel computation (Preserves crisp visibility without squaring dimness)
-    float totalAlpha = (runeLuma * 0.96 + apertureRim * 0.85 + (needleStar + coreFocus) * 0.80) * circleCut * vColor.a * ColorModulator.a;
+    // Alpha calculation
+    float totalAlpha = ((runeLuma * drawMask) * 0.98 + coreFocus * 0.5 + leadSpark * 0.9)
+                       * circleCut * vColor.a * ColorModulator.a;
     if (totalAlpha < 0.008) discard;
 
-    fragColor = vec4(finalColor * vColor.rgb * ColorModulator.rgb, clamp(totalAlpha, 0.0, 1.0));
+    fragColor = vec4(finalColor * ColorModulator.rgb, clamp(totalAlpha, 0.0, 1.0));
 }
