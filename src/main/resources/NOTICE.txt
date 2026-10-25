@@ -1,0 +1,62 @@
+================================================================================
+Zoltraak: Cinematic Edition (NeoForge 1.21.1)
+Copyright (c) 2026 Aling (ling-gwdgw2) and Zoltraak Cinematic Contributors
+================================================================================
+
+1. PRIMARY LICENSE
+------------------
+This mod is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+For complete terms, see the LICENSE file included in the mod repository:
+https://github.com/ling-gwdgw2/Zoltraak-Cinematic-NeoForge-1.21.1
+
+
+2. CLEAN-ROOM ORIGINALITY STATEMENT
+-----------------------------------
+As of Version 1.0.4 and all subsequent releases, Zoltraak: Cinematic Edition
+is an entirely independent, 100% clean-room original creation.
+
+All Java source code, procedural vector mesh algorithms (Blaze3D / JOML),
+dedicated GLSL 150 shaders, JSON configurations, and textures are custom-built
+and authored from the ground up without using third-party proprietary code.
+
+Core Shaders (100% Custom):
+  - zoltraak_beam (.fsh, .vsh, .json)
+  - black_zoltraak_beam (.fsh, .vsh, .json)
+  - great_zoltraak_white (.fsh, .vsh, .json)
+  - great_zoltraak_black (.fsh, .vsh, .json)
+  - great_zoltraak_plume (.fsh, .vsh, .json)
+  - corona (.fsh, .vsh, .json)
+  - rapid_zoltraak_bullet (.fsh, .vsh, .json)
+  - magic_circle & black_magic_circle (.fsh, .vsh, .json)
+  - zoltraak_impact (.fsh, .vsh, .json)
+  - cinematic_flare (.fsh, .vsh, .json)
+  - defense_barrier (.fsh, .vsh, .json)
+  - gargantua (.fsh, .vsh, .json)
+  - unsealing_fire_column (.fsh, .vsh, .json)
+
+Textures:
+  - zoltraak_glow.png: Procedural HDR radial bloom texture
+  - zoltraak_magic_circle.png: High-definition 2048x2048 custom artwork
+
+
+3. HISTORICAL ATTRIBUTION & PROTOTYPE NOTICE
+---------------------------------------------
+During early experimental prototyping prior to version 1.0.4, initial shader
+experiments referenced concepts from Frieren Spells by sho09 (MIT License).
+In Version 1.0.4, all legacy prototypes, borrowed assets, and atlas files were
+permanently deleted and replaced with original procedural implementations.
+
+
+4. ECOSYSTEM & PLATFORM CREDITS
+--------------------------------
+  - Iron's Spells 'n Spellbooks by Iron431 (Spell framework integration)
+  - NeoForge Team (NeoForge Mod Loader & API)
+  - Minecraft (c) Mojang AB / Microsoft Corporation
+
+
+5. DISCLAIMER
+--------------
+Zoltraak: Cinematic Edition is a non-commercial fan modification inspired by
+"Sousou no Frieren" (Frieren: Beyond Journey's End) created by Kanehito Yamada
+and Tsukasa Abe. Not an official product of Mojang AB or Shogakukan.
+================================================================================

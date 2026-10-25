@@ -86,10 +86,15 @@ python build.py
 - **[Architectural Limitations & Gaps](GAPS.md)**: ข้อจำกัดทางสถาปัตยกรรมและข้อแลกเปลี่ยนทางเทคนิค
 - **[Full Mod Wiki & Compendium](WIKI.md)**: สารานุกรมเวทมนตร์และคู่มือการเล่นตัวเต็ม
 - **[Technical Architecture](ARCHITECTURE.md)**: เอกสารสถาปัตยกรรมทางเทคนิคและเอนจินกราฟิก
+- **[Notices & Copyright Information](NOTICE.md)**: ข้อมูลลิขสิทธิ์ การประกาศทางกฎหมาย และคำชี้แจง Clean-Room
 
 ---
 
 ## License & Credits
 
-- **Source Code License**: [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
-- **Mod Author**: Aling
+- **Primary Source Code License**: [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
+- **Copyright**: (c) 2026 Aling (`ling-gwdgw2`) and Zoltraak Cinematic Contributors
+- **Clean-Room & Legal Notices**: ดูรายละเอียดประกาศทางกฎหมายและการพัฒนาโค้ดทั้งหมดได้ที่ [NOTICE.md](NOTICE.md)
+- **Inspiration**: *Sousou no Frieren* (Frieren: Beyond Journey's End) created by Kanehito Yamada and Tsukasa Abe
+- **Ecosystem Credits**: [Iron's Spells 'n Spellbooks](https://github.com/iron431/Irons-Spells-n-Spellbooks) by Iron431, [NeoForge Team](https://neoforged.net/)
+
