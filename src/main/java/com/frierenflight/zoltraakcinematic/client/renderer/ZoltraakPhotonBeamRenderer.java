@@ -15,8 +15,6 @@ import net.minecraft.resources.ResourceLocation;
 public class ZoltraakPhotonBeamRenderer extends EntityRenderer<ZoltraakCinematicBeamEntity> {
     public static final ResourceLocation TEX_MAGIC_CIRCLE =
             ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/spell/zoltraak_magic_circle.png");
-    public static final ResourceLocation TEX_VFX_ATLAS =
-            ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/entity/zoltraak_vfx_atlas.png");
 
     private final ZoltraakRenderer<ZoltraakCinematicBeamEntity> masterRenderer;
 

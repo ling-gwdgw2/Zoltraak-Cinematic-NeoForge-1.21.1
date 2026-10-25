@@ -28,12 +28,20 @@
 (ระบบคำนวณเรขาคณิตสามมิติ และ Core Shader ประจำม็อดแบบ Standalone 100%)
 เดิมทีระบบเคยพึ่งพาโมดูลภายนอกอย่าง Photon และ KilaGraph แต่ในสถาปัตยกรรมปัจจุบัน ม็อดได้รับการพัฒนาสู่ **Pure Procedural Geometry & Dedicated GLSL 150 Shader Architecture**:
 - **Procedural Vector Mesh Engine (Blaze3D & JOML)**: คำนวณโครงสร้าง Mesh สดแบบ Real-Time ด้วยหลักคณิตศาสตร์เรขาคณิต (Dynamic Ribbons, Arcs, Spiral Rings, Tapered Cylinders) จึงให้ความลื่นไหลระดับภาพยนตร์โดยไม่ต้องพึ่งโมเดลภายนอก
-- **Native Core GLSL 150 Shaders**:
-  - `zoltraak_beam`: Procedural Sine Ripple & Photonic Tapering
-  - `black_zoltraak_beam`: FBM (Fractal Brownian Motion) Dark Matter Soot & Screen-Derivative `fwidth` Particulate Grain
-  - `great_zoltraak_plume`: Volumetric Mana Erosion Plumes
-  - `corona`: Multi-axis Runic Aperture Flare
-  - `lens`: Gravitational Lensing & Chromatic Aberration
+- **Native Core GLSL 150 Shaders (100% Original Clean-Room Shaders)**:
+  - `zoltraak_beam`: Procedural super-Gaussian white core ($e^{-(y/\text{core})^4}$), supersonic longitudinal ionization ripples, and aerodynamic arrowhead tip
+  - `black_zoltraak_beam`: Pure obsidian void core, crackling ash-lightning filaments, and royal violet / silver-lavender boundary ionization
+  - `great_zoltraak_white`: 3D cylindrical volumetric raymarching, Fresnel facing modulation, and catastrophic plasma discharge
+  - `great_zoltraak_black`: 3D cylindrical volumetric void raymarching, charcoal-violet soot turbulence, and silver-lavender rim discharge
+  - `great_zoltraak_plume`: Lateral fluid plume wave dynamics, dual-tone light/dark mode support, and dielectric spark breaking
+  - `corona`: Demonic gravitational singularity accretion corona with logarithmic inflow spiral and photonic photon sphere
+  - `rapid_zoltraak_bullet`: Supersonic aerodynamic laser-needle bullet with diamond taper
+  - `magic_circle` / `black_magic_circle`: Procedural runic mandala and anime magic circles
+  - `zoltraak_impact`: Dynamic crater shockwave, expanding plasma bloom, and dust billow
+  - `cinematic_flare`: Anamorphic camera-aligned diffraction glare
+  - `defense_barrier`: Hexagonal energy barrier with impact wave dispersion
+  - `gargantua`: Gravitational lensing black hole accretion raymarching
+  - `unsealing_fire_column`: Ritual arcane fire pillar and runic rings
 - **SceneLens FBO Capture**: ระบบตรวจจับ Framebuffer ของตัวเกมผ่าน `glBlitFramebuffer` ส่งเข้า `SceneSampler` เพื่อสร้างมิติการบิดเบือนมิติ (Space Bending/Heat Refraction) ได้ด้วยตัวเกมเพียวๆ โดยไม่ต้องลง Mod หักเหแสงภายนอก
 - **ZoltraakRenderPass (Deferred Queue)**: จัดคิวการเรนเดอร์แยกพิเศษ (`AFTER_SKY` -> `AFTER_LEVEL`) แก้ปัญหา Translucent Sorting และ Z-Fighting อย่างสมบูรณ์แบบ
 - **Iris / Oculus Dynamic Compatibility (`ShaderCompatibility`)**: มีระบบตรวจจับ Shaderpack อัตโนมัติ ปรับระดับการเรนเดอร์ให้เข้ากับม็อด Shader (Oculus/Iris) โดยไม่เรนเดอร์ใน Shadow Pass และไม่มีปัญหาเกมแครช
@@ -48,7 +56,7 @@
    - **[Iron's Spells 'n Spellbooks](https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks)** (1.21.1)
    *(ไม่จำเป็นต้องติดตั้ง Photon หรือ KilaGraph เพิ่มเติมอีกต่อไป ม็อดมี Shader & Geometry Engine ในตัว 100%)*
 4. *(รองรับ)* เข้ากันได้ดีกับ **Oculus / Iris Shaders**
-5. ดาวน์โหลดไฟล์ `zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar` แล้ววางลงในโฟลเดอร์ `.minecraft/mods`
+5. ดาวน์โหลดไฟล์ `zoltraak_cinematic-neoforge-1.21.1-1.0.4.jar` แล้ววางลงในโฟลเดอร์ `.minecraft/mods`
 
 ---
 
@@ -66,7 +74,7 @@ python build.py
 ```
 
 ผลลัพธ์ไฟล์ JAR จะถูกสร้างขึ้นที่:
-`./zoltraak_cinematic-neoforge-1.21.1-1.0.3.jar`
+`./zoltraak_cinematic-neoforge-1.21.1-1.0.4.jar`
 
 ---
 

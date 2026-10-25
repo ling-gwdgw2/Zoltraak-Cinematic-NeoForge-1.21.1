@@ -29,11 +29,6 @@ public final class SceneLens {
          GL30.glBindFramebuffer(36008, read);
          GL30.glBindFramebuffer(36009, draw);
       }
-
-      if (ZoltraakCinematicShaders.lens != null) {
-         ZoltraakCinematicShaders.lens.setSampler("SceneSampler", snapshot.getColorTextureId());
-         ZoltraakCinematicShaders.lens.safeGetUniform("Viewport").set(main.width, main.height);
-      }
    }
 
    public static void release() {

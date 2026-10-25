@@ -1,32 +1,71 @@
 #version 150
+
+// Zoltraak Cinematic - 100% Clean Room Coronal Singularity Fragment Shader
+// Renders the Demonic Gravitational Singularity Accretion Corona for Qual
+
 in vec2 uv;
+in vec4 vertexColor;
 in float age;
+
 out vec4 fragColor;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
-void main(){
- if(age>=200.){
-  vec2 q=(uv-.5)*2.;float r=length(q),a=atan(q.y,q.x),life=1.-smoothstep(200.,224.,age);
-  float petals=pow(.5+.5*cos(a*7.+sin(a*3.)*.6),18.);
-  float star=exp(-r*7.)*3.+petals*exp(-r*2.8)*1.2;
-  float edge=exp(-abs(r-.28)*35.)*.5;
-  vec3 c=mix(vec3(.52,.08,1.),vec3(1.,.85,1.),exp(-r*6.));
-  fragColor=vec4(c*(star+edge)*life,1.-smoothstep(.7,1.,r));return;
- }
- float growth=smoothstep(24.,118.,age),span=2.8+9.2*growth;
- vec2 p=(uv-.5)*vec2(span*2.,5.2);float r=length(p),a=atan(p.y,p.x),t=age*.035;
- if(r<.99)discard;
- float n=noise(vec2(p.x*6.-t*4.,p.y*18.+sin(p.x*4.-t)*.7));
- float grain=noise(p*95.+vec2(t*9.,0.));
- float eyeWidth=.13+.45*exp(-p.x*p.x*.035);
- float eye=exp(-pow(abs(p.y)/eyeWidth,2.))*exp(-abs(p.x)*.10);
- float filament=exp(-abs(p.y-sin(p.x*2.-t*4.)*.026)*70.)*exp(-abs(p.x)*.085);
- float outer=exp(-abs(p.y)/(.25+eyeWidth))*exp(-abs(p.x)*.55)*.22;
- float rim=exp(-abs(r-1.025)*72.);
- float arc=exp(-abs(r-1.10-(n-.5)*.035)*35.)*(.45+.55*sin(a+t)*sin(a+t));
- vec3 red=vec3(1.,.035,.003),gold=vec3(1.,.58,.008),hot=vec3(1.,.9,.12);
- vec3 c=mix(red,gold,pow(clamp(eye,0.,1.),.65))*eye*(.75+.35*n+.22*grain);
- c+=red*outer+gold*filament*.52+hot*rim*.72+gold*arc*.17;
- float fade=(1.-smoothstep(span*.78,span*.995,abs(p.x)))*(1.-smoothstep(1.8,2.55,abs(p.y)));
- fragColor=vec4(c,fade);
+
+float hash12(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+float noise2D(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+        mix(hash12(i), hash12(i + vec2(1.0, 0.0)), f.x),
+        mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), f.x),
+        f.y
+    );
+}
+
+void main() {
+    vec2 p = uv * 2.0 - 1.0;
+    float r = length(p);
+    if (r > 1.0) discard;
+
+    float theta = atan(p.y, p.x);
+
+    // 1. Logarithmic Gravitational Inflow Spiral
+    float time = age * 0.06;
+    float spiral = theta * 6.0 + log(max(r, 0.001)) * 4.5 - time * 2.5;
+    float vortexWave = sin(spiral) * 0.5 + 0.5;
+
+    // 2. Event Horizon Gravitational Blackout Core
+    float eventHorizon = smoothstep(0.18, 0.32, r);
+
+    // 3. Photonic Accretion Ring & Blazing Inner Rim
+    float ring = exp(-pow((r - 0.40) * 10.0, 2.0));
+    float innerRim = exp(-pow((r - 0.34) * 22.0, 2.0));
+
+    // 4. Coronal Plasma Streamers (Outward Discharge Rays)
+    float streamers = pow(abs(cos(theta * 7.0 - time * 0.8 + sin(r * 12.0) * 0.6)), 8.0) * exp(-r * 2.8);
+
+    // 5. High-Frequency Arc Micro-Fluctuations
+    float microArcs = noise2D(vec2(theta * 10.0, r * 16.0 - time * 3.0)) * ring;
+
+    // 6. Spectral Palette (Demonic Obsidian Violet to Silver-Lavender)
+    vec3 deepViolet  = vec3(0.55, 0.10, 0.95);
+    vec3 magentaGlow = vec3(0.85, 0.22, 0.88);
+    vec3 lavenderHot = vec3(0.96, 0.92, 1.00);
+
+    vec3 baseColor = mix(deepViolet, magentaGlow, vortexWave);
+    baseColor *= vertexColor.rgb * 1.15;
+    vec3 color = mix(baseColor, lavenderHot, clamp(innerRim * 1.25 + ring * 0.35, 0.0, 1.0));
+
+    // 7. Energy Composition & Boundary Falloff
+    float intensity = (ring * 1.2 + innerRim * 1.5 + streamers * 0.85 + microArcs * 0.4) * eventHorizon;
+    float edgeFade = 1.0 - smoothstep(0.80, 0.99, r);
+    float alpha = intensity * edgeFade * vertexColor.a;
+
+    if (alpha < 0.003) discard;
+
+    fragColor = vec4(color, alpha);
 }

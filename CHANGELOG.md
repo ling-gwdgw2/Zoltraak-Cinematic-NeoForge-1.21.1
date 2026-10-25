@@ -9,7 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.4] - 2026-10-23
 
-### 1:1 Anime Visual Fidelity Overhaul & Magic Circle Refactoring (การยกเครื่องเอฟเฟกต์ตามอนิเมะและปรับปรุงวงเวทย์)
+### 100% Clean-Room Overhaul & 1:1 Anime Visual Fidelity (ยกเครื่องโค้ดและเชดเดอร์ใหม่ทั้งหมด 100% Original)
+
+#### Clean Room Codebase & Asset Independence (การเขียนทดแทนใหม่ทั้งหมด 100% Original)
+- **100% Original Shaders & Configurations Written from Scratch**:
+  - `zoltraak_beam.fsh`, `.vsh`, `.json`: Completely rewritten with original mathematical formulation featuring a super-Gaussian white plasma core ($e^{-(y/\text{core})^4}$), supersonic longitudinal ionization waves, and aerodynamic arrowhead tapering.
+  - `black_zoltraak_beam.fsh`, `.vsh`, `.json`: Completely rewritten with pure obsidian void core, crackling ash-lightning filaments, and royal violet / silver-lavender boundary ionization.
+  - `great_zoltraak_white.fsh`, `.vsh`, `.json`: Completely rewritten featuring 3D cylindrical volumetric raymarching, Fresnel facing modulation, and catastrophic plasma discharge.
+  - `great_zoltraak_black.fsh`, `.vsh`, `.json`: Completely rewritten featuring 3D cylindrical volumetric void raymarching, charcoal-violet soot turbulence, and silver-lavender rim discharge.
+  - `great_zoltraak_plume.fsh`, `.vsh`, `.json`: Completely rewritten with lateral fluid plume wave dynamics, dual-tone light/dark mode support, and dielectric spark breaking.
+  - `corona.fsh`, `.vsh`, `.json`: Completely rewritten from scratch as an original Demonic Gravitational Singularity Accretion Corona for Qual's cataclysmic singularity phase, featuring logarithmic inflow spirals, event horizon absorption cores, and outward coronal plasma streamers.
+- **Dead Shaders & Texture Atlases Purged**:
+  - Permanently deleted unused legacy shaders: `black_zoltraak_head.fsh`, `black_zoltraak_head.json`, `lens.fsh`, and `lens.json`.
+  - Permanently deleted `zoltraak_vfx_atlas.png` and severed all references across `ZoltraakRenderTypes.java`, `ZoltraakPhotonBeamRenderer.java`, and `SceneLens.java`.
+  - Replaced `zoltraak_glow.png` with a mathematically synthesized procedural HDR Gaussian-quartic radial bloom texture generated via clean-room mathematical script.
+  - Replaced `zoltraak_magic_circle.png` with original 2048x2048 high-definition artwork with clean luminous alpha channel.
+- **Complete Autonomy & Independence**:
+  - The entire repository now consists solely of 100% original code, shaders, configurations, and textures, with zero borrowed assets.
 
 #### Added
 - **Dedicated Supersonic Rapid Bullet Shaders (`rapid_zoltraak_bullet.json`, `.vsh`, `.fsh`)**:

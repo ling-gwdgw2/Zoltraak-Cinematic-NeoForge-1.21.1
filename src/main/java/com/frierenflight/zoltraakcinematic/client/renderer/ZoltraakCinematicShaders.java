@@ -12,10 +12,8 @@ import java.io.IOException;
 public final class ZoltraakCinematicShaders {
 
    public static ShaderInstance corona;
-   public static ShaderInstance lens;
    public static ShaderInstance zoltraak;
    public static ShaderInstance blackZoltraak;
-   public static ShaderInstance blackZoltraakHead;
    public static ShaderInstance greatBlack;
    public static ShaderInstance greatWhite;
    public static ShaderInstance greatPlume;
@@ -33,10 +31,8 @@ public final class ZoltraakCinematicShaders {
    @SubscribeEvent
    public static void onRegisterShaders(RegisterShadersEvent e) {
       registerSafe(e, "corona", s -> corona = s);
-      registerSafe(e, "lens", s -> lens = s);
       registerSafe(e, "zoltraak_beam", s -> zoltraak = s);
       registerSafe(e, "black_zoltraak_beam", s -> blackZoltraak = s);
-      registerSafe(e, "black_zoltraak_head", s -> blackZoltraakHead = s);
       registerSafe(e, "great_zoltraak_black", s -> greatBlack = s);
       registerSafe(e, "great_zoltraak_white", s -> greatWhite = s);
       registerSafe(e, "great_zoltraak_plume", s -> greatPlume = s);

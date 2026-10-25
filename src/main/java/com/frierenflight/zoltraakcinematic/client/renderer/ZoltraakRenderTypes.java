@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 public final class ZoltraakRenderTypes extends RenderType {
    private static final ResourceLocation TEX_GLOW = ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/spell/zoltraak_glow.png");
    private static final ResourceLocation TEX_CIRCLE = ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/spell/zoltraak_magic_circle.png");
-   private static final ResourceLocation TEX_ATLAS = ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/entity/zoltraak_vfx_atlas.png");
 
    // Use vanilla LIGHTNING_TRANSPARENCY so Iris / Sodium / shaderpacks recognize the additive blending
    // and automatically route it to the emissive glowing HDR bloom pipeline.
@@ -77,23 +76,6 @@ public final class ZoltraakRenderTypes extends RenderType {
          .setShaderState(safeShader(() -> ZoltraakCinematicShaders.corona))
          .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
          .setTransparencyState(ADD)
-         .setCullState(NO_CULL)
-         .setDepthTestState(LEQUAL_DEPTH_TEST)
-         .setWriteMaskState(COLOR_WRITE)
-         .createCompositeState(false)
-   );
-
-   public static final RenderType LENS = create(
-      "zol_lens",
-      DefaultVertexFormat.POSITION_TEX_COLOR,
-      Mode.QUADS,
-      4096,
-      false,
-      false,
-      CompositeState.builder()
-         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.lens))
-         .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
-         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
          .setCullState(NO_CULL)
          .setDepthTestState(LEQUAL_DEPTH_TEST)
          .setWriteMaskState(COLOR_WRITE)
@@ -337,23 +319,6 @@ public final class ZoltraakRenderTypes extends RenderType {
          .createCompositeState(false)
    );
 
-   public static final RenderType BLACK_HEAD = create(
-      "black_zol_head",
-      DefaultVertexFormat.POSITION_TEX_COLOR,
-      Mode.QUADS,
-      8192,
-      false,
-      false,
-      CompositeState.builder()
-         .setShaderState(safeShader(() -> ZoltraakCinematicShaders.blackZoltraakHead))
-         .setTextureState(new TextureStateShard(TEX_GLOW, true, false))
-         .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
-         .setCullState(NO_CULL)
-         .setDepthTestState(LEQUAL_DEPTH_TEST)
-         .setWriteMaskState(COLOR_WRITE)
-         .createCompositeState(false)
-   );
-
    public static final RenderType BARRAGE_CIRCLE = ZOL_CIRCLE;
 
    public static final RenderType BARRAGE_ATLAS = create(
@@ -365,7 +330,7 @@ public final class ZoltraakRenderTypes extends RenderType {
       true,
       CompositeState.builder()
          .setShaderState(safeShader(() -> ZoltraakCinematicShaders.barrageFx))
-         .setTextureState(new TextureStateShard(TEX_ATLAS, false, false))
+         .setTextureState(new TextureStateShard(TEX_GLOW, false, false))
          .setTransparencyState(ADD)
          .setCullState(NO_CULL)
          .setDepthTestState(LEQUAL_DEPTH_TEST)
