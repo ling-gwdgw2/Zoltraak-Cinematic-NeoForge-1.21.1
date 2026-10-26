@@ -217,7 +217,7 @@ void main() {
     }
     vec3 diskV = cross(axis, diskU);
 
-    p += d * (gargWhiteNoise(vUv * 512.0) * 0.1);
+    p += d * (gargWhiteNoise(gl_FragCoord.xy) * 0.35);
 
     float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 64.0;
     int steps = int(mix(targetSteps * 0.45, targetSteps,
@@ -267,43 +267,47 @@ void main() {
         }
 
         vec2 flat2 = vec2(dot(planar, diskU), dot(planar, diskV));
-
-        // 1. Polar Coordinates (radial & azimuthal angle)
-        float angle = atan(flat2.y, flat2.x);
-        float normAngle = angle / GARG_TAU + 0.5;
         float t = clamp((radial - inner) / max(outer - inner, 0.001), 0.0, 1.0);
 
-        // 2. Keplerian Differential Rotation: inner orbits significantly faster than outer (Omega ~ r^-1.5)
+        // 1. Keplerian Differential Rotation (Omega ~ r^-1.5)
         float keplerSpeed = pow(inner / max(radial, inner), 1.5);
         float orbitalPhase = time * 0.85 * keplerSpeed;
 
-        // 3. Sheared Logarithmic Spiral FBM: authentic turbulent gas filaments & dust lanes
-        // Eliminates all concentric Moiré / vinyl-record ring artifacts
+        // 2. Continuous 2D Rotated Coordinates (100% Seamless, Zero Branch Cut, No Seam at 360 deg)
+        // Rotate flat2 in Cartesian space backwards by orbital phase + logarithmic spiral twist
+        float rotAngle = -orbitalPhase + log(max(radial / inner, 1.0)) * 1.65;
+        float cosA = cos(rotAngle);
+        float sinA = sin(rotAngle);
+        vec2 rotatedPos = vec2(
+            flat2.x * cosA - flat2.y * sinA,
+            flat2.x * sinA + flat2.y * cosA
+        );
+
+        // 3. Multi-octave Smooth Gas FBM across 2D Swirling Space (Zero Moiré, Organic Cloud Eddies)
         float gasNoise = 0.0;
         float weight = 0.0;
-        float logRadial = log(max(radial, 1.0));
-
         for (int octave = 0; octave < 3; ++octave) {
             float freq = pow(2.0, float(octave));
-            // Logarithmic spiral angle: lines of constant phase are spirals matching differential shear
-            float spiralU = (normAngle + orbitalPhase * (0.28 / freq) - logRadial * 0.65) * 3.0 * freq;
-            float radialU = (radial * 0.16 + sin(normAngle * GARG_TAU * freq + logRadial) * 0.06) * freq;
-
-            vec2 gasUv = vec2(radialU, spiralU);
+            vec2 uv = rotatedPos * (0.042 * freq);
+            // Subtle harmonic domain warp to simulate fluid convection curls
+            vec2 warp = vec2(
+                sin(uv.y * 3.14159 + uv.x) * 0.08,
+                cos(uv.x * 3.14159 - uv.y) * 0.08
+            );
             float layer = 1.0 / freq;
-            float sampleVal = dot(textureLod(NoiseSampler, fract(gasUv), 0.0).rgb, vec3(0.299, 0.587, 0.114));
+            float sampleVal = dot(textureLod(NoiseSampler, fract(uv + warp), 0.0).rgb, vec3(0.299, 0.587, 0.114));
             gasNoise += layer * sampleVal;
             weight += layer;
         }
         float noise = gasNoise / max(weight, 0.001);
-        noise = smoothstep(0.18, 0.82, noise);
+        noise = smoothstep(0.20, 0.80, noise);
 
-        // 4. Soft Turbulent Gas Swirls & Interstellar Dust Lanes (Curling spiral filaments, zero Moiré)
-        float spiralShear = sin(normAngle * 4.0 - radial * 0.85 + noise * 3.6 + orbitalPhase * 0.4);
-        float filament = clamp(noise * (0.75 + 0.35 * spiralShear), 0.0, 1.0);
+        // 4. Broad Interstellar Gas Streamers & Dust Lanes (Low-frequency, completely free of Moiré rings)
+        float broadStreamer = sin((rotatedPos.x + rotatedPos.y) * 0.15 + noise * 3.2);
+        float filament = clamp(noise * (0.80 + 0.28 * broadStreamer), 0.0, 1.0);
 
-        // 5. Gaussian Volumetric Atmosphere: gives authentic 3D gaseous thickness from every angle
-        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.55 + 0.45 * filament);
+        // 5. Gaussian Volumetric Scale-Height Atmosphere: gives thick, soft 3D gaseous glow
+        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.65 + 0.35 * filament);
         float zNorm = abs(height) / max(diskScaleHeight, 0.005);
         if (zNorm > 2.8) {
             continue;
@@ -314,7 +318,7 @@ void main() {
         vec3 tangentDir = normalize(cross(axis, planar));
         float viewDoppler = dot(tangentDir, -d) * keplerSpeed;
         float dopplerFactor = clamp(1.0 + viewDoppler * 0.72, 0.28, 2.7);
-        float dopplerBoost = pow(dopplerFactor, 2.8);
+        float dopplerBoost = pow(dopplerFactor, 2.6);
 
         // 7. Blackbody Temperature Shift & Radiative Profile
         float radialProfile = pow(1.0 - t, 1.45)
@@ -325,14 +329,16 @@ void main() {
         vec3 baseCol = gargDiskColour(colorTemp);
         vec3 hotCore = vec3(1.0, 0.98, 0.95) * pow(max(0.0, 1.0 - t * 2.2), 2.2) * max(0.0, viewDoppler);
 
-        float intensity = (0.25 + 1.25 * pow(filament, 1.4)) * dopplerBoost;
+        float intensity = (0.28 + 1.20 * pow(filament, 1.3)) * dopplerBoost;
         vec3 emission = (baseCol + hotCore * 0.45) * radialProfile * max(DiskShape.w, 0.0)
-                * 8.5 * fed * intensity;
+                * 9.0 * fed * intensity;
 
-        // 8. Front-to-back Volumetric Accumulation with Gaussian Atmosphere
-        float local = clamp(verticalCoverage * radialProfile * (0.09 + 0.22 * filament), 0.0, 1.0);
-        accum += emission * (1.0 - alpha) * local;
-        alpha += (1.0 - alpha) * local;
+        // 8. Physical Beer-Lambert Volumetric Integration (Step-Length Invariant: completely eliminates concentric raymarch rings)
+        float density = verticalCoverage * radialProfile * (0.22 + 0.48 * filament);
+        float stepAbsorption = 1.0 - exp(-density * dt * 2.6);
+        vec3 stepEmission = emission * stepAbsorption;
+        accum += stepEmission * (1.0 - alpha);
+        alpha += (1.0 - alpha) * stepAbsorption;
         if (alpha > 0.985) {
             break;
         }
