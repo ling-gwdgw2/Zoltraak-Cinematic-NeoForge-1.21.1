@@ -309,7 +309,7 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
         Vec3 end = start.add(look.scale(currentLength));
         setBoundingBox(new AABB(start, end).inflate(5.25));
 
-        if (tickCount == 1) {
+        if (!level().isClientSide && tickCount == 1) {
             float pitch = black() ? 0.75f : 1.0f;
             level().playSound(null, getX(), getY(), getZ(), ModCinematicSounds.ZOLTRAAK_CHARGE.get(), SoundSource.PLAYERS, 1.4f, pitch);
             level().playSound(null, getX(), getY(), getZ(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.2f, 0.85f * pitch);
