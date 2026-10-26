@@ -106,27 +106,32 @@ const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 80.0;
 const float GARG_TAU = 6.2831853;
-// Half-thickness at the inner and outer edge, in r_g. Slender, sleek proportions matching Interstellar
-const float GARG_THICK_INNER = 0.38;
-const float GARG_THICK_OUTER = 0.20;
+// Half-thickness scale height at the inner and outer edge, in r_g.
+const float GARG_THICK_INNER = 0.52;
+const float GARG_THICK_OUTER = 0.35;
 
 /**
- * Disk colour by radius: pale white-yellow at the inner edge grading to radiant champagne gold,
- * glowing amber and interstellar bronze-orange, matching authentic Gargantua.
+ * True Interstellar Blackbody Palette:
+ * White-hot core -> Champagne gold -> Luminous amber -> Fiery bronze-orange -> Deep cosmic ember red
  */
 vec3 gargDiskColour(float t) {
-    vec3 c0 = vec3(1.000, 0.973, 0.902);
-    vec3 c1 = vec3(1.000, 0.839, 0.588);
-    vec3 c2 = vec3(0.988, 0.667, 0.337);
-    vec3 c3 = vec3(0.839, 0.424, 0.149);
+    vec3 c0 = vec3(1.000, 0.985, 0.940); // 0.00: Incandescent core
+    vec3 c1 = vec3(1.000, 0.860, 0.520); // 0.25: Radiant champagne gold
+    vec3 c2 = vec3(0.980, 0.620, 0.220); // 0.50: Glowing solar amber
+    vec3 c3 = vec3(0.850, 0.360, 0.080); // 0.75: Interstellar fiery bronze
+    vec3 c4 = vec3(0.480, 0.120, 0.025); // 1.00: Smoldering cosmic dust edge
+
     float k = clamp(t, 0.0, 1.0);
-    if (k < 0.34) {
-        return mix(c0, c1, k / 0.34);
+    if (k < 0.25) {
+        return mix(c0, c1, k / 0.25);
     }
-    if (k < 0.67) {
-        return mix(c1, c2, (k - 0.34) / 0.33);
+    if (k < 0.50) {
+        return mix(c1, c2, (k - 0.25) / 0.25);
     }
-    return mix(c2, c3, (k - 0.67) / 0.33);
+    if (k < 0.75) {
+        return mix(c2, c3, (k - 0.50) / 0.25);
+    }
+    return mix(c3, c4, (k - 0.75) / 0.25);
 }
 
 float gargWhiteNoise(vec2 uv) {
@@ -272,61 +277,63 @@ void main() {
         float keplerSpeed = pow(inner / max(radial, inner), 1.5);
         float orbitalPhase = time * 0.85 * keplerSpeed;
 
-        // 3. Azimuthal Streak FBM: stretched along orbital path for authentic gas filament ring structure
-        float streakNoise = 0.0;
+        // 3. Sheared Logarithmic Spiral FBM: authentic turbulent gas filaments & dust lanes
+        // Eliminates all concentric Moiré / vinyl-record ring artifacts
+        float gasNoise = 0.0;
         float weight = 0.0;
+        float logRadial = log(max(radial, 1.0));
+
         for (int octave = 0; octave < 3; ++octave) {
             float freq = pow(2.0, float(octave));
-            float radialUv = radial * 0.42 * freq;
-            float angularUv = (normAngle + orbitalPhase * (0.25 / freq)) * 2.0 * freq;
+            // Logarithmic spiral angle: lines of constant phase are spirals matching differential shear
+            float spiralU = (normAngle + orbitalPhase * (0.28 / freq) - logRadial * 0.65) * 3.0 * freq;
+            float radialU = (radial * 0.16 + sin(normAngle * GARG_TAU * freq + logRadial) * 0.06) * freq;
 
-            vec2 streakUv = vec2(
-                radialUv + sin(normAngle * GARG_TAU * freq) * 0.08,
-                angularUv + radial * 0.06 * freq
-            );
-
+            vec2 gasUv = vec2(radialU, spiralU);
             float layer = 1.0 / freq;
-            float sampleVal = dot(textureLod(NoiseSampler, fract(streakUv), 0.0).rgb, vec3(0.299, 0.587, 0.114));
-            streakNoise += layer * sampleVal;
+            float sampleVal = dot(textureLod(NoiseSampler, fract(gasUv), 0.0).rgb, vec3(0.299, 0.587, 0.114));
+            gasNoise += layer * sampleVal;
             weight += layer;
         }
-        float noise = streakNoise / max(weight, 0.001);
-        noise = smoothstep(0.18, 0.88, noise);
+        float noise = gasNoise / max(weight, 0.001);
+        noise = smoothstep(0.18, 0.82, noise);
 
-        // 4. Concentric High-Frequency Rings (Interstellar Striations)
-        float ringBands = 0.65 + 0.35 * sin(radial * 5.5 + noise * 2.5) * cos(radial * 13.0);
-        float filament = clamp(noise * ringBands * 1.35, 0.0, 1.0);
+        // 4. Soft Turbulent Gas Swirls & Interstellar Dust Lanes (Curling spiral filaments, zero Moiré)
+        float spiralShear = sin(normAngle * 4.0 - radial * 0.85 + noise * 3.6 + orbitalPhase * 0.4);
+        float filament = clamp(noise * (0.75 + 0.35 * spiralShear), 0.0, 1.0);
 
-        float thickness = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t)
-                * mix(0.08, 1.25, filament);
-        float coverage = smoothstep(thickness, 0.0, abs(height));
-        if (coverage <= 0.002) {
+        // 5. Gaussian Volumetric Atmosphere: gives authentic 3D gaseous thickness from every angle
+        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.55 + 0.45 * filament);
+        float zNorm = abs(height) / max(diskScaleHeight, 0.005);
+        if (zNorm > 2.8) {
             continue;
         }
+        float verticalCoverage = exp(-zNorm * zNorm * 1.8);
 
-        // 5. Relativistic Doppler Beaming: gas approaching observer is amplified in brightness & energy
+        // 6. Relativistic Doppler Beaming (approaching gas amplified & blued, receding gas softened & amber)
         vec3 tangentDir = normalize(cross(axis, planar));
         float viewDoppler = dot(tangentDir, -d) * keplerSpeed;
-        float dopplerBoost = pow(clamp(1.0 + viewDoppler * 0.55, 0.35, 2.2), 2.4);
+        float dopplerFactor = clamp(1.0 + viewDoppler * 0.72, 0.28, 2.7);
+        float dopplerBoost = pow(dopplerFactor, 2.8);
 
-        // 6. Blackbody Temperature Shift & Profile
-        float profile = pow(1.0 - t, 1.55)
-                * smoothstep(0.0, 0.025, t) * smoothstep(1.0, 0.85, t);
+        // 7. Blackbody Temperature Shift & Radiative Profile
+        float radialProfile = pow(1.0 - t, 1.45)
+                * smoothstep(0.0, 0.035, t) * smoothstep(1.0, 0.82, t);
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
 
-        float colorTemp = clamp(t - filament * 0.28 - viewDoppler * 0.18, 0.0, 1.0);
+        float colorTemp = clamp(t - (filament - 0.5) * 0.22 - viewDoppler * 0.28, 0.0, 1.0);
         vec3 baseCol = gargDiskColour(colorTemp);
-        vec3 hotCore = vec3(1.0, 0.98, 0.95) * pow(max(0.0, 1.0 - t * 2.5), 2.0) * max(0.0, viewDoppler);
+        vec3 hotCore = vec3(1.0, 0.98, 0.95) * pow(max(0.0, 1.0 - t * 2.2), 2.2) * max(0.0, viewDoppler);
 
-        float intensity = (0.15 + 1.45 * pow(filament, 1.5)) * dopplerBoost;
-        vec3 emission = (baseCol + hotCore * 0.4) * profile * max(DiskShape.w, 0.0)
-                * 9.5 * fed * intensity;
+        float intensity = (0.25 + 1.25 * pow(filament, 1.4)) * dopplerBoost;
+        vec3 emission = (baseCol + hotCore * 0.45) * radialProfile * max(DiskShape.w, 0.0)
+                * 8.5 * fed * intensity;
 
-        // 7. Front-to-back Volumetric Accumulation
-        float local = clamp(coverage * profile * (0.08 + 0.24 * filament), 0.0, 1.0);
+        // 8. Front-to-back Volumetric Accumulation with Gaussian Atmosphere
+        float local = clamp(verticalCoverage * radialProfile * (0.09 + 0.22 * filament), 0.0, 1.0);
         accum += emission * (1.0 - alpha) * local;
         alpha += (1.0 - alpha) * local;
-        if (alpha > 0.99) {
+        if (alpha > 0.985) {
             break;
         }
     }
@@ -388,7 +395,14 @@ void main() {
 
     // Emissive disk & photon ring (superheated and energized during detonation)
     float blastDiskEnergize = 1.0 + blast * 3.5;
-    vec3 diskEmission = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
+    vec3 diskRaw = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
+
+    // --- ACES FILMIC TONE MAPPING FOR ACCRETION DISK ---
+    // Smoothly compresses high dynamic range radiance into display space:
+    // Prevents flat blown-out #FFFFFF clipping, preserving rich solar gold, amber, and bronze embers.
+    vec3 diskToneMapped = diskRaw / (diskRaw + vec3(1.18, 1.35, 1.62));
+    // Gentle vibrancy lift for filmic glow
+    vec3 diskEmission = diskToneMapped * (1.0 + 0.28 * smoothstep(0.0, 0.75, diskToneMapped));
 
     // Background behind the disk
     vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? lensedScene : background;
