@@ -64,9 +64,9 @@ public final class GargantuaScreenFx {
             double dist = g.distanceTo(mc.player);
 
             // Act 1: Rupture Flash on spawn
-            if (visualAge >= 0.0f && visualAge <= 8.0f && !TEAR_OBSERVED_ENTITIES.contains(id)) {
+            if (visualAge >= 0.0f && !TEAR_OBSERVED_ENTITIES.contains(id)) {
                 TEAR_OBSERVED_ENTITIES.add(id);
-                if (dist <= 100.0d) {
+                if (visualAge <= 15.0f && dist <= 100.0d) {
                     float distFactor = (float) Mth.clamp(1.0 - dist / 100.0d, 0.2, 1.0);
                     triggerFlash(12, 0.65f * distFactor);
                 }
@@ -85,7 +85,8 @@ public final class GargantuaScreenFx {
             // Act 4: Supernova Detonation (Blast Tick)
             if (visualAge >= (float) blastTick && !BLAST_OBSERVED_ENTITIES.contains(id)) {
                 BLAST_OBSERVED_ENTITIES.add(id);
-                if (dist <= 160.0d) {
+                // Only trigger the explosive blast and flash if the player was present during detonation
+                if (visualAge <= (float) blastTick + 15.0f && dist <= 160.0d) {
                     float distFactor = (float) Mth.clamp(1.0 - dist / 160.0d, 0.15, 1.0);
                     triggerFlash(45, 1.0f * distFactor);
 
@@ -129,12 +130,20 @@ public final class GargantuaScreenFx {
         if (currentVignetteAlpha > 0.01f) {
             int vigAlpha = (int) (currentVignetteAlpha * 255.0f);
             int vigColor = (vigAlpha << 24) | 0x05010B; // Deep obsidian violet
-            // Border darkening
-            int border = Math.max(16, (int) (w * 0.15f));
-            graphics.fill(0, 0, w, border, vigColor);
-            graphics.fill(0, h - border, w, h, vigColor);
-            graphics.fill(0, border, border, h - border, vigColor);
-            graphics.fill(w - border, border, w, h - border, vigColor);
+            int clearColor = 0x0005010B;
+            int border = Math.max(24, (int) (h * 0.28f));
+
+            // Top gradient (fade inward)
+            graphics.fillGradient(0, 0, w, border, vigColor, clearColor);
+            // Bottom gradient (fade inward)
+            graphics.fillGradient(0, h - border, w, h, clearColor, vigColor);
+
+            // Left & Right borders (subtle vignette frame)
+            int sideBorder = Math.max(16, (int) (w * 0.12f));
+            int sideAlpha = (int) (currentVignetteAlpha * 160.0f);
+            int sideColor = (sideAlpha << 24) | 0x05010B;
+            graphics.fillGradient(0, border, sideBorder, h - border, sideColor, sideColor);
+            graphics.fillGradient(w - sideBorder, border, w, h - border, sideColor, sideColor);
         }
 
         // 2. Act 4: Supernova Pure White Blinding Flash

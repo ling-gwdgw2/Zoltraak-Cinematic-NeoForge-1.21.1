@@ -196,20 +196,6 @@ public class ZoltraakCinematicClientEvents {
             event.setRoll(event.getRoll() + rumbleRoll);
         }
 
-        if (shakeEnabled) {
-            float gShake = com.frierenflight.zoltraakcinematic.client.renderer.GargantuaShake.currentShake((float) event.getPartialTick()) * shakeMult;
-            if (gShake > 0.001f) {
-                long now = System.currentTimeMillis();
-                long step = now / 14L;
-                float r1 = (float) ((step * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
-                float r2 = (float) (((step + 127L) * 2654435769L & 0xFFFFFFFFL) / 4294967295.0);
-                float pitchJitter = (r1 * 2.0f - 1.0f) * gShake * 0.85f;
-                float yawJitter   = (r2 * 2.0f - 1.0f) * gShake * 1.15f;
-                event.setPitch(event.getPitch() + net.minecraft.util.Mth.clamp(pitchJitter, -12.0f, 12.0f));
-                event.setYaw(event.getYaw() + net.minecraft.util.Mth.clamp(yawJitter, -12.0f, 12.0f));
-            }
-        }
-
         // Aerodynamic Flight Camera Roll Banking
         if (com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isFlightCameraRollEnabled()) {
             Minecraft mc = Minecraft.getInstance();
@@ -284,9 +270,10 @@ public class ZoltraakCinematicClientEvents {
         if (mc.level != null && !mc.isPaused()) {
             // Tick Gargantua cinematic screen overlays & acoustic events
             com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaScreenFx.clientTick(mc);
+            com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaCasterPose.clientTick(mc);
 
             // Allow skipping Gargantua cutscenes by pressing Jump (Spacebar)
-            if (mc.options.keyJump.consumeClick() && com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaCameraDirector.isActive()) {
+            if (com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaCameraDirector.isActive() && mc.options.keyJump.consumeClick()) {
                 com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaCameraDirector.skip();
             }
 

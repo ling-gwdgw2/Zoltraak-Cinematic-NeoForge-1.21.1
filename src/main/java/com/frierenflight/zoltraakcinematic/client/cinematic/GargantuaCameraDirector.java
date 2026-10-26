@@ -147,7 +147,7 @@ public final class GargantuaCameraDirector {
                 -Math.sin(pitchRad),
                 Math.cos(yawRad) * Math.cos(pitchRad)
         );
-        CameraPose vanillaPose = new CameraPose(vanillaPos, vanillaLook, lastFov, 0.0f);
+        CameraPose vanillaPose = new CameraPose(vanillaPos, vanillaLook, vanillaYaw, vanillaPitch, lastFov, 0.0f);
 
         return vanillaPose.lerp(clippedShot, currentWeight);
     }

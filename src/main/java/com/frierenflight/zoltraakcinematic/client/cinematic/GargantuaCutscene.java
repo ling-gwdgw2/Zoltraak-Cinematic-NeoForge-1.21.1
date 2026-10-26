@@ -105,9 +105,9 @@ public final class GargantuaCutscene {
         }
 
         // -------------------------------------------------------------
-        // Act 4: Supernova Detonation & Wide Landscape Panorama (blastTick -> blastTick + 80)
+        // Act 4: Supernova Detonation & Wide Landscape Panorama (blastTick -> End of Lifetime)
         // -------------------------------------------------------------
-        if (visualAge > (float) blastTick && visualAge <= (float) blastTick + 80.0f) {
+        if (visualAge > (float) blastTick) {
             float k = Mth.clamp((visualAge - (float) blastTick) / 80.0f, 0.0f, 1.0f);
             float smoothK = k * (2.0f - k); // Deceleration curve
 

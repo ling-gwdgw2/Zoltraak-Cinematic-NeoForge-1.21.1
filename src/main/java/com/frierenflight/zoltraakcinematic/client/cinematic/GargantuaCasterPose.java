@@ -15,9 +15,28 @@ import net.minecraft.world.entity.player.Player;
  */
 public final class GargantuaCasterPose {
 
+    private static float prevActiveWeight = 0.0f;
     private static float activeWeight = 0.0f;
 
     private GargantuaCasterPose() {}
+
+    public static void clientTick(Minecraft mc) {
+        prevActiveWeight = activeWeight;
+        if (mc.player == null) {
+            activeWeight = 0.0f;
+            prevActiveWeight = 0.0f;
+            return;
+        }
+
+        boolean isCastingGargantua = ClientMagicData.isCasting() &&
+                GargantuaSpell.ID.toString().equals(ClientMagicData.getCastingSpellId());
+
+        if (isCastingGargantua) {
+            activeWeight = Math.min(1.0f, activeWeight + 0.10f);
+        } else {
+            activeWeight = Math.max(0.0f, activeWeight - 0.15f);
+        }
+    }
 
     public static float getPoseWeight(LivingEntity entity) {
         if (!(entity instanceof Player player)) return 0.0f;
@@ -26,16 +45,16 @@ public final class GargantuaCasterPose {
             return 0.0f;
         }
 
-        boolean isCastingGargantua = ClientMagicData.isCasting() &&
-                GargantuaSpell.ID.toString().equals(ClientMagicData.getCastingSpellId());
-
-        if (isCastingGargantua) {
-            activeWeight = Math.min(1.0f, activeWeight + 0.08f);
-        } else {
-            activeWeight = Math.max(0.0f, activeWeight - 0.10f);
+        float partial = 1.0f;
+        if (mc.level != null && !mc.isPaused()) {
+            try {
+                partial = mc.getTimer().getGameTimeDeltaPartialTick(false);
+            } catch (Throwable ignored) {
+                partial = 1.0f;
+            }
         }
 
-        return activeWeight;
+        return Mth.lerp(partial, prevActiveWeight, activeWeight);
     }
 
     /**
