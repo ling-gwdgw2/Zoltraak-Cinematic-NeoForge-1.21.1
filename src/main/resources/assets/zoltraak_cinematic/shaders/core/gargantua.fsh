@@ -106,7 +106,7 @@ uniform vec4 DiskU;
 const int GARG_STEPS_MAX = 128;
 const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
-const float GARG_ESCAPE = 80.0;
+const float GARG_ESCAPE = 160.0;
 const float GARG_TAU = 6.2831853;
 // Half-thickness scale height of the volumetric plasma disk (in r_g)
 // Slender, razor-sharp astrophysical accretion disk
@@ -174,7 +174,11 @@ void main() {
     float impact = length(centre - rayDir * along);
     float holeDistance = length(centre);
     float shadowEdge = rg * GARG_SHADOW;
-    float reach = rg * DiskShape.y * 1.35;
+    // Gravitational lensing envelope: extends far beyond the physical gas disk to capture
+    // astrophysical spacetime curvature, background deflection, and Einstein rings at long range.
+    float lensingRadius = max(DiskShape.y * 2.8, 70.0);
+    float escapeRadius = lensingRadius * 1.05;
+    float reach = rg * lensingRadius;
 
     // Everything below is in units of r_g, in the hole's own frame.
     vec3 axis = normalize(SpinAxis.xyz);
@@ -182,7 +186,7 @@ void main() {
     vec3 d = rayDir;
     float h = length(cross(p, d));
 
-    vec2 span = gargSphereHit(p, d, DiskShape.y * 1.35);
+    vec2 span = gargSphereHit(p, d, lensingRadius);
     if (span.y < 0.0) {
         fragColor = vec4(sceneColour, 1.0);
         return;
@@ -225,8 +229,7 @@ void main() {
     p += d * startJitter;
 
     float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 64.0;
-    int steps = int(mix(targetSteps * 0.45, targetSteps,
-            clamp(reach / max(holeDistance, 0.001) * 1.6, 0.0, 1.0)));
+    int steps = int(targetSteps);
 
     vec3 accum = vec3(0.0);
     float alpha = 0.0;
@@ -242,9 +245,20 @@ void main() {
         }
         float radius = length(p);
         float height = dot(p, axis);
-        // Smooth continuous adaptive step size (no discontinuous branching, perfectly smooth integration)
-        float nearPlane = max(abs(height) * 0.40, radius * 0.018);
-        float dt = clamp(min(radius * 0.075, nearPlane), 0.025, 0.85);
+        vec3 planar = p - axis * height;
+        float radial = length(planar);
+
+        // Adaptive step size:
+        // In the outer vacuum / lensing zone, take larger steps (up to 2.5 r_g) so geodesics
+        // traverse the full envelope without running out of steps. Inside the disk, take fine steps.
+        float diskDist = max(max(inner - radial, radial - outer), abs(height) - 1.2);
+        float dt;
+        if (diskDist > 0.0) {
+            dt = clamp(min(radius * 0.09, diskDist * 0.40 + 0.35), 0.08, 2.5);
+        } else {
+            float nearPlane = max(abs(height) * 0.35, radius * 0.018);
+            dt = clamp(min(radius * 0.065, nearPlane), 0.025, 0.70);
+        }
 
         p += d * dt;
         travelledBlocks += dt * rg;
@@ -261,13 +275,13 @@ void main() {
             captured = true;
             break;
         }
-        if (travelled > GARG_ESCAPE) {
+        if (travelled > escapeRadius) {
             break;
         }
 
         height = dot(p, axis);
-        vec3 planar = p - axis * height;
-        float radial = length(planar);
+        planar = p - axis * height;
+        radial = length(planar);
         if (radial < inner || radial > outer) {
             continue;
         }
@@ -328,7 +342,7 @@ void main() {
 
         // --- 5. BLACKBODY TEMPERATURE SHIFT & RADIATIVE PROFILE ---
         // Physical radiative profile: brilliant ISCO inner edge, smoothly tapering outward
-        float radialProfile = pow(max(1.0 - t, 0.0), 0.70) * smoothstep(0.0, 0.03, t) * smoothstep(1.0, 0.85, t);
+        float radialProfile = pow(max(1.0 - t, 0.0), 0.70) * smoothstep(0.0, 0.03, t) * (1.0 - smoothstep(0.85, 1.0, t));
         float coreMultiplier = 1.0 + pow(max(1.0 - t, 0.0), 1.8) * 2.2;
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
 
@@ -361,10 +375,16 @@ void main() {
     float critBoost = 1.0 + crit * 1.8;
     float blast = clamp(HoleState.y - 1.0, 0.0, 1.0);
 
+    // Radial falloff feathering for gravitational lensing and cosmic sky:
+    // Inside 0.40 * reach (which covers the entire accretion disk), lensing is 100% full strength.
+    // Beyond the disk (0.40 to 1.0 reach), it smoothly and seamlessly tapers to zero at the boundary.
+    float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
+    float edgeFeather = 1.0 - smoothstep(0.40, 1.0, normDist);
+
     // Screen-space gravitational lensing: prevent foreground bleeding
     vec2 lensedUv = vUv;
     if (SpinAxis.w >= 0.05 && openFactor > 0.001) {
-        vec2 candidateUv = clamp(vUv + (d.xy - rayDir.xy) * 0.35 * openFactor, 0.001, 0.999);
+        vec2 candidateUv = clamp(vUv + (d.xy - rayDir.xy) * vec2(0.38, 0.65) * (edgeFeather * openFactor), 0.001, 0.999);
         float candidateDepth = texture(DepthSampler, candidateUv).r;
         if (candidateDepth >= SL_SKY_DEPTH) {
             lensedUv = candidateUv;
@@ -386,10 +406,8 @@ void main() {
     // Luminous cosmic starfield & interstellar nebula lensed by the black hole.
     vec3 background = lensedScene;
     if (!captured && !hitSolid && SpinAxis.w >= 0.05) {
-        float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
-        float edgeFeather = smoothstep(1.0, 0.35, normDist);
         float bent = 1.0 - dot(d, rayDir);
-        float lensed = clamp(bent * 12.0, 0.0, 1.0) * edgeFeather;
+        float lensed = clamp(bent * 14.0, 0.0, 1.0) * edgeFeather;
 
         if (lensed > 0.001) {
             float sceneLum = dot(lensedScene, vec3(0.299, 0.587, 0.114));
