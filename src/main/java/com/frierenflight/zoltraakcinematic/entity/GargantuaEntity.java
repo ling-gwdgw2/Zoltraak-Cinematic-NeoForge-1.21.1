@@ -34,6 +34,9 @@ import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.*;
@@ -405,6 +408,9 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         }
 
         if (!this.level().isClientSide() && this.level() instanceof ServerLevel serverLevel) {
+            // Anti-Burial Levitation (Auto Ground-Clearance System)
+            applyGroundClearance(serverLevel);
+
             // Surface block tearing during active phase
             if (this.tickCount >= getTearEndTick() && this.tickCount <= getHoldEndTick()) {
                 tearSurfaceBlocks(serverLevel);
@@ -424,6 +430,69 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
 
         if (this.tickCount >= getMaxLifetimeTicks()) {
             this.discard();
+        }
+    }
+
+    /**
+     * Anti-Burial Levitation (Auto Ground-Clearance System):
+     * Guarantees the supermassive singularity hovers at an altitude of 34-40 blocks above solid terrain,
+     * preventing its 108-block wide accretion disk from sinking or clipping into ground/buildings.
+     */
+    private void applyGroundClearance(ServerLevel level) {
+        if (this.tickCount > 70) return;
+
+        Vec3 pos = this.position();
+        BlockPos blockPos = BlockPos.containing(pos.x, pos.y, pos.z);
+
+        // 1. If spawned inside solid blocks, immediately scan upward into open air
+        BlockState bs = level.getBlockState(blockPos);
+        if (!bs.isAir() && bs.blocksMotion()) {
+            BlockPos.MutableBlockPos mpos = blockPos.mutable();
+            while (mpos.getY() < level.getMaxBuildHeight() && !level.getBlockState(mpos).isAir()) {
+                mpos.move(Direction.UP);
+            }
+            double safeY = mpos.getY() + 38.0d;
+            this.setPos(pos.x, safeY, pos.z);
+            return;
+        }
+
+        // 2. Trace downward to determine ground elevation
+        Vec3 downTrace = pos.subtract(0.0d, 55.0d, 0.0d);
+        HitResult groundHit = level.clip(new ClipContext(
+                pos, downTrace,
+                ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, this
+        ));
+
+        if (groundHit.getType() != HitResult.Type.MISS) {
+            double groundY = groundHit.getLocation().y;
+            double currentClearance = pos.y - groundY;
+            double desiredClearance = 38.0d;
+
+            // Check if there is an enclosed ceiling (e.g. cavern or Nether roof)
+            Vec3 upTrace = pos.add(0.0d, 45.0d, 0.0d);
+            HitResult ceilingHit = level.clip(new ClipContext(
+                    pos, upTrace,
+                    ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this
+            ));
+            if (ceilingHit.getType() != HitResult.Type.MISS) {
+                double ceilingY = ceilingHit.getLocation().y;
+                double availableGap = ceilingY - groundY;
+                if (availableGap > 12.0d) {
+                    desiredClearance = Math.min(desiredClearance, availableGap * 0.52d);
+                }
+            }
+
+            if (currentClearance < desiredClearance) {
+                double diff = desiredClearance - currentClearance;
+                if (this.tickCount <= 2) {
+                    // On initial spawn, instantly adjust to safe altitude
+                    this.setPos(pos.x, pos.y + diff, pos.z);
+                } else {
+                    // Smooth celestial ascension during opening seconds
+                    double step = Math.min(1.4d, Math.max(0.15d, diff * 0.16d));
+                    this.setPos(pos.x, pos.y + step, pos.z);
+                }
+            }
         }
     }
 

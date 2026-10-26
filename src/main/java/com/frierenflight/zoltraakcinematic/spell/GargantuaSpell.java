@@ -69,12 +69,12 @@ public class GargantuaSpell extends AbstractSpell {
 
     @Override
     public AnimationHolder getCastStartAnimation() {
-        return SpellAnimations.CHARGE_ANIMATION;
+        return AnimationHolder.none();
     }
 
     @Override
     public AnimationHolder getCastFinishAnimation() {
-        return SpellAnimations.FINISH_ANIMATION;
+        return AnimationHolder.none();
     }
 
     @Override
@@ -96,23 +96,23 @@ public class GargantuaSpell extends AbstractSpell {
                     targetPos = hitLoc.subtract(0, 4.0d, 0);
                 } else {
                     // Check if there is a ceiling above the target point before elevating
-                    Vec3 upTarget = hitLoc.add(0, 18.0d, 0);
+                    Vec3 upTarget = hitLoc.add(0, 40.0d, 0);
                     HitResult ceilingHit = level.clip(new ClipContext(
                             hitLoc.add(0, 0.5d, 0), upTarget,
                             ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity));
                     if (ceilingHit.getType() != HitResult.Type.MISS) {
                         double availableHeight = ceilingHit.getLocation().y - hitLoc.y;
-                        if (availableHeight > 6.0d) {
-                            targetPos = ceilingHit.getLocation().subtract(0, 2.5d, 0);
+                        if (availableHeight > 10.0d) {
+                            targetPos = ceilingHit.getLocation().subtract(0, 3.5d, 0);
                         } else {
-                            targetPos = hitLoc.add(0, Math.max(1.5d, availableHeight * 0.5d), 0);
+                            targetPos = hitLoc.add(0, Math.max(2.0d, availableHeight * 0.5d), 0);
                         }
                     } else {
                         targetPos = upTarget;
                     }
                 }
             } else {
-                targetPos = eyePos.add(lookVec.scale(48.0d));
+                targetPos = eyePos.add(lookVec.scale(64.0d)).add(0, 30.0d, 0);
             }
 
             // Spawn Gargantua singularity entity with scaled Black Hole Spell Power and Interstellar tilt

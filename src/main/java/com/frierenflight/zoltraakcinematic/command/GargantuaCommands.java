@@ -51,9 +51,9 @@ public class GargantuaCommands {
             caster = player;
             Vec3 eye = player.getEyePosition();
             Vec3 look = player.getViewVector(1.0f);
-            pos = eye.add(look.scale(24.0d));
+            pos = eye.add(look.scale(54.0d)).add(0, 36.0d, 0);
         } else {
-            pos = source.getPosition().add(0, 5, 0);
+            pos = source.getPosition().add(0, 38.0d, 0);
         }
 
         float spellPower = 500.0f;

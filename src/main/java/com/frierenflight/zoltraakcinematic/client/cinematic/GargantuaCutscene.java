@@ -34,22 +34,23 @@ public final class GargantuaCutscene {
         // Smoothstep progress curve
         float k = progress * progress * (3.0f - 2.0f * progress);
 
-        // Dolly Zoom: Camera pulls backward from 2.8 blocks to 6.2 blocks
-        double distance = Mth.lerp((double) k, 2.8d, 6.2d);
-        double heightOffset = Mth.lerp((double) k, 0.15d, 0.65d);
-        double sideOffset = Mth.lerp((double) k, 1.2d, 1.8d);
+        // Cinematic Over-The-Shoulder Aiming:
+        // Camera pulls back behind the right shoulder as arcane energy builds up
+        double distance = Mth.lerp((double) k, 2.4d, 5.2d);
+        double heightOffset = Mth.lerp((double) k, 0.45d, 0.95d);
+        double sideOffset = Mth.lerp((double) k, 1.25d, 1.65d);
 
-        // Position camera in front-right quarter of the caster
-        Vec3 camPos = eyePos.add(look.scale(distance))
+        // Position camera behind and to the right of the caster
+        Vec3 camPos = eyePos.subtract(look.scale(distance))
                 .add(right.scale(sideOffset))
                 .add(0.0d, heightOffset, 0.0d);
 
-        // Focal point centers on caster's upper torso / staff
-        Vec3 focalPoint = eyePos.subtract(0.0d, 0.2d, 0.0d);
+        // Focal point aims far forward along caster's gaze toward target horizon
+        Vec3 focalPoint = eyePos.add(look.scale(64.0d)).add(0.0d, 1.2d, 0.0d);
 
-        // Vertigo FOV compression: FOV narrows from 72 deg to 46 deg
-        float fov = Mth.lerp(k, 72.0f, 46.0f);
-        float roll = Mth.lerp(k, 0.0f, -3.2f);
+        // Dynamic cinematic FOV focus: narrows from 70 deg to 58 deg as singularity charges
+        float fov = Mth.lerp(k, 70.0f, 58.0f);
+        float roll = Mth.lerp(k, 0.0f, -2.0f);
 
         return new CameraPose(camPos, focalPoint, fov, roll);
     }
