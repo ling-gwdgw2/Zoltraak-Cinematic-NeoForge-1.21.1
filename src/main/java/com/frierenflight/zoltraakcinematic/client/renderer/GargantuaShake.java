@@ -54,7 +54,7 @@ public final class GargantuaShake {
                 int tearEnd = gargantua.getTearEndTick();
                 if (tearEnd > 0 && visualAge >= 0.0f && visualAge <= (float) tearEnd) {
                     float openProgress = visualAge / (float) tearEnd;
-                    float distFactor = (float) Mth.clamp(1.0 - dist / 80.0d, 0.0, 1.0);
+                    float distFactor = (float) Mth.clamp(1.0 - dist / 175.0d, 0.0, 1.0);
                     float jolt = (float) (Math.sin(openProgress * Math.PI) * 3.5f);
                     openingShake = jolt * distFactor;
                 }
@@ -63,7 +63,7 @@ public final class GargantuaShake {
                 float rumble = 0.0f;
                 int critEnd = gargantua.getCriticalEndTick();
                 if (visualAge > (float) tearEnd && visualAge < (float) critEnd) {
-                    float distFactor = (float) Mth.clamp(1.0 - dist / 80.0d, 0.0, 1.0);
+                    float distFactor = (float) Mth.clamp(1.0 - dist / 175.0d, 0.0, 1.0);
                     float baseRumble = 0.20f;
                     float crit = gargantua.criticality(partialTick);
                     rumble = (baseRumble + 4.5f * (crit * crit)) * distFactor;

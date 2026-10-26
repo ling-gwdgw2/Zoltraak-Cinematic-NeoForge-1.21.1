@@ -66,18 +66,18 @@ public final class GargantuaScreenFx {
             // Act 1: Rupture Flash on spawn
             if (visualAge >= 0.0f && !TEAR_OBSERVED_ENTITIES.contains(id)) {
                 TEAR_OBSERVED_ENTITIES.add(id);
-                if (visualAge <= 15.0f && dist <= 100.0d) {
-                    float distFactor = (float) Mth.clamp(1.0 - dist / 100.0d, 0.2, 1.0);
+                if (visualAge <= 15.0f && dist <= 150.0d) {
+                    float distFactor = (float) Mth.clamp(1.0 - dist / 150.0d, 0.2, 1.0);
                     triggerFlash(12, 0.65f * distFactor);
                 }
             }
 
             // Act 3: Critical Implosion (Silence & Darkness)
             if (visualAge > (float) critStart && visualAge <= (float) blastTick) {
-                if (dist <= 120.0d) {
+                if (dist <= 180.0d) {
                     float span = Math.max(1.0f, (float) (blastTick - critStart));
                     float progress = Mth.clamp((visualAge - (float) critStart) / span, 0.0f, 1.0f);
-                    float distFactor = (float) Mth.clamp(1.0 - dist / 120.0d, 0.1, 1.0);
+                    float distFactor = (float) Mth.clamp(1.0 - dist / 180.0d, 0.1, 1.0);
                     targetVignette = Math.max(targetVignette, (progress * 0.72f) * distFactor);
                 }
             }
@@ -86,8 +86,8 @@ public final class GargantuaScreenFx {
             if (visualAge >= (float) blastTick && !BLAST_OBSERVED_ENTITIES.contains(id)) {
                 BLAST_OBSERVED_ENTITIES.add(id);
                 // Only trigger the explosive blast and flash if the player was present during detonation
-                if (visualAge <= (float) blastTick + 15.0f && dist <= 160.0d) {
-                    float distFactor = (float) Mth.clamp(1.0 - dist / 160.0d, 0.15, 1.0);
+                if (visualAge <= (float) blastTick + 15.0f && dist <= 240.0d) {
+                    float distFactor = (float) Mth.clamp(1.0 - dist / 240.0d, 0.15, 1.0);
                     triggerFlash(45, 1.0f * distFactor);
 
                     // Play explosive detonation & tinnitus sounds

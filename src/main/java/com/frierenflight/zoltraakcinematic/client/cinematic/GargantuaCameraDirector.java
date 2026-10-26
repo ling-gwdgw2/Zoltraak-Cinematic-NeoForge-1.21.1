@@ -101,7 +101,7 @@ public final class GargantuaCameraDirector {
                 double closestDistSq = Double.MAX_VALUE;
                 for (GargantuaEntity g : activeSingularities) {
                     double d = g.distanceToSqr(mc.player);
-                    if (d < closestDistSq && d <= (140.0 * 140.0)) {
+                    if (d < closestDistSq && d <= (240.0 * 240.0)) {
                         closestDistSq = d;
                         closest = g;
                     }
@@ -179,7 +179,26 @@ public final class GargantuaCameraDirector {
 
         if (hit.getType() == HitResult.Type.BLOCK) {
             Vec3 dir = toward.normalize();
-            Vec3 safePos = hit.getLocation().subtract(dir.scale(0.45d));
+            Vec3 hitLoc = hit.getLocation();
+            double hitDist = hitLoc.distanceTo(from);
+
+            // If an obstacle would force the camera closer than 60 blocks (inside the 54-block disk),
+            // elevate camera upward to clear the obstacle while maintaining majestic distance
+            if (hitDist < 60.0d) {
+                Vec3 elevatedPos = pose.position().add(0.0d, 24.0d, 0.0d);
+                BlockHitResult elevatedHit = level.clip(new ClipContext(
+                        from, elevatedPos,
+                        ClipContext.Block.VISUAL, ClipContext.Fluid.NONE, viewer
+                ));
+                if (elevatedHit.getType() != HitResult.Type.BLOCK || elevatedHit.getLocation().distanceTo(from) > hitDist) {
+                    Vec3 safeElevated = (elevatedHit.getType() == HitResult.Type.BLOCK)
+                            ? elevatedHit.getLocation().subtract(dir.scale(0.5d))
+                            : elevatedPos;
+                    return new CameraPose(safeElevated, pose.look(), pose.fov(), pose.roll());
+                }
+            }
+
+            Vec3 safePos = hitLoc.subtract(dir.scale(0.45d));
             return new CameraPose(safePos, pose.look(), pose.fov(), pose.roll());
         }
 

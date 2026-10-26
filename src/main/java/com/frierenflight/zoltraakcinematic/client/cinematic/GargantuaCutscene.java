@@ -72,13 +72,13 @@ public final class GargantuaCutscene {
             float k = Mth.clamp(visualAge / (float) tearEnd, 0.0f, 1.0f);
             float smoothK = k * k * (3.0f - 2.0f * k);
 
-            // Camera sweeps back from 18 blocks to 38 blocks with upward lift
-            double dist = Mth.lerp((double) smoothK, 18.0d, 38.0d);
-            double height = Mth.lerp((double) smoothK, -2.0d, 8.0d);
+            // Camera sweeps back smoothly from 75 blocks to 110 blocks with majestic upward lift
+            double dist = Mth.lerp((double) smoothK, 75.0d, 110.0d);
+            double height = Mth.lerp((double) smoothK, 10.0d, 24.0d);
 
             Vec3 camPos = center.add(dist * 0.85d, height, dist * 0.52d);
-            float fov = Mth.lerp(smoothK, 78.0f, 68.0f);
-            float roll = (float) Math.sin(smoothK * Math.PI) * -4.5f;
+            float fov = Mth.lerp(smoothK, 74.0f, 65.0f);
+            float roll = (float) Math.sin(smoothK * Math.PI) * -3.5f;
 
             return new CameraPose(camPos, center, fov, roll);
         }
@@ -89,18 +89,18 @@ public final class GargantuaCutscene {
         if (visualAge > (float) critStart && visualAge <= (float) blastTick) {
             float span = Math.max(1.0f, (float) (blastTick - critStart));
             float k = Mth.clamp((visualAge - (float) critStart) / span, 0.0f, 1.0f);
-            float implosionK = (float) Math.pow(k, 2.5); // Accelerates inward
+            float implosionK = (float) Math.pow(k, 2.2); // Accelerates inward
 
-            // Camera zooms in from 45 blocks to 24 blocks
-            double dist = Mth.lerp((double) implosionK, 45.0d, 24.0d);
-            double height = Mth.lerp((double) implosionK, 6.0d, 14.0d);
+            // Camera zooms in from 110 blocks to 82 blocks
+            double dist = Mth.lerp((double) implosionK, 110.0d, 82.0d);
+            double height = Mth.lerp((double) implosionK, 22.0d, 30.0d);
 
-            double angle = (double) visualAge * 0.012d;
+            double angle = (double) visualAge * 0.010d;
             Vec3 camPos = center.add(Math.cos(angle) * dist, height, Math.sin(angle) * dist);
 
             // Hyper-frequency micro tremor in roll
-            float tremor = (float) Math.sin((double) visualAge * 1.8d) * 1.5f * implosionK;
-            float fov = Mth.lerp(implosionK, 68.0f, 76.0f);
+            float tremor = (float) Math.sin((double) visualAge * 1.8d) * 1.4f * implosionK;
+            float fov = Mth.lerp(implosionK, 65.0f, 73.0f);
 
             return new CameraPose(camPos, center, fov, tremor);
         }
@@ -112,13 +112,13 @@ public final class GargantuaCutscene {
             float k = Mth.clamp((visualAge - (float) blastTick) / 80.0f, 0.0f, 1.0f);
             float smoothK = k * (2.0f - k); // Deceleration curve
 
-            // Majestic wide panoramic shot at 78 blocks distance
-            double dist = Mth.lerp((double) smoothK, 62.0d, 82.0d);
-            double height = Mth.lerp((double) smoothK, 16.0d, 28.0d);
+            // Majestic wide panoramic shot pulling back from 118 blocks to 152 blocks
+            double dist = Mth.lerp((double) smoothK, 118.0d, 152.0d);
+            double height = Mth.lerp((double) smoothK, 28.0d, 48.0d);
 
             Vec3 camPos = center.add(dist * 0.707d, height, dist * 0.707d);
-            float fov = Mth.lerp(smoothK, 84.0f, 72.0f);
-            float roll = Mth.lerp(smoothK, -3.0f, 0.0f);
+            float fov = Mth.lerp(smoothK, 78.0f, 68.0f);
+            float roll = Mth.lerp(smoothK, -2.5f, 0.0f);
 
             return new CameraPose(camPos, center, fov, roll);
         }
@@ -126,9 +126,9 @@ public final class GargantuaCutscene {
         // -------------------------------------------------------------
         // Act 2: Grand Accretion Orbit & Gravitational Lensing (Holding Phase)
         // -------------------------------------------------------------
-        double orbitAngle = (double) (visualAge - (float) tearEnd) * 0.008d;
-        double dist = 48.0d + Math.sin((double) visualAge * 0.015d) * 4.0d;
-        double height = 6.0d + Math.cos((double) visualAge * 0.02d) * 5.0d;
+        double orbitAngle = (double) (visualAge - (float) tearEnd) * 0.007d;
+        double dist = 110.0d + Math.sin((double) visualAge * 0.012d) * 12.0d;
+        double height = 22.0d + Math.cos((double) visualAge * 0.016d) * 8.0d;
 
         Vec3 camPos = center.add(
                 Math.cos(orbitAngle) * dist,
@@ -136,7 +136,7 @@ public final class GargantuaCutscene {
                 Math.sin(orbitAngle) * dist
         );
 
-        float orbitRoll = (float) Math.sin(orbitAngle * 2.0d) * 1.8f;
-        return new CameraPose(camPos, center, 68.0f, orbitRoll);
+        float orbitRoll = (float) Math.sin(orbitAngle * 2.0d) * 1.6f;
+        return new CameraPose(camPos, center, 65.0f, orbitRoll);
     }
 }
