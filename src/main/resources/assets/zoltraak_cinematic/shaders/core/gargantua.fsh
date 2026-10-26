@@ -105,26 +105,45 @@ const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 60.0;
 const float GARG_TAU = 6.2831853;
 // Half-thickness at the inner and outer edge, in r_g. Slender, sleek proportions matching Interstellar
-const float GARG_THICK_INNER = 0.38;
-const float GARG_THICK_OUTER = 0.20;
+const float GARG_THICK_INNER = 0.13;
+const float GARG_THICK_OUTER = 0.06;
 
 /**
- * Disk colour by radius: pale white-yellow at the inner edge grading to radiant champagne gold,
- * glowing amber and interstellar bronze-orange, matching authentic Gargantua.
+ * Extended Reinhard tone curve with controlled white point (W = 3.6).
+ * Smoothly maps HDR emissive radiance into [0, 1], preserving rich golden/amber
+ * chromaticity and gas filament details in highlights without flat white clipping.
+ */
+vec3 tonemapGargantua(vec3 col) {
+    const float W2 = 12.96; // 3.6^2
+    vec3 mapped = (col * (vec3(1.0) + col / W2)) / (vec3(1.0) + col);
+    return clamp(mapped, 0.0, 1.0);
+}
+
+/**
+ * Authentic Interstellar multi-zone blackbody spectrum:
+ * t = 0.0: Incandescent golden-white plasma at the ISCO boundary
+ * t = 0.20: Radiant champagne gold
+ * t = 0.50: Deep glowing amber
+ * t = 0.80: Warm interstellar bronze & burnt orange
+ * t = 1.0: Smoky dark ruby-amber outer wisps
  */
 vec3 gargDiskColour(float t) {
-    vec3 c0 = vec3(1.000, 0.973, 0.902);
-    vec3 c1 = vec3(1.000, 0.839, 0.588);
-    vec3 c2 = vec3(0.988, 0.667, 0.337);
-    vec3 c3 = vec3(0.839, 0.424, 0.149);
+    vec3 c0 = vec3(1.000, 0.945, 0.830);
+    vec3 c1 = vec3(1.000, 0.790, 0.380);
+    vec3 c2 = vec3(0.980, 0.560, 0.180);
+    vec3 c3 = vec3(0.780, 0.300, 0.070);
+    vec3 c4 = vec3(0.380, 0.100, 0.020);
     float k = clamp(t, 0.0, 1.0);
-    if (k < 0.34) {
-        return mix(c0, c1, k / 0.34);
+    if (k < 0.20) {
+        return mix(c0, c1, k / 0.20);
     }
-    if (k < 0.67) {
-        return mix(c1, c2, (k - 0.34) / 0.33);
+    if (k < 0.50) {
+        return mix(c1, c2, (k - 0.20) / 0.30);
     }
-    return mix(c2, c3, (k - 0.67) / 0.33);
+    if (k < 0.80) {
+        return mix(c2, c3, (k - 0.50) / 0.30);
+    }
+    return mix(c3, c4, (k - 0.80) / 0.20);
 }
 
 float gargWhiteNoise(vec2 uv) {
@@ -270,27 +289,46 @@ void main() {
 
         float t = (radial - inner) / max(outer - inner, 0.001);
         float thickness = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t)
-                * mix(0.10, 1.35, noise);
+                * mix(0.15, 1.35, noise);
         float coverage = smoothstep(thickness, 0.0, abs(height));
         if (coverage <= 0.002) {
             continue;
         }
+
+        // Relativistic Doppler beaming for rotating Keplerian gas:
+        // Orbital velocity uPhi = cross(axis, planar) / radial
+        // Speed beta ~ sqrt(1 / radial)
+        vec3 uPhi = normalize(cross(axis, planar));
+        float beta = clamp(sqrt(1.0 / max(radial, 2.0)), 0.0, 0.55);
+        float betaLos = -dot(uPhi, d) * beta;
+        float gammaInv = sqrt(max(1.0 - beta * beta, 0.05));
+        float doppler = gammaInv / max(1.0 - betaLos, 0.08);
+        float dopplerFactor = clamp(pow(doppler, 3.2), 0.35, 2.6);
 
         // Seamless inner emission connecting smoothly right to the shadow boundary
         float profile = pow(1.0 - t, 1.4)
                 * smoothstep(0.0, 0.015, t) * smoothstep(1.0, 0.90, t);
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
         float grain = 0.35 + 0.65 * noise;
-        vec3 emission = gargDiskColour(t) * profile * max(DiskShape.w, 0.0)
-                * 9.0 * fed * grain;
 
-        // Front to back accumulation
-        // Deliberately small (0.22) so ray builds up over a dozen or more samples,
-        // giving deep volumetric structure and preventing opaque shell blowouts.
-        float local = clamp(coverage * profile * 0.22, 0.0, 1.0);
-        accum += emission * (1.0 - alpha) * local;
-        alpha += (1.0 - alpha) * local;
-        if (alpha > 0.99) {
+        // Step-size scaled density ensures identical optical depth across varying raymarch step sizes
+        float stepDensity = coverage * profile * grain * 2.2;
+        float stepAlpha = 1.0 - exp(-stepDensity * dt);
+
+        vec3 col = gargDiskColour(t);
+        // Doppler spectral shift: approaching side shifts hotter/whiter gold, receding shifts deeper amber
+        if (dopplerFactor > 1.0) {
+            col = mix(col, vec3(1.0, 0.95, 0.86), clamp((dopplerFactor - 1.0) * 0.35, 0.0, 0.5));
+        } else {
+            col = mix(col, vec3(0.80, 0.32, 0.08), clamp((1.0 - dopplerFactor) * 0.45, 0.0, 0.6));
+        }
+
+        vec3 stepEmission = col * (profile * max(DiskShape.w, 0.0) * 3.2 * fed * grain * dopplerFactor);
+
+        // Analytic radiative transfer: I_new = I_old + S * (1 - alpha) * stepAlpha
+        accum += stepEmission * (1.0 - alpha) * stepAlpha;
+        alpha += (1.0 - alpha) * stepAlpha;
+        if (alpha > 0.98) {
             break;
         }
     }
@@ -312,16 +350,16 @@ void main() {
     }
 
     // The photon ring: hugging the outer edge of the apparent shadow (critical curve)
-    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.14, 0.001), 2.0));
-    float second = exp(-pow((impact - shadowEdge * 1.035) / max(rg * 0.08, 0.001), 2.0))
+    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.026, 0.001), 2.0));
+    float second = exp(-pow((impact - shadowEdge * 1.025) / max(rg * 0.014, 0.001), 2.0))
             / 535.0;
     float ahead = step(0.0, along);
-    float ringGain = 0.32 * ahead * max(DiskShape.w, 0.0) * (0.30 + 0.70 * alpha)
+    float ringGain = 0.40 * ahead * max(DiskShape.w, 0.0) * (0.20 + 0.80 * alpha)
             * (1.0 + HoleState.y * 1.8);
     if (hitSolid && sceneDistance < holeDistance) {
         ringGain = 0.0;
     }
-    vec3 ring = gargDiskColour(0.0) * (first + second) * ringGain;
+    vec3 ring = vec3(1.0, 0.92, 0.78) * (first + second) * ringGain;
 
     // Open transition: 0.0 = untouched scene, 1.0 = fully active black hole
     float openFactor = clamp(HoleState.x, 0.0, 1.0);
@@ -401,8 +439,17 @@ void main() {
     // Smoothly blend the background between the untouched scene and the relativistic distortion
     vec3 blendedBg = mix(sceneColour, behindEffect, openFactor);
 
-    // Final composite: disk emission layered over the background + supernova
-    vec3 result = diskEmission + blendedBg * (1.0 - alpha * openFactor) + supernovaVfx;
+    // Emissive light from accretion disk, photon ring caustic, and supernova explosion
+    vec3 emissiveLight = tonemapGargantua(diskEmission + supernovaVfx);
+
+    // Final composite: emissive light layered over background
+    vec3 result = emissiveLight + blendedBg * (1.0 - alpha * openFactor);
+
+    // Soft-knee hue & saturation preserving compression to prevent ANY color channel clipping
+    float maxComp = max(result.r, max(result.g, result.b));
+    if (maxComp > 1.0) {
+        result = result / maxComp * (1.0 - exp(-maxComp));
+    }
 
     fragColor = vec4(result, 1.0);
 }
