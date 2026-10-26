@@ -105,16 +105,16 @@ const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 60.0;
 const float GARG_TAU = 6.2831853;
 // Half-thickness at the inner and outer edge, in r_g. Slender, sleek proportions matching Interstellar
-const float GARG_THICK_INNER = 0.13;
-const float GARG_THICK_OUTER = 0.06;
+const float GARG_THICK_INNER = 0.32;
+const float GARG_THICK_OUTER = 0.16;
 
 /**
- * Extended Reinhard tone curve with controlled white point (W = 3.6).
+ * Extended Reinhard tone curve with controlled white point (W = 5.0).
  * Smoothly maps HDR emissive radiance into [0, 1], preserving rich golden/amber
  * chromaticity and gas filament details in highlights without flat white clipping.
  */
 vec3 tonemapGargantua(vec3 col) {
-    const float W2 = 12.96; // 3.6^2
+    const float W2 = 25.0; // 5.0^2
     vec3 mapped = (col * (vec3(1.0) + col / W2)) / (vec3(1.0) + col);
     return clamp(mapped, 0.0, 1.0);
 }
@@ -239,7 +239,8 @@ void main() {
         float height = dot(p, axis);
         float diskThick = mix(GARG_THICK_INNER, GARG_THICK_OUTER, clamp((radius - inner) / max(outer - inner, 0.001), 0.0, 1.0));
         float diskDist = max(abs(height) - diskThick, 0.0);
-        float dt = clamp(min(radius * 0.08 + diskDist * 0.4, radius * 0.18), 0.05, 0.95);
+        // Adaptive step size: shrink to 0.09 near the disk so rays smoothly sample the volumetric gas without skipping
+        float dt = clamp(min(radius * 0.10, 0.09 + diskDist * 0.45), 0.05, 0.85);
 
         p += d * dt;
         travelledBlocks += dt * rg;
@@ -307,27 +308,24 @@ void main() {
 
         // Seamless inner emission connecting smoothly right to the shadow boundary
         float profile = pow(1.0 - t, 1.4)
-                * smoothstep(0.0, 0.015, t) * smoothstep(1.0, 0.90, t);
+                * smoothstep(0.0, 0.02, t) * smoothstep(1.0, 0.90, t);
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
         float grain = 0.35 + 0.65 * noise;
-
-        // Step-size scaled density ensures identical optical depth across varying raymarch step sizes
-        float stepDensity = coverage * profile * grain * 2.2;
-        float stepAlpha = 1.0 - exp(-stepDensity * dt);
 
         vec3 col = gargDiskColour(t);
         // Doppler spectral shift: approaching side shifts hotter/whiter gold, receding shifts deeper amber
         if (dopplerFactor > 1.0) {
-            col = mix(col, vec3(1.0, 0.95, 0.86), clamp((dopplerFactor - 1.0) * 0.35, 0.0, 0.5));
+            col = mix(col, vec3(1.0, 0.96, 0.88), clamp((dopplerFactor - 1.0) * 0.35, 0.0, 0.5));
         } else {
-            col = mix(col, vec3(0.80, 0.32, 0.08), clamp((1.0 - dopplerFactor) * 0.45, 0.0, 0.6));
+            col = mix(col, vec3(0.82, 0.34, 0.08), clamp((1.0 - dopplerFactor) * 0.45, 0.0, 0.6));
         }
 
-        vec3 stepEmission = col * (profile * max(DiskShape.w, 0.0) * 3.2 * fed * grain * dopplerFactor);
+        // Volumetric opacity accumulation per step: continuous, smooth, and non-banded
+        float local = clamp(coverage * profile * (0.24 * grain), 0.0, 1.0);
+        vec3 emission = col * (profile * max(DiskShape.w, 0.0) * 6.5 * fed * grain * dopplerFactor);
 
-        // Analytic radiative transfer: I_new = I_old + S * (1 - alpha) * stepAlpha
-        accum += stepEmission * (1.0 - alpha) * stepAlpha;
-        alpha += (1.0 - alpha) * stepAlpha;
+        accum += emission * (1.0 - alpha) * local;
+        alpha += (1.0 - alpha) * local;
         if (alpha > 0.98) {
             break;
         }
@@ -350,16 +348,16 @@ void main() {
     }
 
     // The photon ring: hugging the outer edge of the apparent shadow (critical curve)
-    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.026, 0.001), 2.0));
-    float second = exp(-pow((impact - shadowEdge * 1.025) / max(rg * 0.014, 0.001), 2.0))
+    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.075, 0.001), 2.0));
+    float second = exp(-pow((impact - shadowEdge * 1.03) / max(rg * 0.040, 0.001), 2.0))
             / 535.0;
     float ahead = step(0.0, along);
-    float ringGain = 0.40 * ahead * max(DiskShape.w, 0.0) * (0.20 + 0.80 * alpha)
+    float ringGain = 0.50 * ahead * max(DiskShape.w, 0.0) * (0.25 + 0.75 * alpha)
             * (1.0 + HoleState.y * 1.8);
     if (hitSolid && sceneDistance < holeDistance) {
         ringGain = 0.0;
     }
-    vec3 ring = vec3(1.0, 0.92, 0.78) * (first + second) * ringGain;
+    vec3 ring = vec3(1.0, 0.94, 0.82) * (first + second) * ringGain;
 
     // Open transition: 0.0 = untouched scene, 1.0 = fully active black hole
     float openFactor = clamp(HoleState.x, 0.0, 1.0);
