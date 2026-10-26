@@ -227,7 +227,8 @@ public final class GargantuaPostProcessor {
                 shader.safeGetUniform("HoleState").set(opened, critAndBlast, timeSec, swallowed);
 
                 float raymarchSteps = (float) Math.max(64, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getRaymarchStepCount());
-                shader.safeGetUniform("DiskShape").set(3.83f, 13.5f, raymarchSteps, brightness);
+                float diskOuterRadius = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getAccretionDiskOuterRadius();
+                shader.safeGetUniform("DiskShape").set(3.83f, diskOuterRadius, raymarchSteps, brightness);
                 shader.safeGetUniform("InverseProjectionMat").set(invProj);
 
                 RenderSystem.setShader(() -> shader);

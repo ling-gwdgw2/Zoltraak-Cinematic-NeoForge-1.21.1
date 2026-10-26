@@ -18,6 +18,7 @@ public class ZoltraakCinematicClientConfig {
 
     // Shader Performance
     public static final ModConfigSpec.ConfigValue<String> BLACK_HOLE_RAYMARCH_STEPS;
+    public static final ModConfigSpec.DoubleValue ACCRETION_DISK_OUTER_RADIUS;
     public static final ModConfigSpec.BooleanValue ENABLE_ANAMORPHIC_LENS_FLARES;
     public static final ModConfigSpec.BooleanValue ENABLE_GRAVITATIONAL_LENSING;
     public static final ModConfigSpec.BooleanValue ENABLE_CHROMATIC_ABERRATION;
@@ -62,6 +63,11 @@ public class ZoltraakCinematicClientConfig {
                          "Allowed values: LOW (32 steps), MEDIUM (64 steps), HIGH (96 steps), ULTRA (128 steps).",
                          "Use LOW for integrated graphics (iGPUs) or handheld devices like Steam Deck.")
                 .define("blackHoleRaymarchSteps", "MEDIUM");
+
+        ACCRETION_DISK_OUTER_RADIUS = builder
+                .comment("Outer radius of Gargantua's accretion disk in gravitational radii (r_g).",
+                         "Higher values create a wider, more majestic interstellar gas disk (Default: 22.0, Original: 13.5).")
+                .defineInRange("accretionDiskOuterRadius", 22.0d, 8.0d, 40.0d);
 
         ENABLE_ANAMORPHIC_LENS_FLARES = builder
                 .comment("Whether horizontal 16-sample Gaussian anamorphic streak flares render on beam cores.")
@@ -130,6 +136,10 @@ public class ZoltraakCinematicClientConfig {
             case "ULTRA" -> 128;
             default -> 64; // MEDIUM
         };
+    }
+
+    public static float getAccretionDiskOuterRadius() {
+        return SPEC.isLoaded() ? ACCRETION_DISK_OUTER_RADIUS.get().floatValue() : 22.0f;
     }
 
     public static boolean isAnamorphicLensFlaresEnabled() {

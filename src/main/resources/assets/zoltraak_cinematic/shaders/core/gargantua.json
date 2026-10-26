@@ -39,7 +39,7 @@
       "name": "DiskShape",
       "type": "float",
       "count": 4,
-      "values": [3.83, 13.5, 64.0, 1.0]
+      "values": [3.83, 22.0, 64.0, 1.0]
     },
     {
       "name": "DiskU",

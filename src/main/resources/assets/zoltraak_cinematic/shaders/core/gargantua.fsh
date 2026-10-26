@@ -104,7 +104,7 @@ uniform vec4 DiskU;
 const int GARG_STEPS_MAX = 128;
 const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
-const float GARG_ESCAPE = 60.0;
+const float GARG_ESCAPE = 80.0;
 const float GARG_TAU = 6.2831853;
 // Half-thickness at the inner and outer edge, in r_g. Slender, sleek proportions matching Interstellar
 const float GARG_THICK_INNER = 0.38;
