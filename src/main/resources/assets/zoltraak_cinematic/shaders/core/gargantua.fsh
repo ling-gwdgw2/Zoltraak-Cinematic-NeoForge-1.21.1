@@ -23,13 +23,15 @@ vec3 gargCosmicSky(vec3 dir, float time, float sceneLum) {
     float n3 = dot(textureLod(NoiseSampler, fract(nebUv * 5.2 - vec2(0.48, 0.22)), 0.0).rgb, vec3(0.333));
     float nebDensity = pow(clamp(n1 * 0.55 + n2 * 0.32 + n3 * 0.18 - 0.20, 0.0, 1.0), 1.5);
 
-    // Cosmic color palette: deep indigo, celestial violet, radiant stardust gold
-    vec3 nebBase = vec3(0.06, 0.12, 0.36);
-    vec3 nebMid = vec3(0.46, 0.18, 0.62);
+    // Cosmic nebula palette (Solas Shader celestial aesthetic): deep interstellar void, emerald-teal auroral gas, celestial violet, radiant stardust gold
+    vec3 nebBase = vec3(0.03, 0.07, 0.20);
+    vec3 nebEmerald = vec3(0.06, 0.38, 0.26);
+    vec3 nebViolet = vec3(0.42, 0.16, 0.58);
     vec3 nebHighlight = vec3(1.0, 0.82, 0.45);
-    vec3 nebCol = mix(nebBase, nebMid, clamp(n2 * 1.6, 0.0, 1.0));
-    nebCol = mix(nebCol, nebHighlight, pow(n3, 2.2));
-    vec3 nebulaLight = nebCol * (nebDensity * 2.6);
+    vec3 nebCol = mix(nebBase, nebEmerald, clamp(n1 * 1.6, 0.0, 1.0));
+    nebCol = mix(nebCol, nebViolet, clamp(n2 * 1.4 - 0.2, 0.0, 1.0));
+    nebCol = mix(nebCol, nebHighlight, pow(n3, 2.0));
+    vec3 nebulaLight = nebCol * (nebDensity * 2.8);
 
     // 2. Multi-scale Procedural Diamond Starfield
     // A. Dense distant stellar field
@@ -217,7 +219,8 @@ void main() {
     }
     vec3 diskV = cross(axis, diskU);
 
-    p += d * (gargWhiteNoise(gl_FragCoord.xy) * 0.35);
+    // Subtle sub-step jitter: prevents raymarch stepping artifacts without generating salt-and-pepper grain
+    p += d * (gargWhiteNoise(gl_FragCoord.xy) * 0.04);
 
     float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 64.0;
     int steps = int(mix(targetSteps * 0.45, targetSteps,
@@ -288,30 +291,30 @@ void main() {
         );
         float flowAngle = atan(rotatedPos.y, rotatedPos.x);
 
-        // 3. Multi-octave Flowing Gas Plasma & Turbulent Boiling Eddies
+        // 3. Multi-octave Flowing Gas Plasma & Turbulent Boiling Eddies (Silky-Smooth Nebular Volumetrics)
         float gasNoise = 0.0;
         float weight = 0.0;
-        float boilingTime = time * 0.45;
-        for (int octave = 0; octave < 3; ++octave) {
+        float boilingTime = time * 0.40;
+        for (int octave = 0; octave < 2; ++octave) {
             float freq = pow(2.0, float(octave));
-            vec2 uv = rotatedPos * (0.040 * freq);
+            vec2 uv = rotatedPos * (0.016 * freq);
             // Dynamic fluid convection curls & eddy boiling
             vec2 eddy = vec2(
-                sin(uv.y * 3.14159 + uv.x + boilingTime * freq) * 0.07,
-                cos(uv.x * 3.14159 - uv.y + boilingTime * freq * 0.8) * 0.07
+                sin(uv.y * 2.5 + boilingTime * freq) * 0.05,
+                cos(uv.x * 2.5 + boilingTime * freq * 0.85) * 0.05
             );
             float layer = 1.0 / freq;
-            float sampleVal = dot(textureLod(NoiseSampler, fract(uv + eddy), 0.0).rgb, vec3(0.299, 0.587, 0.114));
+            float sampleVal = dot(textureLod(NoiseSampler, fract(uv + eddy), 0.0).rgb, vec3(0.3333));
             gasNoise += layer * sampleVal;
             weight += layer;
         }
         float noise = gasNoise / max(weight, 0.001);
-        noise = smoothstep(0.18, 0.82, noise);
+        noise = smoothstep(0.12, 0.88, noise);
 
-        // 4. Azimuthal Gas Filaments (Whipping along orbit, perfectly periodic in 2*pi, ZERO comb-teeth artifacts)
-        float stream1 = sin(flowAngle * 3.0 + noise * 3.8);
-        float stream2 = cos(flowAngle * 5.0 - log(max(flowRadial, 1.0)) * 2.2 + noise * 2.4);
-        float filament = clamp(noise * (0.72 + 0.30 * stream1 + 0.18 * stream2), 0.0, 1.0);
+        // 4. Azimuthal Gas Filaments (Silky flowing ribbons whipping along orbit, 100% periodic, ZERO noise speckles)
+        float stream1 = sin(flowAngle * 2.0) * 0.5 + 0.5;
+        float stream2 = cos(flowAngle * 3.0 - log(max(flowRadial / inner, 1.0)) * 1.5) * 0.5 + 0.5;
+        float filament = clamp(noise * 0.70 + (stream1 * 0.20 + stream2 * 0.10) * noise, 0.0, 1.0);
 
         // 5. Gaussian Volumetric Scale-Height Atmosphere: gives thick, soft 3D gaseous glow
         float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.65 + 0.35 * filament);
@@ -327,18 +330,25 @@ void main() {
         float dopplerFactor = clamp(1.0 + viewDoppler * 0.72, 0.28, 2.7);
         float dopplerBoost = pow(dopplerFactor, 2.6);
 
-        // 7. Blackbody Temperature Shift & Radiative Profile
+        // 7. Blackbody Temperature Shift & Radiative Profile (Solas-grade Incandescent Core)
         float radialProfile = pow(1.0 - t, 1.45)
                 * smoothstep(0.0, 0.035, t) * smoothstep(1.0, 0.82, t);
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
 
         float colorTemp = clamp(t - (filament - 0.5) * 0.22 - viewDoppler * 0.28, 0.0, 1.0);
         vec3 baseCol = gargDiskColour(colorTemp);
-        vec3 hotCore = vec3(1.0, 0.98, 0.95) * pow(max(0.0, 1.0 - t * 2.2), 2.2) * max(0.0, viewDoppler);
 
-        float intensity = (0.28 + 1.20 * pow(filament, 1.3)) * dopplerBoost;
-        vec3 emission = (baseCol + hotCore * 0.45) * radialProfile * max(DiskShape.w, 0.0)
-                * 9.0 * fed * intensity;
+        // Solas-grade Incandescent White-Hot Core:
+        // The innermost accretion disk reaches tens of millions of Kelvin, glowing brilliant incandescent white-gold
+        // across the entire inner equator (not just on the approaching side)
+        float innerHeat = pow(max(0.0, 1.0 - t * 1.75), 1.8);
+        vec3 incandescent = vec3(1.35, 1.25, 1.15) * innerHeat;
+        // Approaching side relativistic Doppler boost
+        vec3 dopplerBoostCol = vec3(0.8, 1.0, 1.2) * (max(0.0, viewDoppler) * innerHeat * 0.85);
+
+        float intensity = (0.35 + 1.10 * pow(filament, 1.2)) * dopplerBoost;
+        vec3 emission = (baseCol + incandescent + dopplerBoostCol) * radialProfile * max(DiskShape.w, 0.0)
+                * 8.5 * fed * intensity;
 
         // 8. Physical Beer-Lambert Volumetric Integration (Step-Length Invariant: completely eliminates concentric raymarch rings)
         float density = verticalCoverage * radialProfile * (0.22 + 0.48 * filament);
@@ -394,17 +404,33 @@ void main() {
         }
     }
 
-    // The photon ring: hugging the outer edge of the apparent shadow (critical curve)
-    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.14, 0.001), 2.0));
-    float second = exp(-pow((impact - shadowEdge * 1.035) / max(rg * 0.08, 0.001), 2.0))
-            / 535.0;
+    // --- EINSTEIN PHOTON RING (CRITICAL CURVE) ---
+    // The luminous boundary formed by light ray orbits looping around the photon sphere.
+    // In Solas Shader and real astrophysics, this is an unbroken, brilliant 360-degree circle of light.
+    float ringDist = impact - shadowEdge;
+    // Inner mask: strict zero inside event horizon shadow, sharp rise at shadow edge
+    float ringInnerMask = smoothstep(-rg * 0.015, rg * 0.015, ringDist);
+
+    // 1. Razor-sharp incandescent core ring (ultra-thin intense white line)
+    float ringCore = exp(-pow(ringDist / max(rg * 0.032, 0.001), 2.0)) * ringInnerMask;
+
+    // 2. Secondary Einstein deflection fringe
+    float ringSecondary = exp(-pow((ringDist - rg * 0.045) / max(rg * 0.020, 0.001), 2.0)) * ringInnerMask * 0.45;
+
+    // 3. Radiant solar golden corona (soft halo bathing the outer edge)
+    float ringHalo = exp(-pow(max(ringDist, 0.0) / max(rg * 0.22, 0.001), 1.6)) * ringInnerMask;
+
+    // Color blending: dazzling incandescent white-hot core + warm radiant champagne/gold corona
+    vec3 ringCoreCol = vec3(1.0, 0.99, 0.96) * (ringCore * 4.5 + ringSecondary * 2.2);
+    vec3 ringHaloCol = vec3(1.0, 0.78, 0.35) * (ringHalo * 1.5);
+    vec3 ringComposite = ringCoreCol + ringHaloCol;
+
     float ahead = step(0.0, along);
-    float ringGain = 0.32 * ahead * max(DiskShape.w, 0.0) * (0.30 + 0.70 * alpha)
-            * (1.0 + crit * 1.8);
+    float ringGain = ahead * max(DiskShape.w, 0.0) * (1.0 + crit * 1.8);
     if (hitSolid && sceneDistance < frontHoleDist) {
         ringGain = 0.0;
     }
-    vec3 ring = gargDiskColour(0.0) * (first + second) * ringGain;
+    vec3 ring = ringComposite * ringGain;
 
     // Emissive disk & photon ring (superheated and energized during detonation)
     float blastDiskEnergize = 1.0 + blast * 3.5;
@@ -412,10 +438,10 @@ void main() {
 
     // --- ACES FILMIC TONE MAPPING FOR ACCRETION DISK ---
     // Smoothly compresses high dynamic range radiance into display space:
-    // Prevents flat blown-out #FFFFFF clipping, preserving rich solar gold, amber, and bronze embers.
-    vec3 diskToneMapped = diskRaw / (diskRaw + vec3(1.18, 1.35, 1.62));
+    // Allows brilliant pure white to shine on the photon ring & core, while preserving rich solar gold and amber embers.
+    vec3 diskToneMapped = diskRaw / (diskRaw + vec3(0.95, 1.10, 1.30));
     // Gentle vibrancy lift for filmic glow
-    vec3 diskEmission = diskToneMapped * (1.0 + 0.28 * smoothstep(0.0, 0.75, diskToneMapped));
+    vec3 diskEmission = diskToneMapped * (1.0 + 0.25 * smoothstep(0.0, 0.75, diskToneMapped));
 
     // Background behind the disk
     vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? lensedScene : background;

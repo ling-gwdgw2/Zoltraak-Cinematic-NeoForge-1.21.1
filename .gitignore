@@ -34,3 +34,6 @@ scratch/
 
 # Local Libraries (Game & Dependency jars are ignored to comply with Mojang EULA & keep repository clean)
 libs/
+
+# External reference shaders
+Solas Shader*/
