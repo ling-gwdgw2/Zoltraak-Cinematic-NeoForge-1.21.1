@@ -269,42 +269,49 @@ void main() {
         vec2 flat2 = vec2(dot(planar, diskU), dot(planar, diskV));
         float t = clamp((radial - inner) / max(outer - inner, 0.001), 0.0, 1.0);
 
-        // 1. Keplerian Differential Rotation (Omega ~ r^-1.5)
+        // 1. Keplerian Differential Rotation + Inward Accretion Infall Flow (Cinematic Interstellar Motion)
         float keplerSpeed = pow(inner / max(radial, inner), 1.5);
-        float orbitalPhase = time * 0.85 * keplerSpeed;
+        // Fast, energetic relativistic inner orbit grading outward
+        float orbitalPhase = time * 2.2 * keplerSpeed;
+        // Inward accretion flow: gas visibly spirals toward the event horizon
+        float accretionInflow = time * 0.40 * sqrt(inner / max(radial, inner));
+        float flowRadial = radial + accretionInflow;
 
         // 2. Continuous 2D Rotated Coordinates (100% Seamless, Zero Branch Cut, No Seam at 360 deg)
         // Rotate flat2 in Cartesian space backwards by orbital phase + logarithmic spiral twist
-        float rotAngle = -orbitalPhase + log(max(radial / inner, 1.0)) * 1.65;
+        float rotAngle = -orbitalPhase + log(max(flowRadial / inner, 1.0)) * 2.0;
         float cosA = cos(rotAngle);
         float sinA = sin(rotAngle);
         vec2 rotatedPos = vec2(
             flat2.x * cosA - flat2.y * sinA,
             flat2.x * sinA + flat2.y * cosA
         );
+        float flowAngle = atan(rotatedPos.y, rotatedPos.x);
 
-        // 3. Multi-octave Smooth Gas FBM across 2D Swirling Space (Zero Moiré, Organic Cloud Eddies)
+        // 3. Multi-octave Flowing Gas Plasma & Turbulent Boiling Eddies
         float gasNoise = 0.0;
         float weight = 0.0;
+        float boilingTime = time * 0.45;
         for (int octave = 0; octave < 3; ++octave) {
             float freq = pow(2.0, float(octave));
-            vec2 uv = rotatedPos * (0.042 * freq);
-            // Subtle harmonic domain warp to simulate fluid convection curls
-            vec2 warp = vec2(
-                sin(uv.y * 3.14159 + uv.x) * 0.08,
-                cos(uv.x * 3.14159 - uv.y) * 0.08
+            vec2 uv = rotatedPos * (0.040 * freq);
+            // Dynamic fluid convection curls & eddy boiling
+            vec2 eddy = vec2(
+                sin(uv.y * 3.14159 + uv.x + boilingTime * freq) * 0.07,
+                cos(uv.x * 3.14159 - uv.y + boilingTime * freq * 0.8) * 0.07
             );
             float layer = 1.0 / freq;
-            float sampleVal = dot(textureLod(NoiseSampler, fract(uv + warp), 0.0).rgb, vec3(0.299, 0.587, 0.114));
+            float sampleVal = dot(textureLod(NoiseSampler, fract(uv + eddy), 0.0).rgb, vec3(0.299, 0.587, 0.114));
             gasNoise += layer * sampleVal;
             weight += layer;
         }
         float noise = gasNoise / max(weight, 0.001);
-        noise = smoothstep(0.20, 0.80, noise);
+        noise = smoothstep(0.18, 0.82, noise);
 
-        // 4. Broad Interstellar Gas Streamers & Dust Lanes (Low-frequency, completely free of Moiré rings)
-        float broadStreamer = sin((rotatedPos.x + rotatedPos.y) * 0.15 + noise * 3.2);
-        float filament = clamp(noise * (0.80 + 0.28 * broadStreamer), 0.0, 1.0);
+        // 4. Azimuthal Gas Filaments (Whipping along orbit, perfectly periodic in 2*pi, ZERO comb-teeth artifacts)
+        float stream1 = sin(flowAngle * 3.0 + noise * 3.8);
+        float stream2 = cos(flowAngle * 5.0 - log(max(flowRadial, 1.0)) * 2.2 + noise * 2.4);
+        float filament = clamp(noise * (0.72 + 0.30 * stream1 + 0.18 * stream2), 0.0, 1.0);
 
         // 5. Gaussian Volumetric Scale-Height Atmosphere: gives thick, soft 3D gaseous glow
         float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.65 + 0.35 * filament);
