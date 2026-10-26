@@ -20,12 +20,12 @@ dedicated GLSL 150 shaders, JSON configurations, and textures are custom-built
 and authored from the ground up without using third-party proprietary code.
 
 Core Shaders (100% Custom):
-  - zoltraak_beam (.fsh, .vsh, .json)
-  - black_zoltraak_beam (.fsh, .vsh, .json)
-  - great_zoltraak_white (.fsh, .vsh, .json)
-  - great_zoltraak_black (.fsh, .vsh, .json)
-  - great_zoltraak_plume (.fsh, .vsh, .json)
-  - corona (.fsh, .vsh, .json)
+  - cinematic_photon_beam (.fsh, .vsh, .json)
+  - cinematic_abyssal_beam (.fsh, .vsh, .json)
+  - cinematic_great_photon (.fsh, .vsh, .json)
+  - cinematic_great_abyssal (.fsh, .vsh, .json)
+  - cinematic_plasma_plume (.fsh, .vsh, .json)
+  - cinematic_singularity_corona (.fsh, .vsh, .json)
   - rapid_zoltraak_bullet (.fsh, .vsh, .json)
   - magic_circle & black_magic_circle (.fsh, .vsh, .json)
   - zoltraak_impact (.fsh, .vsh, .json)
@@ -40,10 +40,10 @@ Textures & GUI Icons:
   - defense.png: Custom 64x64 hexagonal mana barrier spell icon
 
 Audio Sound Effects (100% In-House Synthesized):
-  - zoltraak_charge.ogg: Mathematically synthesized rising mana swell
-  - zoltraak_fire.ogg: Supersonic laser transient & photonic plasma hiss
-  - zoltraak_great_fire.ogg: Sub-bass seismic roar & cavernous reverb wash
-  - zoltraak_impact.ogg: Kinetic fracture pop & crater shockwave rumble
+  - cinematic_charge.ogg: Mathematically synthesized rising mana swell
+  - cinematic_fire.ogg: Supersonic laser transient & photonic plasma hiss
+  - cinematic_great_fire.ogg: Sub-bass seismic roar & cavernous reverb wash
+  - cinematic_impact.ogg: Kinetic fracture pop & crater shockwave rumble
 
 
 3. HISTORICAL ATTRIBUTION & PROTOTYPE NOTICE

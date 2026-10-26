@@ -30,12 +30,12 @@ public final class ZoltraakCinematicShaders {
 
    @SubscribeEvent
    public static void onRegisterShaders(RegisterShadersEvent e) {
-      registerSafe(e, "corona", s -> corona = s);
-      registerSafe(e, "zoltraak_beam", s -> zoltraak = s);
-      registerSafe(e, "black_zoltraak_beam", s -> blackZoltraak = s);
-      registerSafe(e, "great_zoltraak_black", s -> greatBlack = s);
-      registerSafe(e, "great_zoltraak_white", s -> greatWhite = s);
-      registerSafe(e, "great_zoltraak_plume", s -> greatPlume = s);
+      registerSafe(e, "cinematic_singularity_corona", s -> corona = s);
+      registerSafe(e, "cinematic_photon_beam", s -> zoltraak = s);
+      registerSafe(e, "cinematic_abyssal_beam", s -> blackZoltraak = s);
+      registerSafe(e, "cinematic_great_abyssal", s -> greatBlack = s);
+      registerSafe(e, "cinematic_great_photon", s -> greatWhite = s);
+      registerSafe(e, "cinematic_plasma_plume", s -> greatPlume = s);
       registerSafe(e, "magic_circle", s -> magicCircle = s);
       registerSafe(e, "black_magic_circle", s -> blackMagicCircle = s);
       registerSafe(e, "defense_barrier", DefaultVertexFormat.POSITION_COLOR, s -> defenseBarrier = s);

@@ -29,12 +29,12 @@
 เดิมทีระบบเคยพึ่งพาโมดูลภายนอกอย่าง Photon และ KilaGraph แต่ในสถาปัตยกรรมปัจจุบัน ม็อดได้รับการพัฒนาสู่ **Pure Procedural Geometry & Dedicated GLSL 150 Shader Architecture**:
 - **Procedural Vector Mesh Engine (Blaze3D & JOML)**: คำนวณโครงสร้าง Mesh สดแบบ Real-Time ด้วยหลักคณิตศาสตร์เรขาคณิต (Dynamic Ribbons, Arcs, Spiral Rings, Tapered Cylinders) จึงให้ความลื่นไหลระดับภาพยนตร์โดยไม่ต้องพึ่งโมเดลภายนอก
 - **Native Core GLSL 150 Shaders (100% Original Clean-Room Shaders)**:
-  - `zoltraak_beam`: Procedural super-Gaussian white core ($e^{-(y/\text{core})^4}$), supersonic longitudinal ionization ripples, and aerodynamic arrowhead tip
-  - `black_zoltraak_beam`: Pure obsidian void core, crackling ash-lightning filaments, and royal violet / silver-lavender boundary ionization
-  - `great_zoltraak_white`: 3D cylindrical volumetric raymarching, Fresnel facing modulation, and catastrophic plasma discharge
-  - `great_zoltraak_black`: 3D cylindrical volumetric void raymarching, charcoal-violet soot turbulence, and silver-lavender rim discharge
-  - `great_zoltraak_plume`: Lateral fluid plume wave dynamics, dual-tone light/dark mode support, and dielectric spark breaking
-  - `corona`: Demonic gravitational singularity accretion corona with logarithmic inflow spiral and photonic photon sphere
+  - `cinematic_photon_beam`: Procedural super-Gaussian white core ($e^{-(y/\text{core})^4}$), supersonic longitudinal ionization ripples, and aerodynamic arrowhead tip
+  - `cinematic_abyssal_beam`: Pure obsidian void core, crackling ash-lightning filaments, and royal violet / silver-lavender boundary ionization
+  - `cinematic_great_photon`: 3D cylindrical volumetric raymarching, Fresnel facing modulation, and catastrophic plasma discharge
+  - `cinematic_great_abyssal`: 3D cylindrical volumetric void raymarching, charcoal-violet soot turbulence, and silver-lavender rim discharge
+  - `cinematic_plasma_plume`: Lateral fluid plume wave dynamics, dual-tone light/dark mode support, and dielectric spark breaking
+  - `cinematic_singularity_corona`: Demonic gravitational singularity accretion corona with logarithmic inflow spiral and photonic photon sphere
   - `rapid_zoltraak_bullet`: Supersonic aerodynamic laser-needle bullet with diamond taper
   - `magic_circle` / `black_magic_circle`: Procedural runic mandala and anime magic circles
   - `zoltraak_impact`: Dynamic crater shockwave, expanding plasma bloom, and dust billow

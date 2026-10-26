@@ -18,12 +18,12 @@ As of **Version 1.0.4** and all subsequent releases:
 
 - **100% Original Codebase**: All Java source code, procedural vector mesh algorithms (Blaze3D / JOML), GLSL 150 core shaders, and shader JSON configurations are 100% original, clean-room creations developed independently.
 - **Dedicated Custom Shaders**:
-  - `zoltraak_beam` (`.fsh`, `.vsh`, `.json`): Custom super-Gaussian core formulation ($e^{-(y/\text{core})^4}$), supersonic longitudinal ionization ripples, and diamond arrowhead tapering.
-  - `black_zoltraak_beam` (`.fsh`, `.vsh`, `.json`): Pure obsidian void core, crackling ash-lightning filaments, and silver-lavender boundary ionization.
-  - `great_zoltraak_white` (`.fsh`, `.vsh`, `.json`): 3D cylindrical volumetric raymarching, Fresnel facing modulation, and plasma discharge.
-  - `great_zoltraak_black` (`.fsh`, `.vsh`, `.json`): 3D cylindrical volumetric void raymarching and charcoal-violet soot turbulence.
-  - `great_zoltraak_plume` (`.fsh`, `.vsh`, `.json`): Lateral fluid plume wave dynamics with dual-tone support and dielectric spark breaking.
-  - `corona` (`.fsh`, `.vsh`, `.json`): Demonic gravitational singularity accretion corona with logarithmic inflow spiral and photonic photon sphere.
+  - `cinematic_photon_beam` (`.fsh`, `.vsh`, `.json`): Custom super-Gaussian core formulation ($e^{-(y/\text{core})^4}$), supersonic longitudinal ionization ripples, and diamond arrowhead tapering.
+  - `cinematic_abyssal_beam` (`.fsh`, `.vsh`, `.json`): Pure obsidian void core, crackling ash-lightning filaments, and silver-lavender boundary ionization.
+  - `cinematic_great_photon` (`.fsh`, `.vsh`, `.json`): 3D cylindrical volumetric raymarching, Fresnel facing modulation, and plasma discharge.
+  - `cinematic_great_abyssal` (`.fsh`, `.vsh`, `.json`): 3D cylindrical volumetric void raymarching and charcoal-violet soot turbulence.
+  - `cinematic_plasma_plume` (`.fsh`, `.vsh`, `.json`): Lateral fluid plume wave dynamics with dual-tone support and dielectric spark breaking.
+  - `cinematic_singularity_corona` (`.fsh`, `.vsh`, `.json`): Demonic gravitational singularity accretion corona with logarithmic inflow spiral and photonic photon sphere.
   - `rapid_zoltraak_bullet` (`.fsh`, `.vsh`, `.json`): Supersonic aerodynamic laser-needle projectile shader with diamond taper.
   - `magic_circle` / `black_magic_circle` (`.fsh`, `.vsh`, `.json`): Procedural runic mandala and anime magic circles.
   - `zoltraak_impact` (`.fsh`, `.vsh`, `.json`): Dynamic crater shockwave, expanding plasma bloom, and dust billow.
@@ -36,7 +36,7 @@ As of **Version 1.0.4** and all subsequent releases:
   - `zoltraak_magic_circle.png`: High-definition 2048x2048 anime magic circle with clean luminous alpha channel.
   - `defense.png`: Custom-crafted 64x64 hexagonal mana crystal barrier spell icon.
 - **100% Original Synthesized Audio**:
-  - All Zoltraak sound effects (`zoltraak_charge.ogg`, `zoltraak_fire.ogg`, `zoltraak_great_fire.ogg`, and `zoltraak_impact.ogg`) are 100% mathematically synthesized in-house using digital signal processing (DSP), FM/additive resonance, and spatial stereo convolution.
+  - All Zoltraak sound effects (`cinematic_charge.ogg`, `cinematic_fire.ogg`, `cinematic_great_fire.ogg`, and `cinematic_impact.ogg`) are 100% mathematically synthesized in-house using digital signal processing (DSP), FM/additive resonance, and spatial stereo convolution.
 
 ---
 

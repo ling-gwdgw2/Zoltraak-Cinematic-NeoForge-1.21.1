@@ -3,7 +3,7 @@
     "subtitle": "subtitles.zoltraak_cinematic.zoltraak_charge",
     "sounds": [
       {
-        "name": "zoltraak_cinematic:zoltraak_charge",
+        "name": "zoltraak_cinematic:cinematic_charge",
         "stream": false
       }
     ]
@@ -12,7 +12,7 @@
     "subtitle": "subtitles.zoltraak_cinematic.zoltraak_fire",
     "sounds": [
       {
-        "name": "zoltraak_cinematic:zoltraak_fire",
+        "name": "zoltraak_cinematic:cinematic_fire",
         "attenuation_distance": 48
       }
     ]
@@ -21,7 +21,7 @@
     "subtitle": "subtitles.zoltraak_cinematic.zoltraak_impact",
     "sounds": [
       {
-        "name": "zoltraak_cinematic:zoltraak_impact",
+        "name": "zoltraak_cinematic:cinematic_impact",
         "attenuation_distance": 48
       }
     ]
@@ -30,7 +30,7 @@
     "subtitle": "subtitles.zoltraak_cinematic.zoltraak_great_fire",
     "sounds": [
       {
-        "name": "zoltraak_cinematic:zoltraak_great_fire",
+        "name": "zoltraak_cinematic:cinematic_great_fire",
         "attenuation_distance": 80
       }
     ]
