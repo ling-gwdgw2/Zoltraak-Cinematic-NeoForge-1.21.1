@@ -15,6 +15,7 @@ public class ZoltraakCinematicClientConfig {
     public static final ModConfigSpec.BooleanValue ENABLE_CAMERA_SHAKE;
     public static final ModConfigSpec.DoubleValue CAMERA_SHAKE_MULTIPLIER;
     public static final ModConfigSpec.BooleanValue ENABLE_FLIGHT_CAMERA_ROLL;
+    public static final ModConfigSpec.BooleanValue ENABLE_CINEMATIC_CAMERA;
 
     // Shader Performance
     public static final ModConfigSpec.ConfigValue<String> BLACK_HOLE_RAYMARCH_STEPS;
@@ -53,6 +54,11 @@ public class ZoltraakCinematicClientConfig {
         ENABLE_FLIGHT_CAMERA_ROLL = builder
                 .comment("Whether the camera tilts/banks with aerodynamic roll (+/- 6.5 deg) when turning during flight.")
                 .define("enableFlightCameraRoll", true);
+
+        ENABLE_CINEMATIC_CAMERA = builder
+                .comment("Whether 3D cinematic camera choreography (Dolly Zoom, orbital tracking, supernova wide shot) plays during Gargantua casting and active singularity.",
+                         "Press Jump (Spacebar) in-game to quickly skip an active cinematic camera cutscene.")
+                .define("enableCinematicCamera", true);
 
         builder.pop();
 
@@ -122,6 +128,10 @@ public class ZoltraakCinematicClientConfig {
 
     public static boolean isFlightCameraRollEnabled() {
         return !SPEC.isLoaded() || ENABLE_FLIGHT_CAMERA_ROLL.get();
+    }
+
+    public static boolean isCinematicCameraEnabled() {
+        return !SPEC.isLoaded() || ENABLE_CINEMATIC_CAMERA.get();
     }
 
     public static String getBlackHoleRaymarchStepsPreset() {

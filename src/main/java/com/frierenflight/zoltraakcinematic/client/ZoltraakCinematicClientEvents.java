@@ -256,6 +256,9 @@ public class ZoltraakCinematicClientEvents {
                 }
             }
         }
+
+        // Gargantua cinematic screen effects (Supernova flash & Act 3 Implosion darkness)
+        com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaScreenFx.renderGui(event);
     }
 
     /**
@@ -279,6 +282,14 @@ public class ZoltraakCinematicClientEvents {
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.level != null && !mc.isPaused()) {
+            // Tick Gargantua cinematic screen overlays & acoustic events
+            com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaScreenFx.clientTick(mc);
+
+            // Allow skipping Gargantua cutscenes by pressing Jump (Spacebar)
+            if (mc.options.keyJump.consumeClick() && com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaCameraDirector.isActive()) {
+                com.frierenflight.zoltraakcinematic.client.cinematic.GargantuaCameraDirector.skip();
+            }
+
             if (mc.screen == null && mc.player != null) {
                 while (KEY_DEFENSE.consumeClick()) {
                     long now = System.currentTimeMillis();
