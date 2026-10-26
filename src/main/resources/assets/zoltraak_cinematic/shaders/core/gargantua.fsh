@@ -108,9 +108,10 @@ const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 80.0;
 const float GARG_TAU = 6.2831853;
-// Half-thickness scale height at the inner and outer edge, in r_g.
-const float GARG_THICK_INNER = 0.52;
-const float GARG_THICK_OUTER = 0.35;
+// Half-thickness scale height of the volumetric plasma disk (in r_g)
+// Solas Shader / Protoplanetary flared disk geometry: thick, puffy, billowing 3D gas cloud
+const float GARG_THICK_INNER = 1.35;
+const float GARG_THICK_OUTER = 3.20;
 
 /**
  * True Interstellar Blackbody Palette:
@@ -240,8 +241,12 @@ void main() {
         }
         float radius = length(p);
         float height = dot(p, axis);
-        float nearPlane = max(abs(height) * 0.35, radius * 0.012);
-        float dt = clamp(min(radius * 0.10, nearPlane), 0.02, 1.2);
+        // Solas-grade adaptive volumetric step sizing:
+        // Automatically switches to fine micro-steps when intersecting the gas cloud volume
+        float inDiskZone = float(radius >= inner * 0.85 && radius <= outer * 1.15 && abs(height) < 4.5);
+        float diskDt = clamp(radius * 0.038, 0.05, 0.25);
+        float spaceDt = clamp(min(radius * 0.10, max(abs(height) * 0.4, 0.15)), 0.05, 1.2);
+        float dt = mix(spaceDt, diskDt, inDiskZone);
 
         p += d * dt;
         travelledBlocks += dt * rg;
@@ -272,17 +277,15 @@ void main() {
         vec2 flat2 = vec2(dot(planar, diskU), dot(planar, diskV));
         float t = clamp((radial - inner) / max(outer - inner, 0.001), 0.0, 1.0);
 
-        // 1. Keplerian Differential Rotation + Inward Accretion Infall Flow (Cinematic Interstellar Motion)
+        // --- 1. SOLAS-GRADE PROTOPLANETARY ACCRETION DYNAMICS ---
+        // Differential Keplerian orbital rotation + Inward spiral accretion flow
         float keplerSpeed = pow(inner / max(radial, inner), 1.5);
-        // Fast, energetic relativistic inner orbit grading outward
-        float orbitalPhase = time * 2.2 * keplerSpeed;
-        // Inward accretion flow: gas visibly spirals toward the event horizon
-        float accretionInflow = time * 0.40 * sqrt(inner / max(radial, inner));
+        float orbitalPhase = time * 1.8 * keplerSpeed;
+        float accretionInflow = time * 0.35 * sqrt(inner / max(radial, inner));
         float flowRadial = radial + accretionInflow;
 
-        // 2. Continuous 2D Rotated Coordinates (100% Seamless, Zero Branch Cut, No Seam at 360 deg)
-        // Rotate flat2 in Cartesian space backwards by orbital phase + logarithmic spiral twist
-        float rotAngle = -orbitalPhase + log(max(flowRadial / inner, 1.0)) * 2.0;
+        // Continuous 2D Rotation (zero branch-cut seam, 100% smooth 360 deg)
+        float rotAngle = -orbitalPhase + log(max(flowRadial / inner, 1.0)) * 2.2;
         float cosA = cos(rotAngle);
         float sinA = sin(rotAngle);
         vec2 rotatedPos = vec2(
@@ -291,68 +294,79 @@ void main() {
         );
         float flowAngle = atan(rotatedPos.y, rotatedPos.x);
 
-        // 3. Multi-octave Flowing Gas Plasma & Turbulent Boiling Eddies (Silky-Smooth Nebular Volumetrics)
-        float gasNoise = 0.0;
-        float weight = 0.0;
-        float boilingTime = time * 0.40;
-        for (int octave = 0; octave < 2; ++octave) {
-            float freq = pow(2.0, float(octave));
-            vec2 uv = rotatedPos * (0.016 * freq);
-            // Dynamic fluid convection curls & eddy boiling
-            vec2 eddy = vec2(
-                sin(uv.y * 2.5 + boilingTime * freq) * 0.05,
-                cos(uv.x * 2.5 + boilingTime * freq * 0.85) * 0.05
-            );
-            float layer = 1.0 / freq;
-            float sampleVal = dot(textureLod(NoiseSampler, fract(uv + eddy), 0.0).rgb, vec3(0.3333));
-            gasNoise += layer * sampleVal;
-            weight += layer;
-        }
-        float noise = gasNoise / max(weight, 0.001);
-        noise = smoothstep(0.12, 0.88, noise);
+        // --- 2. SOLAS SHADER WORLEY + PERLIN VOLUMETRIC CLOUD DENSITY ---
+        // Uses Solas Shader's exact noise channel layout:
+        // Channel R: Perlin Noise | Channel G: Worley Cellular Lobes | Channel B: Detail Noise
+        float boilingTime = time * 0.28;
+        vec2 uvMain = rotatedPos * 0.022;
+        vec2 eddy = vec2(
+            sin(uvMain.y * 3.14 + boilingTime) * 0.06,
+            cos(uvMain.x * 3.14 + boilingTime * 0.85) * 0.06
+        );
+        vec4 noiseTex1 = textureLod(NoiseSampler, fract(uvMain + eddy), 0.0);
+        // Cellular Worley noise produces rounded, billowy cauliflower cloud puffs
+        float worley1 = (1.0 - noiseTex1.g) * 0.5 + 0.25;
+        float perlin1 = noiseTex1.r;
+        float cloudLobe1 = perlin1 * 0.55 + worley1 * 0.45;
 
-        // 4. Azimuthal Gas Filaments (Silky flowing ribbons whipping along orbit, 100% periodic, ZERO noise speckles)
-        float stream1 = sin(flowAngle * 2.0) * 0.5 + 0.5;
-        float stream2 = cos(flowAngle * 3.0 - log(max(flowRadial / inner, 1.0)) * 1.5) * 0.5 + 0.5;
-        float filament = clamp(noise * 0.70 + (stream1 * 0.20 + stream2 * 0.10) * noise, 0.0, 1.0);
+        // Second octave for fine turbulent wisps and convection eddies
+        vec2 uvDetail = rotatedPos * 0.055;
+        vec4 noiseTex2 = textureLod(NoiseSampler, fract(uvDetail - eddy * 0.8), 0.0);
+        float worley2 = (1.0 - noiseTex2.g) * 0.5 + 0.25;
+        float cloudLobe2 = noiseTex2.r * 0.5 + worley2 * 0.5;
 
-        // 5. Gaussian Volumetric Scale-Height Atmosphere: gives thick, soft 3D gaseous glow
-        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.65 + 0.35 * filament);
+        // Combined multi-scale billowing cloud density
+        float gasCloud = cloudLobe1 * 0.72 + cloudLobe2 * 0.28;
+        gasCloud = smoothstep(0.12, 0.85, gasCloud);
+
+        // --- 3. PROTOPLANETARY SWIRLING SPIRAL ARMS (Solas Formula) ---
+        // 4 sweeping logarithmic spiral arms swirling inward toward the event horizon
+        float whirl = -4.2;
+        float arms = 4.0;
+        float spiralArm = sin((flowAngle + sqrt(radial) * whirl) * arms) * 0.5 + 0.5;
+        float filament = clamp(gasCloud * (0.65 + 0.55 * spiralArm), 0.0, 1.0);
+
+        // --- 4. FLARED 3D ATMOSPHERIC VOLUME & CLOUD MOUNDS ---
+        // Real accretion disks flare outward vertically from 1.35 rg at ISCO to 3.20 rg at outer rim
+        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.70 + 0.45 * filament);
         float zNorm = abs(height) / max(diskScaleHeight, 0.005);
-        if (zNorm > 2.8) {
+        if (zNorm > 2.6) {
             continue;
         }
-        float verticalCoverage = exp(-zNorm * zNorm * 1.8);
+        float verticalCoverage = exp(-zNorm * zNorm * 1.6);
 
-        // 6. Relativistic Doppler Beaming (approaching gas amplified & blued, receding gas softened & amber)
+        // --- 5. RELATIVISTIC DOPPLER BEAMING ---
         vec3 tangentDir = normalize(cross(axis, planar));
         float viewDoppler = dot(tangentDir, -d) * keplerSpeed;
-        float dopplerFactor = clamp(1.0 + viewDoppler * 0.72, 0.28, 2.7);
-        float dopplerBoost = pow(dopplerFactor, 2.6);
+        float dopplerFactor = clamp(1.0 + viewDoppler * 0.72, 0.32, 2.6);
+        float dopplerBoost = pow(dopplerFactor, 2.4);
 
-        // 7. Blackbody Temperature Shift & Radiative Profile (Solas-grade Incandescent Core)
-        float radialProfile = pow(1.0 - t, 1.45)
-                * smoothstep(0.0, 0.035, t) * smoothstep(1.0, 0.82, t);
+        // --- 6. SOLAS WARM GOLDEN AMBER PALETTE & FORWARD POWDER SCATTERING ---
+        // Rich density across the entire disk (smoothstep allows outer disk to shine like in Solas)
+        float radialProfile = smoothstep(0.0, 0.035, t) * smoothstep(1.0, 0.78, t);
+        // Exponential core intensity booster at ISCO
+        float coreMultiplier = 1.0 + pow(max(1.0 - t, 0.0), 1.5) * 3.5;
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
 
-        float colorTemp = clamp(t - (filament - 0.5) * 0.22 - viewDoppler * 0.28, 0.0, 1.0);
+        float colorTemp = clamp(t - (filament - 0.5) * 0.18 - viewDoppler * 0.25, 0.0, 1.0);
         vec3 baseCol = gargDiskColour(colorTemp);
 
-        // Solas-grade Incandescent White-Hot Core:
-        // The innermost accretion disk reaches tens of millions of Kelvin, glowing brilliant incandescent white-gold
-        // across the entire inner equator (not just on the approaching side)
-        float innerHeat = pow(max(0.0, 1.0 - t * 1.75), 1.8);
-        vec3 incandescent = vec3(1.35, 1.25, 1.15) * innerHeat;
-        // Approaching side relativistic Doppler boost
-        vec3 dopplerBoostCol = vec3(0.8, 1.0, 1.2) * (max(0.0, viewDoppler) * innerHeat * 0.85);
+        // Incandescent inner core (white-hot equator)
+        float innerHeat = pow(max(0.0, 1.0 - t * 1.6), 1.8);
+        vec3 incandescent = vec3(1.45, 1.35, 1.20) * innerHeat;
+        vec3 dopplerBoostCol = vec3(0.8, 1.0, 1.2) * (max(0.0, viewDoppler) * innerHeat * 0.9);
 
-        float intensity = (0.35 + 1.10 * pow(filament, 1.2)) * dopplerBoost;
-        vec3 emission = (baseCol + incandescent + dopplerBoostCol) * radialProfile * max(DiskShape.w, 0.0)
-                * 8.5 * fed * intensity;
+        // Dense, opaque volumetric cloud density (Solas-grade optical depth)
+        float cloudDensity = verticalCoverage * radialProfile * (0.65 + 0.95 * filament);
+        // Solas powder effect: forward scattering brightening at cloud edges and lobes
+        float powder = 1.0 - 0.85 * exp(-cloudDensity * 3.6);
 
-        // 8. Physical Beer-Lambert Volumetric Integration (Step-Length Invariant: completely eliminates concentric raymarch rings)
-        float density = verticalCoverage * radialProfile * (0.22 + 0.48 * filament);
-        float stepAbsorption = 1.0 - exp(-density * dt * 2.6);
+        float intensity = (0.35 + 1.15 * pow(filament, 1.2)) * dopplerBoost;
+        vec3 emission = (baseCol * coreMultiplier + incandescent + dopplerBoostCol) * powder
+                * max(DiskShape.w, 0.0) * 8.5 * fed * intensity;
+
+        // --- 7. BEER-LAMBERT PHYSICAL OPTICAL DEPTH INTEGRATION ---
+        float stepAbsorption = 1.0 - exp(-cloudDensity * dt * 4.2);
         vec3 stepEmission = emission * stepAbsorption;
         accum += stepEmission * (1.0 - alpha);
         alpha += (1.0 - alpha) * stepAbsorption;
@@ -432,9 +446,19 @@ void main() {
     }
     vec3 ring = ringComposite * ringGain;
 
+    // Solas-grade Horizontal Equatorial Plasma Flare (Torus Bloom across front)
+    float planeDist = abs(dot(rayDir * along - centre, axis)) / max(rg, 0.001);
+    float radialDist = impact / max(rg, 0.001);
+    float torusGlow = exp(-planeDist * planeDist * 0.45) * exp(-pow(max(radialDist - 4.2, 0.0) / max(DiskShape.y * 0.45, 1.0), 1.6));
+    float torusMask = step(0.0, along);
+    if (hitSolid && sceneDistance < frontHoleDist) {
+        torusMask = 0.0;
+    }
+    vec3 torusFlareCol = mix(vec3(1.0, 0.76, 0.30), vec3(1.0, 0.96, 0.88), exp(-radialDist * 0.35)) * (torusGlow * torusMask * 1.8 * max(DiskShape.w, 0.0));
+
     // Emissive disk & photon ring (superheated and energized during detonation)
     float blastDiskEnergize = 1.0 + blast * 3.5;
-    vec3 diskRaw = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
+    vec3 diskRaw = (accum + ring + torusFlareCol) * (critBoost * blastDiskEnergize * openFactor);
 
     // --- ACES FILMIC TONE MAPPING FOR ACCRETION DISK ---
     // Smoothly compresses high dynamic range radiance into display space:
