@@ -122,7 +122,7 @@ public class GargantuaEntity extends Entity implements TraceableEntity, OwnableE
         this.entityData.set(DATA_START_GAME_TICK, this.level().getGameTime());
         this.entityData.set(DATA_SEED, seed);
         this.entityData.set(DATA_SPELL_POWER, Math.max(1.0f, spellPower));
-        Vec3 normAxis = (spinAxis != null && spinAxis.lengthSqr() > 0.001) ? spinAxis.normalize() : new Vec3(0, 1, 0);
+        Vec3 normAxis = (spinAxis != null && spinAxis.lengthSqr() > 0.001) ? spinAxis.normalize() : new Vec3(0.22d, 0.96d, 0.15d).normalize();
         this.entityData.set(DATA_AXIS_X, (float) normAxis.x);
         this.entityData.set(DATA_AXIS_Y, (float) normAxis.y);
         this.entityData.set(DATA_AXIS_Z, (float) normAxis.z);

@@ -16,6 +16,9 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class GargantuaRenderer extends EntityRenderer<GargantuaEntity> {
 
+    private static final ResourceLocation DUMMY_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(com.frierenflight.zoltraakcinematic.ZoltraakCinematicMod.MODID, "textures/effect/noise_tile.png");
+
     public GargantuaRenderer(EntityRendererProvider.Context context) {
         super(context);
     }
@@ -28,7 +31,7 @@ public class GargantuaRenderer extends EntityRenderer<GargantuaEntity> {
 
     @Override
     public ResourceLocation getTextureLocation(GargantuaEntity entity) {
-        return null;
+        return DUMMY_TEXTURE;
     }
 
     @Override

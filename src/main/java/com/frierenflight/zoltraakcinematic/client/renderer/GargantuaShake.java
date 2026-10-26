@@ -33,7 +33,7 @@ public final class GargantuaShake {
                 // 1. Spacetime Rupture Opening Jolt
                 float openingShake = 0.0f;
                 int tearEnd = gargantua.getTearEndTick();
-                if (visualAge >= 0.0f && visualAge <= (float) tearEnd) {
+                if (tearEnd > 0 && visualAge >= 0.0f && visualAge <= (float) tearEnd) {
                     float openProgress = visualAge / (float) tearEnd;
                     float distFactor = (float) Mth.clamp(1.0 - dist / 80.0d, 0.0, 1.0);
                     float jolt = (float) (Math.sin(openProgress * Math.PI) * 2.8f);

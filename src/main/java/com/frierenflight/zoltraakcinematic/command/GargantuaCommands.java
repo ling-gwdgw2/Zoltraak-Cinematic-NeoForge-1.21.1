@@ -64,7 +64,7 @@ public class GargantuaCommands {
             }
         }
 
-        GargantuaEntity blackHole = new GargantuaEntity(serverLevel, caster, pos, new Vec3(0, 1, 0), spellPower);
+        GargantuaEntity blackHole = new GargantuaEntity(serverLevel, caster, pos, new Vec3(0.22d, 0.96d, 0.15d).normalize(), spellPower);
         serverLevel.addFreshEntity(blackHole);
 
         source.sendSuccess(() -> Component.literal("§d[Zoltraak Cinematic] §fManifested Astral Singularity!"), true);

@@ -18,9 +18,9 @@ vec3 gargCosmicSky(vec3 dir, float time, float sceneLum) {
 
     // 1. Organic Interstellar Nebula Dust Lanes (using NoiseSampler hardware texture)
     vec2 nebUv = skyUv * vec2(2.4, 1.2) + vec2(time * 0.003, time * 0.001);
-    float n1 = dot(texture(NoiseSampler, nebUv).rgb, vec3(0.333));
-    float n2 = dot(texture(NoiseSampler, nebUv * 2.3 + vec2(0.35, 0.72)).rgb, vec3(0.333));
-    float n3 = dot(texture(NoiseSampler, nebUv * 5.2 - vec2(0.48, 0.22)).rgb, vec3(0.333));
+    float n1 = dot(textureLod(NoiseSampler, fract(nebUv), 0.0).rgb, vec3(0.333));
+    float n2 = dot(textureLod(NoiseSampler, fract(nebUv * 2.3 + vec2(0.35, 0.72)), 0.0).rgb, vec3(0.333));
+    float n3 = dot(textureLod(NoiseSampler, fract(nebUv * 5.2 - vec2(0.48, 0.22)), 0.0).rgb, vec3(0.333));
     float nebDensity = pow(clamp(n1 * 0.55 + n2 * 0.32 + n3 * 0.18 - 0.20, 0.0, 1.0), 1.5);
 
     // Cosmic color palette: deep indigo, celestial violet, radiant stardust gold
@@ -94,10 +94,12 @@ uniform mat4 InverseProjectionMat;
 uniform vec4 HoleCentre;
 // xyz = spin axis in eye space, unit length; w = spin a/M
 uniform vec4 SpinAxis;
-// x = opened 0..1, y = criticality 0..1, z = wrapped seconds, w = swallowed lights
+// x = opened 0..1, y = criticality (0..1) + blast (0..1) -> 0..2, z = wrapped seconds, w = swallowed count (0..10)
 uniform vec4 HoleState;
-// x = disk inner radius, y = outer radius, both in r_g; z = h/r; w = brightness
+// x = disk inner radius (r_g), y = outer radius (r_g), z = raymarch target steps (>= 16.0), w = brightness
 uniform vec4 DiskShape;
+// xyz = disk tangent U in eye space, w = unused
+uniform vec4 DiskU;
 
 const int GARG_STEPS_MAX = 128;
 const float GARG_HORIZON = 1.8;
@@ -201,7 +203,13 @@ void main() {
     float frontHoleDist = rayHitsShadowCone ? (along - sqrt(max(shadowEdge * shadowEdge - impact * impact, 0.0))) : 1.0e9;
     bool isInsideShadow = rayHitsShadowCone && sceneDistance >= frontHoleDist;
 
-    vec3 diskU = normalize(cross(axis, vec3(0.0, 0.0, 1.0)) + vec3(1.0e-4));
+    vec3 diskU;
+    if (dot(DiskU.xyz, DiskU.xyz) > 0.25) {
+        diskU = normalize(DiskU.xyz);
+    } else {
+        vec3 refVec = abs(axis.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+        diskU = normalize(cross(axis, refVec));
+    }
     vec3 diskV = cross(axis, diskU);
 
     p += d * (gargWhiteNoise(vUv * 512.0) * 0.1);
@@ -224,8 +232,8 @@ void main() {
         }
         float radius = length(p);
         float height = dot(p, axis);
-        float nearPlane = max(abs(height) * 0.55, radius * 0.02);
-        float dt = clamp(min(radius * 0.12, nearPlane), 0.03, 1.4);
+        float nearPlane = max(abs(height) * 0.35, radius * 0.012);
+        float dt = clamp(min(radius * 0.10, nearPlane), 0.02, 1.2);
 
         p += d * dt;
         travelledBlocks += dt * rg;
@@ -234,12 +242,12 @@ void main() {
         float lensMult = SpinAxis.w >= 0.05 ? 1.0 : 0.0;
         d = normalize(d + (-1.5 * lensMult * h * h * p / pow(travelled, 5.0)) * dt);
 
-        if (travelled < GARG_HORIZON) {
-            captured = true;
+        if (travelledBlocks >= sceneDistance) {
+            hitSolid = true;
             break;
         }
-        if (sceneDistance < holeDistance && travelledBlocks >= sceneDistance) {
-            hitSolid = true;
+        if (travelled < GARG_HORIZON) {
+            captured = true;
             break;
         }
         if (travelled > GARG_ESCAPE) {
@@ -254,45 +262,68 @@ void main() {
         }
 
         vec2 flat2 = vec2(dot(planar, diskU), dot(planar, diskV));
-        float twist = radial * 0.45;
-        float spin = time * 0.55;
 
-        float noise = 0.0;
+        // 1. Polar Coordinates (radial & azimuthal angle)
+        float angle = atan(flat2.y, flat2.x);
+        float normAngle = angle / GARG_TAU + 0.5;
+        float t = clamp((radial - inner) / max(outer - inner, 0.001), 0.0, 1.0);
+
+        // 2. Keplerian Differential Rotation: inner orbits significantly faster than outer (Omega ~ r^-1.5)
+        float keplerSpeed = pow(inner / max(radial, inner), 1.5);
+        float orbitalPhase = time * 0.85 * keplerSpeed;
+
+        // 3. Azimuthal Streak FBM: stretched along orbital path for authentic gas filament ring structure
+        float streakNoise = 0.0;
         float weight = 0.0;
         for (int octave = 0; octave < 3; ++octave) {
-            float scale = 0.18 * pow(2.0, float(octave));
-            float drift = mod(twist + spin * (1.0 + float(octave) * 0.35), GARG_TAU);
-            float cs = cos(drift);
-            float sn = sin(drift);
-            vec2 uv = vec2(flat2.x * cs - flat2.y * sn,
-                           flat2.x * sn + flat2.y * cs) * scale;
-            float layer = 1.0 / pow(2.0, float(octave));
-            noise += layer * dot(texture(NoiseSampler, uv).rgb,
-                    vec3(0.299, 0.587, 0.114));
+            float freq = pow(2.0, float(octave));
+            float radialUv = radial * 0.42 * freq;
+            float angularUv = (normAngle + orbitalPhase * (0.25 / freq)) * 2.0 * freq;
+
+            vec2 streakUv = vec2(
+                radialUv + sin(normAngle * GARG_TAU * freq) * 0.08,
+                angularUv + radial * 0.06 * freq
+            );
+
+            float layer = 1.0 / freq;
+            float sampleVal = dot(textureLod(NoiseSampler, fract(streakUv), 0.0).rgb, vec3(0.299, 0.587, 0.114));
+            streakNoise += layer * sampleVal;
             weight += layer;
         }
-        noise /= max(weight, 0.001);
+        float noise = streakNoise / max(weight, 0.001);
+        noise = smoothstep(0.18, 0.88, noise);
 
-        float t = (radial - inner) / max(outer - inner, 0.001);
+        // 4. Concentric High-Frequency Rings (Interstellar Striations)
+        float ringBands = 0.65 + 0.35 * sin(radial * 5.5 + noise * 2.5) * cos(radial * 13.0);
+        float filament = clamp(noise * ringBands * 1.35, 0.0, 1.0);
+
         float thickness = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t)
-                * mix(0.10, 1.35, noise);
+                * mix(0.08, 1.25, filament);
         float coverage = smoothstep(thickness, 0.0, abs(height));
         if (coverage <= 0.002) {
             continue;
         }
 
-        // Seamless inner emission connecting smoothly right to the shadow boundary
-        float profile = pow(1.0 - t, 1.4)
-                * smoothstep(0.0, 0.015, t) * smoothstep(1.0, 0.90, t);
-        float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
-        float grain = 0.35 + 0.65 * noise;
-        vec3 emission = gargDiskColour(t) * profile * max(DiskShape.w, 0.0)
-                * 9.0 * fed * grain;
+        // 5. Relativistic Doppler Beaming: gas approaching observer is amplified in brightness & energy
+        vec3 tangentDir = normalize(cross(axis, planar));
+        float viewDoppler = dot(tangentDir, -d) * keplerSpeed;
+        float dopplerBoost = pow(clamp(1.0 + viewDoppler * 0.55, 0.35, 2.2), 2.4);
 
-        // Front to back accumulation
-        // Deliberately small (0.22) so ray builds up over a dozen or more samples,
-        // giving deep volumetric structure and preventing opaque shell blowouts.
-        float local = clamp(coverage * profile * 0.22, 0.0, 1.0);
+        // 6. Blackbody Temperature Shift & Profile
+        float profile = pow(1.0 - t, 1.55)
+                * smoothstep(0.0, 0.025, t) * smoothstep(1.0, 0.85, t);
+        float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
+
+        float colorTemp = clamp(t - filament * 0.28 - viewDoppler * 0.18, 0.0, 1.0);
+        vec3 baseCol = gargDiskColour(colorTemp);
+        vec3 hotCore = vec3(1.0, 0.98, 0.95) * pow(max(0.0, 1.0 - t * 2.5), 2.0) * max(0.0, viewDoppler);
+
+        float intensity = (0.15 + 1.45 * pow(filament, 1.5)) * dopplerBoost;
+        vec3 emission = (baseCol + hotCore * 0.4) * profile * max(DiskShape.w, 0.0)
+                * 9.5 * fed * intensity;
+
+        // 7. Front-to-back Volumetric Accumulation
+        float local = clamp(coverage * profile * (0.08 + 0.24 * filament), 0.0, 1.0);
         accum += emission * (1.0 - alpha) * local;
         alpha += (1.0 - alpha) * local;
         if (alpha > 0.99) {
@@ -300,9 +331,36 @@ void main() {
         }
     }
 
-    // The background, read along the ray's new direction.
+    // Open transition: 0.0 = untouched scene, 1.0 = fully active black hole
+    float openFactor = clamp(HoleState.x, 0.0, 1.0);
+    float crit = clamp(HoleState.y, 0.0, 1.0);
+    float critBoost = 1.0 + crit * 1.8;
+    float blast = clamp(HoleState.y - 1.0, 0.0, 1.0);
+
+    // Screen-space gravitational lensing: prevent foreground bleeding
+    vec2 lensedUv = vUv;
+    if (SpinAxis.w >= 0.05 && openFactor > 0.001) {
+        vec2 candidateUv = clamp(vUv + (d.xy - rayDir.xy) * 0.35 * openFactor, 0.001, 0.999);
+        float candidateDepth = texture(DepthSampler, candidateUv).r;
+        if (candidateDepth >= SL_SKY_DEPTH) {
+            lensedUv = candidateUv;
+        } else if (candidateDepth > 0.0001) {
+            vec4 candClip = vec4(candidateUv * 2.0 - 1.0, candidateDepth * 2.0 - 1.0, 1.0);
+            vec4 candEye = InverseProjectionMat * candClip;
+            float candDist = (abs(candEye.w) > 0.000001) ? length(candEye.xyz / candEye.w) : 1.0e9;
+            if (candDist >= holeDistance - shadowEdge) {
+                lensedUv = candidateUv;
+            }
+        }
+    }
+    vec3 lensedScene = texture(SceneSampler, lensedUv).rgb;
+
+    // Check if occluded by blocks in front of the black hole
+    bool occludedByForeground = hitSolid && (sceneDistance < frontHoleDist && sceneDistance < holeDistance);
+
+    // The background, read along the ray's deflected direction.
     // Luminous cosmic starfield & interstellar nebula lensed by the black hole.
-    vec3 background = sceneColour;
+    vec3 background = lensedScene;
     if (!captured && !hitSolid && SpinAxis.w >= 0.05) {
         float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
         float edgeFeather = smoothstep(1.0, 0.35, normDist);
@@ -310,9 +368,9 @@ void main() {
         float lensed = clamp(bent * 12.0, 0.0, 1.0) * edgeFeather;
 
         if (lensed > 0.001) {
-            float sceneLum = dot(sceneColour, vec3(0.299, 0.587, 0.114));
+            float sceneLum = dot(lensedScene, vec3(0.299, 0.587, 0.114));
             vec3 cosmicSky = gargCosmicSky(d, time, sceneLum);
-            background = sceneColour + cosmicSky * (lensed * edgeFeather);
+            background = lensedScene + cosmicSky * (lensed * edgeFeather);
         }
     }
 
@@ -322,28 +380,22 @@ void main() {
             / 535.0;
     float ahead = step(0.0, along);
     float ringGain = 0.32 * ahead * max(DiskShape.w, 0.0) * (0.30 + 0.70 * alpha)
-            * (1.0 + HoleState.y * 1.8);
+            * (1.0 + crit * 1.8);
     if (hitSolid && sceneDistance < frontHoleDist) {
         ringGain = 0.0;
     }
     vec3 ring = gargDiskColour(0.0) * (first + second) * ringGain;
-
-    // Open transition: 0.0 = untouched scene, 1.0 = fully active black hole
-    float openFactor = clamp(HoleState.x, 0.0, 1.0);
-    float crit = clamp(HoleState.y, 0.0, 1.0);
-    float critBoost = 1.0 + crit * 1.8;
-    float blast = clamp(HoleState.w, 0.0, 1.0);
 
     // Emissive disk & photon ring (superheated and energized during detonation)
     float blastDiskEnergize = 1.0 + blast * 3.5;
     vec3 diskEmission = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
 
     // Background behind the disk
-    vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? sceneColour : background;
+    vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? lensedScene : background;
     vec3 behindEffect = sceneColour;
 
     if (captured || isInsideShadow) {
-        if (crit >= 0.99) {
+        if (crit >= 0.99 && blast > 0.001) {
             // Singularity has detonated! Core blazes into brilliant white-gold supernova light
             // and dissolves gracefully into the background scene as spacetime heals.
             vec3 coreBurst = mix(vec3(1.4, 1.0, 0.6), vec3(4.5, 4.0, 3.2), blast);
@@ -352,7 +404,7 @@ void main() {
             // Active event horizon shadow
             behindEffect = vec3(0.0);
         }
-    } else if (!hitSolid) {
+    } else if (!occludedByForeground) {
         behindEffect = sceneOrCosmic;
     }
 

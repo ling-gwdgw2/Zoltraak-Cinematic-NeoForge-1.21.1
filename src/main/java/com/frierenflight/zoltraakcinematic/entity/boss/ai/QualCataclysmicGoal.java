@@ -119,7 +119,7 @@ public class QualCataclysmicGoal extends Goal {
         // Spawn singularity elevated midway towards target (65% towards target, 4.5m elevated)
         Vec3 spawnPos = bossPos.lerp(targetPos, 0.65).add(0, 4.5, 0);
 
-        Vec3 spinAxis = new Vec3(0, 1, 0);
+        Vec3 spinAxis = new Vec3(0.22d, 0.96d, 0.15d).normalize();
         float spellPower = 600.0f; // Boss cataclysmic tier spell power
 
         GargantuaEntity blackHole = new GargantuaEntity(serverLevel, qual, spawnPos, spinAxis, spellPower, BLACK_HOLE_LIFETIME);

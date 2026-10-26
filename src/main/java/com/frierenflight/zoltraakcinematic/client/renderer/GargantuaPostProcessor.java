@@ -144,47 +144,50 @@ public final class GargantuaPostProcessor {
             int irisDepthTex = ShaderCompatibility.getShaderDepthTexture();
             int activeDrawFbo = (prevDrawFbo != 0 && isShaderPack) ? prevDrawFbo : main.frameBufferId;
 
-            // In Iris, we copy the composite framebuffer to sceneCopy so we can sample it
-            // In vanilla, we copy activeDrawFbo to sceneCopy as well to have a clean, static input texture
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, activeDrawFbo);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
-            GlStateManager._glBlitFrameBuffer(
-                    0, 0, main.width, main.height,
-                    0, 0, sceneCopy.width, sceneCopy.height,
-                    GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
-            );
-
-            // Determine depth texture ID:
-            // 1. If Iris is active, use Iris depth texture directly
-            // 2. In vanilla, main.getDepthTextureId() is the actual depth texture of the world!
-            int depthSamplerId;
-            if (irisDepthTex > 0) {
-                depthSamplerId = irisDepthTex;
-            } else {
-                depthSamplerId = main.getDepthTextureId();
-            }
-
-            // Draw into postTarget (NEVER directly into activeDrawFbo, so depthSamplerId and sceneCopy are never in a feedback loop!)
-            postTarget.bindWrite(true);
-            RenderSystem.disableBlend();
-            RenderSystem.disableDepthTest();
-            RenderSystem.depthMask(false);
-            RenderSystem.disableCull();
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-
+            int depthSamplerId = (irisDepthTex > 0) ? irisDepthTex : main.getDepthTextureId();
             int noiseId = getNoiseTextureId(mc);
 
             Matrix4f invProj = new Matrix4f(projection).invert();
             Matrix4f viewRotation = new Matrix4f(view).setTranslation(0.0f, 0.0f, 0.0f);
             Vec3 camPos = camera.getPosition();
 
+            int renderedCount = 0;
+
             for (int i = 0; i < entities.size(); i++) {
                 GargantuaEntity entity = entities.get(i);
-                if (entity.isRemoved()) continue;
+                if (entity == null || entity.isRemoved()) continue;
 
                 float rg = entity.gravitationalRadius(partialTicks);
                 float brightness = entity.brightness(partialTicks);
                 if (rg < 0.01f || brightness <= 0.0f) continue;
+
+                if (renderedCount == 0) {
+                    // Copy initial screen into sceneCopy ONLY when there is an entity to actually render
+                    GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, activeDrawFbo);
+                    GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
+                    GlStateManager._glBlitFrameBuffer(
+                            0, 0, main.width, main.height,
+                            0, 0, sceneCopy.width, sceneCopy.height,
+                            GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
+                    );
+
+                    postTarget.bindWrite(true);
+                    RenderSystem.disableBlend();
+                    RenderSystem.disableDepthTest();
+                    RenderSystem.depthMask(false);
+                    RenderSystem.disableCull();
+                    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                } else {
+                    // Ping-pong copy from postTarget back to sceneCopy for next black hole
+                    GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, postTarget.frameBufferId);
+                    GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
+                    GlStateManager._glBlitFrameBuffer(
+                            0, 0, postTarget.width, postTarget.height,
+                            0, 0, sceneCopy.width, sceneCopy.height,
+                            GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
+                    );
+                    postTarget.bindWrite(true);
+                }
 
                 Vec3 center = entity.centre(partialTicks);
                 Vector3f relPos = new Vector3f(
@@ -200,6 +203,12 @@ public final class GargantuaPostProcessor {
                         new Vector3f()
                 ).normalize();
 
+                Vec3 worldTangent = Math.abs(axis.y) < 0.99 ? axis.cross(new Vec3(0, 1, 0)).normalize() : axis.cross(new Vec3(1, 0, 0)).normalize();
+                Vector3f eyeDiskU = viewRotation.transformDirection(
+                        new Vector3f((float) worldTangent.x, (float) worldTangent.y, (float) worldTangent.z),
+                        new Vector3f()
+                ).normalize();
+
                 shader.setSampler("SceneSampler", sceneCopy.getColorTextureId());
                 shader.setSampler("DepthSampler", depthSamplerId);
                 shader.setSampler("NoiseSampler", noiseId);
@@ -207,12 +216,15 @@ public final class GargantuaPostProcessor {
                 float lensMult = com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.isGravitationalLensingEnabled() ? 1.0f : 0.0f;
                 shader.safeGetUniform("HoleCentre").set(eyeCenter.x, eyeCenter.y, eyeCenter.z, rg);
                 shader.safeGetUniform("SpinAxis").set(eyeAxis.x, eyeAxis.y, eyeAxis.z, lensMult);
+                shader.safeGetUniform("DiskU").set(eyeDiskU.x, eyeDiskU.y, eyeDiskU.z, 0.0f);
 
                 float opened = entity.opened(partialTicks);
                 float crit = entity.criticality(partialTicks);
-                float timeSec = (entity.level().getGameTime() + partialTicks) / 20.0f;
                 float blast = entity.blastFlash(partialTicks);
-                shader.safeGetUniform("HoleState").set(opened, crit, timeSec, blast);
+                float critAndBlast = (blast > 0.001f) ? (1.0f + blast) : crit;
+                float timeSec = ((entity.level().getGameTime() % 72000L) + partialTicks) / 20.0f;
+                float swallowed = (float) Math.min(entity.getSwallowedCount(), 10);
+                shader.safeGetUniform("HoleState").set(opened, critAndBlast, timeSec, swallowed);
 
                 float raymarchSteps = (float) Math.max(64, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getRaymarchStepCount());
                 shader.safeGetUniform("DiskShape").set(3.83f, 13.5f, raymarchSteps, brightness);
@@ -220,34 +232,24 @@ public final class GargantuaPostProcessor {
 
                 RenderSystem.setShader(() -> shader);
                 drawFullscreenQuad();
-
-                // If more entities exist, ping-pong postTarget back into sceneCopy for next pass
-                if (i < entities.size() - 1) {
-                    GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, postTarget.frameBufferId);
-                    GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, sceneCopy.frameBufferId);
-                    GlStateManager._glBlitFrameBuffer(
-                            0, 0, postTarget.width, postTarget.height,
-                            0, 0, sceneCopy.width, sceneCopy.height,
-                            GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
-                    );
-                    postTarget.bindWrite(true);
-                }
+                renderedCount++;
             }
 
-            // Blit finished composited color from postTarget back into activeDrawFbo
-            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, postTarget.frameBufferId);
-            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, activeDrawFbo);
-            GlStateManager._glBlitFrameBuffer(
-                    0, 0, postTarget.width, postTarget.height,
-                    0, 0, main.width, main.height,
-                    GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
-            );
+            if (renderedCount > 0) {
+                GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, postTarget.frameBufferId);
+                GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, activeDrawFbo);
+                GlStateManager._glBlitFrameBuffer(
+                        0, 0, postTarget.width, postTarget.height,
+                        0, 0, main.width, main.height,
+                        GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST
+                );
+            }
 
         } catch (Throwable t) {
             System.err.println("[ZoltraakCinematic] Gargantua post-processing error: " + t.getMessage());
         } finally {
-            GL30.glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, prevReadFbo);
-            GL30.glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, prevDrawFbo);
+            GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, prevReadFbo);
+            GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, prevDrawFbo);
             GlStateManager._viewport(0, 0, main.viewWidth, main.viewHeight);
             if (prevDepthTest) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
             if (prevCull) RenderSystem.enableCull(); else RenderSystem.disableCull();
@@ -277,21 +279,23 @@ public final class GargantuaPostProcessor {
             mc.getTextureManager().bindForSetup(NOISE_TEX);
             tex = mc.getTextureManager().getTexture(NOISE_TEX);
         }
-        return tex != null ? tex.getId() : 0;
+        if (tex != null) {
+            tex.bind();
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
+            return tex.getId();
+        }
+        return 0;
     }
 
     private static void drawFullscreenQuad() {
-        ByteBufferBuilder byteBuffer = new ByteBufferBuilder(256);
-        BufferBuilder builder = new BufferBuilder(byteBuffer, VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder builder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
         builder.addVertex(-1.0f, -1.0f, 0.0f).setUv(0.0f, 0.0f);
         builder.addVertex( 1.0f, -1.0f, 0.0f).setUv(1.0f, 0.0f);
         builder.addVertex( 1.0f,  1.0f, 0.0f).setUv(1.0f, 1.0f);
         builder.addVertex(-1.0f,  1.0f, 0.0f).setUv(0.0f, 1.0f);
-        MeshData meshData = builder.build();
-        if (meshData != null) {
-            BufferUploader.drawWithShader(meshData);
-        }
-        byteBuffer.close();
+        BufferUploader.drawWithShader(builder.buildOrThrow());
     }
 
     public static void release() {

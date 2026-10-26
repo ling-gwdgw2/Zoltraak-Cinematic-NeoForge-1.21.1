@@ -5,9 +5,9 @@ import com.frierenflight.zoltraakcinematic.entity.GargantuaEntity;
 import com.frierenflight.zoltraakcinematic.registry.ModCinematicSounds;
 import io.redspace.ironsspellbooks.api.config.DefaultConfig;
 import io.redspace.ironsspellbooks.api.magic.MagicData;
-import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
 import io.redspace.ironsspellbooks.api.spells.*;
 import io.redspace.ironsspellbooks.api.util.AnimationHolder;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -15,6 +15,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -87,13 +88,35 @@ public class GargantuaSpell extends AbstractSpell {
             HitResult hit = level.clip(new ClipContext(eyePos, traceEnd, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity));
             Vec3 targetPos;
             if (hit.getType() != HitResult.Type.MISS) {
-                targetPos = hit.getLocation().add(0, 18.0d, 0);
+                Vec3 hitLoc = hit.getLocation();
+                Direction hitFace = (hit instanceof BlockHitResult bhr) ? bhr.getDirection() : Direction.UP;
+
+                if (hitFace == Direction.DOWN) {
+                    // Hit ceiling directly: spawn safely below ceiling
+                    targetPos = hitLoc.subtract(0, 4.0d, 0);
+                } else {
+                    // Check if there is a ceiling above the target point before elevating
+                    Vec3 upTarget = hitLoc.add(0, 18.0d, 0);
+                    HitResult ceilingHit = level.clip(new ClipContext(
+                            hitLoc.add(0, 0.5d, 0), upTarget,
+                            ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity));
+                    if (ceilingHit.getType() != HitResult.Type.MISS) {
+                        double availableHeight = ceilingHit.getLocation().y - hitLoc.y;
+                        if (availableHeight > 6.0d) {
+                            targetPos = ceilingHit.getLocation().subtract(0, 2.5d, 0);
+                        } else {
+                            targetPos = hitLoc.add(0, Math.max(1.5d, availableHeight * 0.5d), 0);
+                        }
+                    } else {
+                        targetPos = upTarget;
+                    }
+                }
             } else {
                 targetPos = eyePos.add(lookVec.scale(48.0d));
             }
 
-            // Spawn Gargantua singularity entity with scaled Black Hole Spell Power
-            Vec3 spinAxis = new Vec3(0, 1, 0);
+            // Spawn Gargantua singularity entity with scaled Black Hole Spell Power and Interstellar tilt
+            Vec3 spinAxis = new Vec3(0.22d, 0.96d, 0.15d).normalize();
             float spellPower = getSpellPower(spellLevel, entity);
             GargantuaEntity blackHole = new GargantuaEntity(serverLevel, entity, targetPos, spinAxis, spellPower);
             serverLevel.addFreshEntity(blackHole);
