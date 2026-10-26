@@ -104,46 +104,46 @@ const float GARG_HORIZON = 1.8;
 const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 60.0;
 const float GARG_TAU = 6.2831853;
-// Half-thickness at the inner and outer edge, in r_g. Slender, sleek proportions matching Interstellar
-const float GARG_THICK_INNER = 0.32;
-const float GARG_THICK_OUTER = 0.16;
+// Half-thickness at inner and outer edge in r_g: substantial volumetric proportions matching Interstellar
+const float GARG_THICK_INNER = 0.50;
+const float GARG_THICK_OUTER = 0.25;
 
 /**
- * Extended Reinhard tone curve with controlled white point (W = 5.0).
- * Smoothly maps HDR emissive radiance into [0, 1], preserving rich golden/amber
- * chromaticity and gas filament details in highlights without flat white clipping.
+ * Extended Reinhard tone curve with controlled white point (W = 7.0).
+ * Smoothly maps HDR emissive radiance into [0, 1], preserving incandescent white-gold
+ * highlights and rich amber chromaticity without flat white clipping.
  */
 vec3 tonemapGargantua(vec3 col) {
-    const float W2 = 25.0; // 5.0^2
+    const float W2 = 49.0; // 7.0^2
     vec3 mapped = (col * (vec3(1.0) + col / W2)) / (vec3(1.0) + col);
     return clamp(mapped, 0.0, 1.0);
 }
 
 /**
  * Authentic Interstellar multi-zone blackbody spectrum:
- * t = 0.0: Incandescent golden-white plasma at the ISCO boundary
- * t = 0.20: Radiant champagne gold
- * t = 0.50: Deep glowing amber
- * t = 0.80: Warm interstellar bronze & burnt orange
+ * t = 0.0: Incandescent white-hot plasma at the ISCO boundary
+ * t = 0.18: Radiant champagne gold
+ * t = 0.45: Deep glowing amber
+ * t = 0.75: Warm interstellar bronze & burnt orange
  * t = 1.0: Smoky dark ruby-amber outer wisps
  */
 vec3 gargDiskColour(float t) {
-    vec3 c0 = vec3(1.000, 0.945, 0.830);
-    vec3 c1 = vec3(1.000, 0.790, 0.380);
-    vec3 c2 = vec3(0.980, 0.560, 0.180);
-    vec3 c3 = vec3(0.780, 0.300, 0.070);
-    vec3 c4 = vec3(0.380, 0.100, 0.020);
+    vec3 c0 = vec3(1.000, 0.985, 0.930);
+    vec3 c1 = vec3(1.000, 0.860, 0.520);
+    vec3 c2 = vec3(0.980, 0.650, 0.250);
+    vec3 c3 = vec3(0.850, 0.380, 0.090);
+    vec3 c4 = vec3(0.420, 0.120, 0.020);
     float k = clamp(t, 0.0, 1.0);
-    if (k < 0.20) {
-        return mix(c0, c1, k / 0.20);
+    if (k < 0.18) {
+        return mix(c0, c1, k / 0.18);
     }
-    if (k < 0.50) {
-        return mix(c1, c2, (k - 0.20) / 0.30);
+    if (k < 0.45) {
+        return mix(c1, c2, (k - 0.18) / 0.27);
     }
-    if (k < 0.80) {
-        return mix(c2, c3, (k - 0.50) / 0.30);
+    if (k < 0.75) {
+        return mix(c2, c3, (k - 0.45) / 0.30);
     }
-    return mix(c3, c4, (k - 0.80) / 0.20);
+    return mix(c3, c4, (k - 0.75) / 0.25);
 }
 
 float gargWhiteNoise(vec2 uv) {
@@ -215,6 +215,11 @@ void main() {
         return;
     }
 
+    // Distance along ray where it enters the apparent shadow sphere (critical curve)
+    bool rayHitsShadow = along > 0.0 && impact < shadowEdge;
+    float frontHoleDist = rayHitsShadow ? (along - sqrt(max(shadowEdge * shadowEdge - impact * impact, 0.0))) : 1.0e9;
+    bool isInsideShadow = rayHitsShadow && sceneDistance >= frontHoleDist;
+
     vec3 diskU = normalize(cross(axis, vec3(0.0, 0.0, 1.0)) + vec3(1.0e-4));
     vec3 diskV = cross(axis, diskU);
 
@@ -262,7 +267,7 @@ void main() {
             captured = true;
             break;
         }
-        if (sceneDistance < holeDistance && travelledBlocks >= sceneDistance) {
+        if (sceneDistance < frontHoleDist && travelledBlocks >= sceneDistance) {
             hitSolid = true;
             break;
         }
@@ -316,23 +321,24 @@ void main() {
         float dopplerFactor = clamp(pow(doppler, 3.2), 0.35, 2.6);
 
         // Seamless inner emission connecting smoothly right to the shadow boundary
-        float profile = pow(1.0 - t, 1.4)
-                * smoothstep(0.0, 0.02, t) * smoothstep(1.0, 0.90, t);
+        float profile = pow(1.0 - t, 1.25)
+                * smoothstep(0.0, 0.012, t) * smoothstep(1.0, 0.88, t);
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
         float grain = 0.35 + 0.65 * noise;
 
         vec3 col = gargDiskColour(t);
         // Doppler spectral shift: approaching side shifts hotter/whiter gold, receding shifts deeper amber
         if (dopplerFactor > 1.0) {
-            col = mix(col, vec3(1.0, 0.96, 0.88), clamp((dopplerFactor - 1.0) * 0.35, 0.0, 0.5));
+            col = mix(col, vec3(1.0, 0.98, 0.92), clamp((dopplerFactor - 1.0) * 0.35, 0.0, 0.5));
         } else {
-            col = mix(col, vec3(0.82, 0.34, 0.08), clamp((1.0 - dopplerFactor) * 0.45, 0.0, 0.6));
+            col = mix(col, vec3(0.85, 0.42, 0.10), clamp((1.0 - dopplerFactor) * 0.40, 0.0, 0.5));
         }
 
         // Volumetric opacity accumulation per step: continuous, smooth, and non-banded
-        // Scaled by dt to ensure mathematically invariant radiance and opacity across varying step sizes
-        float local = clamp(coverage * profile * (1.6 * grain) * dt, 0.0, 1.0);
-        vec3 emission = col * (profile * max(DiskShape.w, 0.0) * 43.0 * fed * grain * dopplerFactor * dt);
+        // local represents step absorption alpha (linear in dt)
+        float local = clamp(coverage * profile * (2.2 * grain) * dt, 0.0, 1.0);
+        // Radiant source emission: scaled appropriately for HDR Reinhard mapping (linear in dt via local)
+        vec3 emission = col * (profile * max(DiskShape.w, 0.0) * 16.5 * fed * grain * dopplerFactor);
 
         accum += emission * (1.0 - alpha) * local;
         alpha += (1.0 - alpha) * local;
@@ -358,16 +364,16 @@ void main() {
     }
 
     // The photon ring: hugging the outer edge of the apparent shadow (critical curve)
-    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.075, 0.001), 2.0));
-    float second = exp(-pow((impact - shadowEdge * 1.03) / max(rg * 0.040, 0.001), 2.0))
-            / 535.0;
+    float first = exp(-pow((impact - shadowEdge) / max(rg * 0.080, 0.001), 2.0));
+    float second = exp(-pow((impact - shadowEdge * 1.025) / max(rg * 0.040, 0.001), 2.0))
+            / 450.0;
     float ahead = step(0.0, along);
-    float ringGain = 0.50 * ahead * max(DiskShape.w, 0.0) * (0.25 + 0.75 * alpha)
+    float ringGain = 0.60 * ahead * max(DiskShape.w, 0.0) * (0.30 + 0.70 * alpha)
             * (1.0 + HoleState.y * 1.8);
-    if (hitSolid && sceneDistance < holeDistance) {
+    if (hitSolid && sceneDistance < frontHoleDist) {
         ringGain = 0.0;
     }
-    vec3 ring = vec3(1.0, 0.94, 0.82) * (first + second) * ringGain;
+    vec3 ring = vec3(1.0, 0.96, 0.88) * (first + second) * ringGain;
 
     // Open transition: 0.0 = untouched scene, 1.0 = fully active black hole
     float openFactor = clamp(HoleState.x, 0.0, 1.0);
@@ -382,7 +388,7 @@ void main() {
     // Background behind the disk & lensing
     vec3 behindEffect = sceneColour;
 
-    if (captured) {
+    if (captured || isInsideShadow) {
         if (crit >= 0.99) {
             // Singularity has detonated! Core blazes into brilliant white-gold supernova light
             // and dissolves gracefully into the background scene as spacetime heals.
