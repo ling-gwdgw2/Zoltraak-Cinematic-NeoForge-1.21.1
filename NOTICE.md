@@ -31,9 +31,12 @@ As of **Version 1.0.4** and all subsequent releases:
   - `defense_barrier` (`.fsh`, `.vsh`, `.json`): Hexagonal energy barrier with impact wave dispersion.
   - `gargantua` (`.fsh`, `.vsh`, `.json`): Gravitational lensing black hole accretion raymarching.
   - `unsealing_fire_column` (`.fsh`, `.vsh`, `.json`): Ritual arcane fire pillar and runic rings.
-- **Custom Textures**:
+- **Custom Textures & Spell Icons**:
   - `zoltraak_glow.png`: Procedurally synthesized 512x512 HDR Gaussian-quartic radial bloom texture.
   - `zoltraak_magic_circle.png`: High-definition 2048x2048 anime magic circle with clean luminous alpha channel.
+  - `defense.png`: Custom-crafted 64x64 hexagonal mana crystal barrier spell icon.
+- **100% Original Synthesized Audio**:
+  - All Zoltraak sound effects (`zoltraak_charge.ogg`, `zoltraak_fire.ogg`, `zoltraak_great_fire.ogg`, and `zoltraak_impact.ogg`) are 100% mathematically synthesized in-house using digital signal processing (DSP), FM/additive resonance, and spatial stereo convolution.
 
 ---
 

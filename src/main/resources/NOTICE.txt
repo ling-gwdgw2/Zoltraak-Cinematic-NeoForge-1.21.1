@@ -34,9 +34,16 @@ Core Shaders (100% Custom):
   - gargantua (.fsh, .vsh, .json)
   - unsealing_fire_column (.fsh, .vsh, .json)
 
-Textures:
+Textures & GUI Icons:
   - zoltraak_glow.png: Procedural HDR radial bloom texture
   - zoltraak_magic_circle.png: High-definition 2048x2048 custom artwork
+  - defense.png: Custom 64x64 hexagonal mana barrier spell icon
+
+Audio Sound Effects (100% In-House Synthesized):
+  - zoltraak_charge.ogg: Mathematically synthesized rising mana swell
+  - zoltraak_fire.ogg: Supersonic laser transient & photonic plasma hiss
+  - zoltraak_great_fire.ogg: Sub-bass seismic roar & cavernous reverb wash
+  - zoltraak_impact.ogg: Kinetic fracture pop & crater shockwave rumble
 
 
 3. HISTORICAL ATTRIBUTION & PROTOTYPE NOTICE

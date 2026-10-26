@@ -19,13 +19,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `great_zoltraak_black.fsh`, `.vsh`, `.json`: Completely rewritten featuring 3D cylindrical volumetric void raymarching, charcoal-violet soot turbulence, and silver-lavender rim discharge.
   - `great_zoltraak_plume.fsh`, `.vsh`, `.json`: Completely rewritten with lateral fluid plume wave dynamics, dual-tone light/dark mode support, and dielectric spark breaking.
   - `corona.fsh`, `.vsh`, `.json`: Completely rewritten from scratch as an original Demonic Gravitational Singularity Accretion Corona for Qual's cataclysmic singularity phase, featuring logarithmic inflow spirals, event horizon absorption cores, and outward coronal plasma streamers.
+- **100% Original Synthesized Audio Effects (`zoltraak_*.ogg`)**:
+  - `zoltraak_charge.ogg`: 100% mathematically synthesized stereo rising mana swell with exponential sub-bass pitch glide (55Hz -> 140Hz), vibrato-modulated harmonic sweeps, and sparkling mana shimmer.
+  - `zoltraak_fire.ogg`: Synthesized supersonic laser snap transient, sub-bass 110Hz punch, beating 520Hz/525Hz photonic drone, and turbulent plasma discharge hiss.
+  - `zoltraak_great_fire.ogg`: Cataclysmic seismic 38Hz sub rumble, twin detuned saw/sine energy roar (62Hz & 65.5Hz), and cavernous stereo reverb wash.
+  - `zoltraak_impact.ogg`: Kinetic matter-fracture pop, 35Hz crater shockwave rumble, and debris crackle burst.
+- **Custom-Crafted Spell Icons & GUI Textures**:
+  - `defense.png`: Brand-new custom 64x64 spell icon depicting a glowing cyan hexagonal mana barrier with golden runic border, inset mana crystals, and smooth alpha transparency.
 - **Dead Shaders & Texture Atlases Purged**:
   - Permanently deleted unused legacy shaders: `black_zoltraak_head.fsh`, `black_zoltraak_head.json`, `lens.fsh`, and `lens.json`.
   - Permanently deleted `zoltraak_vfx_atlas.png` and severed all references across `ZoltraakRenderTypes.java`, `ZoltraakPhotonBeamRenderer.java`, and `SceneLens.java`.
   - Replaced `zoltraak_glow.png` with a mathematically synthesized procedural HDR Gaussian-quartic radial bloom texture generated via clean-room mathematical script.
   - Replaced `zoltraak_magic_circle.png` with original 2048x2048 high-definition artwork with clean luminous alpha channel.
 - **Complete Autonomy & Independence**:
-  - The entire repository now consists solely of 100% original code, shaders, configurations, and textures, with zero borrowed assets.
+  - The entire repository now consists solely of 100% original code, shaders, configurations, audio effects, and textures, with zero borrowed assets.
 
 #### Added
 - **Dedicated Supersonic Rapid Bullet Shaders (`rapid_zoltraak_bullet.json`, `.vsh`, `.fsh`)**:
