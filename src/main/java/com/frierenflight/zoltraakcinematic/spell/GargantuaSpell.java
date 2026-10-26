@@ -81,15 +81,15 @@ public class GargantuaSpell extends AbstractSpell {
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
             Vec3 eyePos = entity.getEyePosition();
             Vec3 lookVec = entity.getViewVector(1.0f);
-            double range = 48.0d;
+            double range = 64.0d;
             Vec3 traceEnd = eyePos.add(lookVec.scale(range));
 
             HitResult hit = level.clip(new ClipContext(eyePos, traceEnd, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, entity));
             Vec3 targetPos;
             if (hit.getType() != HitResult.Type.MISS) {
-                targetPos = hit.getLocation().add(0, 14.0d, 0);
+                targetPos = hit.getLocation().add(0, 18.0d, 0);
             } else {
-                targetPos = eyePos.add(lookVec.scale(28.0d));
+                targetPos = eyePos.add(lookVec.scale(48.0d));
             }
 
             // Spawn Gargantua singularity entity with scaled Black Hole Spell Power

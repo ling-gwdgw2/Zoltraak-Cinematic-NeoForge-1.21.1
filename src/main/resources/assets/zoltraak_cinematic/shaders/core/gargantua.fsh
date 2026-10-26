@@ -196,19 +196,12 @@ void main() {
         return;
     }
 
-    // Distance along ray where it enters the shadow sphere (if ray aims at the hole)
-    bool rayHitsShadowCone = along > 0.0 && impact < shadowEdge;
-    float frontHoleDist = rayHitsShadowCone ? (along - sqrt(max(shadowEdge * shadowEdge - impact * impact, 0.0))) : 1.0e9;
-    bool isInsideShadow = rayHitsShadowCone && sceneDistance >= frontHoleDist;
-
     vec3 diskU = normalize(cross(axis, vec3(0.0, 0.0, 1.0)) + vec3(1.0e-4));
     vec3 diskV = cross(axis, diskU);
 
     p += d * (gargWhiteNoise(vUv * 512.0) * 0.1);
 
-    float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 64.0;
-    int steps = int(mix(targetSteps * 0.45, targetSteps,
-            clamp(reach / max(holeDistance, 0.001) * 1.6, 0.0, 1.0)));
+    int steps = int(clamp(DiskShape.z, 48.0, float(GARG_STEPS_MAX)));
 
     vec3 accum = vec3(0.0);
     float alpha = 0.0;
@@ -217,6 +210,7 @@ void main() {
     float time = HoleState.z;
     float inner = DiskShape.x;
     float outer = DiskShape.y;
+    float escapeDist = max(DiskShape.y * 1.35, 18.0);
 
     for (int i = 0; i < GARG_STEPS_MAX; ++i) {
         if (i >= steps) {
@@ -224,8 +218,9 @@ void main() {
         }
         float radius = length(p);
         float height = dot(p, axis);
-        float nearPlane = max(abs(height) * 0.55, radius * 0.02);
-        float dt = clamp(min(radius * 0.12, nearPlane), 0.03, 1.4);
+        float diskThick = mix(GARG_THICK_INNER, GARG_THICK_OUTER, clamp((radius - inner) / max(outer - inner, 0.001), 0.0, 1.0));
+        float diskDist = max(abs(height) - diskThick, 0.0);
+        float dt = clamp(min(radius * 0.08 + diskDist * 0.4, radius * 0.18), 0.05, 0.95);
 
         p += d * dt;
         travelledBlocks += dt * rg;
@@ -242,7 +237,7 @@ void main() {
             hitSolid = true;
             break;
         }
-        if (travelled > GARG_ESCAPE) {
+        if (travelled > escapeDist) {
             break;
         }
 
@@ -323,7 +318,7 @@ void main() {
     float ahead = step(0.0, along);
     float ringGain = 0.32 * ahead * max(DiskShape.w, 0.0) * (0.30 + 0.70 * alpha)
             * (1.0 + HoleState.y * 1.8);
-    if (hitSolid && sceneDistance < frontHoleDist) {
+    if (hitSolid && sceneDistance < holeDistance) {
         ringGain = 0.0;
     }
     vec3 ring = gargDiskColour(0.0) * (first + second) * ringGain;
@@ -342,14 +337,14 @@ void main() {
     vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? sceneColour : background;
     vec3 behindEffect = sceneColour;
 
-    if (captured || isInsideShadow) {
+    if (captured) {
         if (crit >= 0.99) {
             // Singularity has detonated! Core blazes into brilliant white-gold supernova light
             // and dissolves gracefully into the background scene as spacetime heals.
             vec3 coreBurst = mix(vec3(1.4, 1.0, 0.6), vec3(4.5, 4.0, 3.2), blast);
             behindEffect = mix(sceneOrCosmic, coreBurst, clamp(blast * 1.6 + openFactor * 0.45, 0.0, 1.0));
         } else {
-            // Active event horizon shadow
+            // Active event horizon shadow: pure geodesic light capture
             behindEffect = vec3(0.0);
         }
     } else if (!hitSolid) {

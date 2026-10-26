@@ -214,8 +214,8 @@ public final class GargantuaPostProcessor {
                 float blast = entity.blastFlash(partialTicks);
                 shader.safeGetUniform("HoleState").set(opened, crit, timeSec, blast);
 
-                float raymarchSteps = (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getRaymarchStepCount();
-                shader.safeGetUniform("DiskShape").set(2.20f, 22.5f, raymarchSteps, brightness);
+                float raymarchSteps = (float) Math.max(64, com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicClientConfig.getRaymarchStepCount());
+                shader.safeGetUniform("DiskShape").set(3.83f, 13.5f, raymarchSteps, brightness);
                 shader.safeGetUniform("InverseProjectionMat").set(invProj);
 
                 RenderSystem.setShader(() -> shader);
