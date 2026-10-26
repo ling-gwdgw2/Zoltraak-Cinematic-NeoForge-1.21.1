@@ -237,10 +237,19 @@ void main() {
         }
         float radius = length(p);
         float height = dot(p, axis);
-        float diskThick = mix(GARG_THICK_INNER, GARG_THICK_OUTER, clamp((radius - inner) / max(outer - inner, 0.001), 0.0, 1.0));
-        float diskDist = max(abs(height) - diskThick, 0.0);
-        // Adaptive step size: shrink to 0.09 near the disk so rays smoothly sample the volumetric gas without skipping
-        float dt = clamp(min(radius * 0.10, 0.09 + diskDist * 0.45), 0.05, 0.85);
+        vec3 planar = p - axis * height;
+        float radial = length(planar);
+
+        float diskThick = mix(GARG_THICK_INNER, GARG_THICK_OUTER, clamp((radial - inner) / max(outer - inner, 0.001), 0.0, 1.0));
+        float dRadial = max(max(inner - radial, 0.0), radial - outer);
+        float dHeight = max(abs(height) - diskThick, 0.0);
+        float diskDist = length(vec2(dRadial, dHeight));
+
+        // Adaptive step size:
+        // - In empty space far from the disk: fast stepping up to 0.85 rg to traverse bounding volume
+        // - Inside or near the active gas volume: smoothly refine to 0.12 rg for rich, non-banded volumetric sampling
+        // - Near horizon: scale with radius to prevent geodesic overshoot
+        float dt = clamp(min(radius * 0.12, 0.12 + diskDist * 0.40), 0.06, 0.85);
 
         p += d * dt;
         travelledBlocks += dt * rg;
@@ -262,8 +271,8 @@ void main() {
         }
 
         height = dot(p, axis);
-        vec3 planar = p - axis * height;
-        float radial = length(planar);
+        planar = p - axis * height;
+        radial = length(planar);
         if (radial < inner || radial > outer) {
             continue;
         }
@@ -321,8 +330,9 @@ void main() {
         }
 
         // Volumetric opacity accumulation per step: continuous, smooth, and non-banded
-        float local = clamp(coverage * profile * (0.24 * grain), 0.0, 1.0);
-        vec3 emission = col * (profile * max(DiskShape.w, 0.0) * 6.5 * fed * grain * dopplerFactor);
+        // Scaled by dt to ensure mathematically invariant radiance and opacity across varying step sizes
+        float local = clamp(coverage * profile * (1.6 * grain) * dt, 0.0, 1.0);
+        vec3 emission = col * (profile * max(DiskShape.w, 0.0) * 43.0 * fed * grain * dopplerFactor * dt);
 
         accum += emission * (1.0 - alpha) * local;
         alpha += (1.0 - alpha) * local;
@@ -369,8 +379,7 @@ void main() {
     float blastDiskEnergize = 1.0 + blast * 3.5;
     vec3 diskEmission = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
 
-    // Background behind the disk
-    vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? sceneColour : background;
+    // Background behind the disk & lensing
     vec3 behindEffect = sceneColour;
 
     if (captured) {
@@ -378,13 +387,13 @@ void main() {
             // Singularity has detonated! Core blazes into brilliant white-gold supernova light
             // and dissolves gracefully into the background scene as spacetime heals.
             vec3 coreBurst = mix(vec3(1.4, 1.0, 0.6), vec3(4.5, 4.0, 3.2), blast);
-            behindEffect = mix(sceneOrCosmic, coreBurst, clamp(blast * 1.6 + openFactor * 0.45, 0.0, 1.0));
+            behindEffect = mix(background, coreBurst, clamp(blast * 1.6 + openFactor * 0.45, 0.0, 1.0));
         } else {
             // Active event horizon shadow: pure geodesic light capture
             behindEffect = vec3(0.0);
         }
     } else if (!hitSolid) {
-        behindEffect = sceneOrCosmic;
+        behindEffect = background;
     }
 
     // --- APOCALYPTIC SUPERNOVA DETONATION & COSMIC SHOCKWAVE VFX ---
