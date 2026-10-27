@@ -217,11 +217,8 @@ void main() {
 
     // Adaptive step configuration across chord
     float totalDist = span.y - span.x;
-    const int STEPS = 50;
+    const int STEPS = 64;
     float stepLength = totalDist / float(STEPS);
-
-    // Anti-banding start dither
-    p += d * (stepLength * gargWhiteNoise(gl_FragCoord.xy));
 
     // IterationT disk geometry bounds
     const float discRadius = 2.25;
@@ -242,6 +239,8 @@ void main() {
         float warpFactor = 1.0 / (sDist * sDist + 0.000001);
         vec3 sVec = -p / max(sDist, 0.0001);
         d = normalize(d + sVec * (warpFactor * (0.06 * lensMult)));
+
+        vec3 pPrev = p;
         p += d * stepLength;
         travelledBlocks += stepLength * uScale;
 
@@ -250,9 +249,12 @@ void main() {
             break;
         }
 
-        // 2. Black Hole Event Horizon Shadow
-        float rHole = length(p);
-        if (rHole < 0.52) {
+        // 2. Black Hole Event Horizon Shadow (Segment-to-Sphere Test)
+        // Tests the exact point of closest approach of this step segment to origin (r = 0.52).
+        // This guarantees a razor-sharp, perfectly round and smooth shadow with ZERO dither noise!
+        float tClose = clamp(-dot(pPrev, d), 0.0, stepLength);
+        float dMin = length(pPrev + d * tClose);
+        if (dMin < 0.52) {
             hitShadow = true;
             transmittance = 0.0;
             break;
@@ -268,6 +270,11 @@ void main() {
         float radialGradient = 1.0 - clamp((r - discInner) / discWidth * 0.5, 0.0, 1.0);
         float discThickness = 0.10 * radialGradient;
 
+        // Smooth outer dissipation between r = 3.0 and r = 4.0:
+        // Ensures the accretion disk softly fades to 0 at the outer boundary with zero grain / cliff edge!
+        float outerFade = clamp((discOuter - r) / 1.0, 0.0, 1.0);
+        outerFade = outerFade * outerFade * (3.0 - 2.0 * outerFade);
+
         // IterationT Inner Edge Volumetric Bloom Factor
         float fr = abs(r - discInner) + 0.4;
         fr = fr * fr;
@@ -279,9 +286,9 @@ void main() {
         // Smooth Bell-Curve Radial Density Profile
         float dr = gargPcurve(radialGradient);
         float density = dr * clamp(1.0 - dist / discThickness, 0.0, 1.0) * 0.7;
-        density = clamp(density + bloomFactor * 0.1, 0.0, 1.0);
+        density = clamp(density + bloomFactor * 0.1, 0.0, 1.0) * outerFade;
 
-        if (density > 0.0001 && r >= discInner && r <= discOuter) {
+        if (density > 0.0001 && r >= discInner) {
             // Concentric Keplerian dust rings & turbulence
             float orbitalPhase = time * 0.8;
             vec2 noiseCoord = vec2(r * 2.8, h * 0.6) + vec2(orbitalPhase * 0.03, 0.0);
@@ -289,22 +296,26 @@ void main() {
             float fbm = 0.35 + 0.65 * noiseVal;
             density *= (fbm * fbm) * dr;
 
-            // IterationT True Blackbody Thermal Emission (2,700K -> 27,000K)
+            // IterationT True Blackbody Thermal Emission:
+            // High dynamic range mapped with sub-linear compression so the core is brilliant white,
+            // while mid disk is champagne gold and outer disk is rich glowing amber.
             float gr = 1.0 - radialGradient;
             gr = gr * gr;
             float glowStrength = 1.0 / (gr * gr * 400.0 + 0.002);
-            vec3 glow = gargBlackbody(2700.0 + glowStrength * 50.0) * (glowStrength * 1.5 + 0.6);
+            float glowFactor = pow(glowStrength, 0.65) * 1.8 + 0.40;
+            float temp = 2700.0 + min(glowStrength * 50.0, 25000.0);
+            vec3 glow = gargBlackbody(temp) * glowFactor;
 
             // Relativistic Doppler beaming
             float flowAngle = atan(dot(planar, diskV), dot(planar, diskU));
-            glow *= clamp(sin(flowAngle - 1.07) * 0.55 + 1.0, 0.35, 1.75);
+            glow *= clamp(sin(flowAngle - 1.07) * 0.55 + 1.0, 0.40, 1.65);
 
             // Volumetric Beer-Lambert integration
-            float stepTrans = exp2(-density * 6.0 * (stepLength / 0.2));
+            float stepTrans = exp2(-density * 6.0 * (stepLength / 0.15));
             float integral = 1.0 - stepTrans;
             transmittance *= stepTrans;
 
-            result += integral * transmittance * glow * 4.5;
+            result += integral * transmittance * glow;
         }
 
         // 4. IterationT 12,000K Incandescent Photon Torus Bloom
@@ -314,7 +325,7 @@ void main() {
         bloomDisc *= step(0.50, r);
         vec3 col = gargBlackbody(12000.0);
 
-        result += col * bloomDisc * (0.022 * stepLength) * transmittance;
+        result += col * bloomDisc * (0.008 * stepLength) * transmittance;
     }
 
     // --- BACKGROUND SCENE & GRAVITATIONAL LENSING ---
@@ -334,11 +345,12 @@ void main() {
         }
     }
 
-    // Accretion disk emission with soft filmic roll-off (IterationT visual profile):
-    // Preserves rich golden amber & bronze hues on outer disk while inner core saturates to brilliant incandescent white.
+    // Accretion disk emission: Standard elegant filmic Reinhard tone mapping.
+    // Perfectly bounds radiance into [0, 1] without flat 80% blowout:
+    // Core (r <= 1.1) reaches dazzling white, mid disk is champagne gold, outer disk is rich glowing amber.
     float blastDiskEnergize = 1.0 + blast * 3.5;
     vec3 diskRaw = result * (openFactor * (1.0 + crit * 1.5) * blastDiskEnergize);
-    vec3 diskEmission = diskRaw / (diskRaw * 0.45 + 1.0);
+    vec3 diskEmission = diskRaw / (diskRaw + 1.0);
 
     // --- APOCALYPTIC SUPERNOVA DETONATION & COSMIC SHOCKWAVE VFX ---
     vec3 supernovaVfx = vec3(0.0);
