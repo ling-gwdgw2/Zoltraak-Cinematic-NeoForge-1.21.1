@@ -354,10 +354,6 @@ void main() {
         float worley = 1.0 - noiseTex.g; // Invert Worley so cellular lobes become luminous plasma knots
         float detail = noiseTex.b;       // High-frequency turbulent filaments
 
-        // Multi-frequency gas density synthesis
-        float plasmaDensity = perlin * 0.44 + worley * 0.36 + detail * 0.20;
-        plasmaDensity = smoothstep(0.16, 0.84, plasmaDensity);
-
         // Concentric Keplerian shear waves & Logarithmic spiral density arms
         float whirl = -4.2;
         float spiralPhase = flowAngle + sqrt(radial / inner) * whirl;
@@ -366,6 +362,10 @@ void main() {
         float striations = sin(radial * 5.2 - orbitalPhase * 1.2) * 0.5 + 0.5; // Fine concentric Keplerian rings
 
         float streamPattern = mix(spiralArm1, spiralArm2, 0.38) * 0.65 + striations * 0.35;
+
+        // Multi-frequency gas density synthesis
+        float plasmaDensity = perlin * 0.44 + worley * 0.36 + detail * 0.20;
+        plasmaDensity = smoothstep(0.16, 0.84, plasmaDensity);
         float filament = clamp(plasmaDensity * (0.45 + 0.75 * streamPattern), 0.0, 1.0);
 
         // --- 3. SLENDER 3D ATMOSPHERIC SCALE-HEIGHT & INNER BLOOM ---
@@ -386,12 +386,6 @@ void main() {
         // Gas density synthesis: combines vertical gaussian slab + pcurve + inner bloom
         float vertCoverage = clamp(1.0 - abs(height) / max(discThickness, 0.005), 0.0, 1.0);
         float baseDensity = dr * vertCoverage * 0.75 + bloomFactor * 0.15;
-
-        // Multi-scale Keplerian noise modulation (Perlin + Worley knots + Detail filaments)
-        float plasmaNoise = perlin * 0.44 + worley * 0.36 + detail * 0.20;
-        plasmaNoise = smoothstep(0.16, 0.84, plasmaNoise);
-        float streamPattern = mix(spiralArm1, spiralArm2, 0.38) * 0.65 + striations * 0.35;
-        float filament = clamp(plasmaNoise * (0.45 + 0.75 * streamPattern), 0.0, 1.0);
 
         float density = baseDensity * (0.50 + 0.60 * filament);
 
