@@ -190,8 +190,8 @@ void main() {
     float shadowEdge = rg * GARG_SHADOW;
     // Gravitational lensing envelope: extends far beyond the physical gas disk to capture
     // astrophysical spacetime curvature, background deflection, and Einstein rings at long range.
-    float lensingRadius = max(DiskShape.y * 2.8, 70.0);
-    float escapeRadius = lensingRadius * 1.05;
+    float lensingRadius = max(DiskShape.y * 1.85, 45.0);
+    float escapeRadius = lensingRadius * 1.10;
     float reach = rg * lensingRadius;
 
     // Everything below is in units of r_g, in the hole's own frame.
@@ -242,7 +242,7 @@ void main() {
     float startJitter = clamp(length(p) * 0.04, 0.03, 0.25) * gargWhiteNoise(gl_FragCoord.xy);
     p += d * startJitter;
 
-    float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 64.0;
+    float targetSteps = DiskShape.z >= 16.0 ? DiskShape.z : 96.0;
     int steps = int(targetSteps);
 
     vec3 accum = vec3(0.0);
@@ -263,15 +263,16 @@ void main() {
         float radial = length(planar);
 
         // Adaptive step size:
-        // In the outer vacuum / lensing zone, take larger steps (up to 2.5 r_g) so geodesics
-        // traverse the full envelope without running out of steps. Inside the disk, take fine steps.
-        float diskDist = max(max(inner - radial, radial - outer), abs(height) - 1.2);
+        // Outside the disk: take efficient steps through empty space so geodesics reach both front & back
+        float distRadial = max(inner - radial, radial - outer);
+        float diskDist = max(distRadial, abs(height) - 0.8);
         float dt;
         if (diskDist > 0.0) {
-            dt = clamp(min(radius * 0.09, diskDist * 0.40 + 0.35), 0.08, 2.5);
+            dt = clamp(min(radius * 0.12, diskDist * 0.45 + 0.35), 0.08, 3.2);
         } else {
-            float nearPlane = max(abs(height) * 0.35, radius * 0.018);
-            dt = clamp(min(radius * 0.065, nearPlane), 0.025, 0.70);
+            // Inside the disk slab: fine resolution to integrate slender volumetric filaments
+            float nearPlane = max(abs(height) * 0.40, radius * 0.020);
+            dt = clamp(min(radius * 0.065, nearPlane), 0.025, 0.50);
         }
 
         p += d * dt;
@@ -385,8 +386,8 @@ void main() {
                 * max(DiskShape.w, 0.0) * 3.8 * fed * intensity;
 
         // --- 6. PHYSICAL BEER-LAMBERT VOLUMETRIC INTEGRATION ---
-        float density = verticalCoverage * radialProfile * (0.30 + 0.50 * filament);
-        float stepAbsorption = 1.0 - exp(-density * dt * 2.6);
+        float density = verticalCoverage * radialProfile * (0.42 + 0.55 * filament);
+        float stepAbsorption = 1.0 - exp(-density * dt * 3.6);
         vec3 stepEmission = emission * stepAbsorption;
         accum += stepEmission * (1.0 - alpha);
         alpha += (1.0 - alpha) * stepAbsorption;
@@ -407,10 +408,10 @@ void main() {
     float normDist = clamp(impact / max(reach, 0.001), 0.0, 1.0);
     float edgeFeather = 1.0 - smoothstep(0.40, 1.0, normDist);
 
-    // Screen-space gravitational lensing: prevent foreground bleeding
+    // Screen-space gravitational lensing: isotropic circular deflection (prevent foreground bleeding)
     vec2 lensedUv = vUv;
     if (SpinAxis.w >= 0.05 && openFactor > 0.001) {
-        vec2 candidateUv = clamp(vUv + (d.xy - rayDir.xy) * vec2(0.38, 0.65) * (edgeFeather * openFactor), 0.001, 0.999);
+        vec2 candidateUv = clamp(vUv + (d.xy - rayDir.xy) * 0.35 * (edgeFeather * openFactor), 0.001, 0.999);
         float candidateDepth = texture(DepthSampler, candidateUv).r;
         if (candidateDepth >= SL_SKY_DEPTH) {
             lensedUv = candidateUv;

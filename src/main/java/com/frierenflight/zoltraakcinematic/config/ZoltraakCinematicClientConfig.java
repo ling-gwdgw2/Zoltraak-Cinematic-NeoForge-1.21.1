@@ -141,10 +141,10 @@ public class ZoltraakCinematicClientConfig {
     public static int getRaymarchStepCount() {
         String preset = getBlackHoleRaymarchStepsPreset().toUpperCase();
         return switch (preset) {
-            case "LOW" -> 32;
-            case "HIGH" -> 96;
+            case "LOW" -> 64;
+            case "HIGH" -> 112;
             case "ULTRA" -> 128;
-            default -> 64; // MEDIUM
+            default -> 96; // MEDIUM
         };
     }
 
