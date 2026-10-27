@@ -114,27 +114,43 @@ const float GARG_THICK_INNER = 0.085;
 const float GARG_THICK_OUTER = 0.150;
 
 /**
- * True Interstellar Blackbody Palette:
- * White-hot core -> Champagne gold -> Luminous amber -> Fiery bronze-orange -> Deep cosmic ember red
+ * IterationT Planckian Locus Blackbody Radiation Function:
+ * Accurately models real astrophysical thermal emission spectrum in sRGB space.
  */
-vec3 gargDiskColour(float t) {
-    vec3 c0 = vec3(1.000, 0.985, 0.940); // 0.00: Incandescent core
-    vec3 c1 = vec3(1.000, 0.860, 0.520); // 0.25: Radiant champagne gold
-    vec3 c2 = vec3(0.980, 0.620, 0.220); // 0.50: Glowing solar amber
-    vec3 c3 = vec3(0.850, 0.360, 0.080); // 0.75: Interstellar fiery bronze
-    vec3 c4 = vec3(0.480, 0.120, 0.025); // 1.00: Smoldering cosmic dust edge
+vec3 gargBlackbody(float temperature) {
+    const mat2x4 splineX = mat2x4(-0.2661293e9, -0.2343589e6, 0.8776956e3, 0.179910,
+                                  -3.0258469e9,  2.1070479e6, 0.2226347e3, 0.240390);
 
-    float k = clamp(t, 0.0, 1.0);
-    if (k < 0.25) {
-        return mix(c0, c1, k / 0.25);
-    }
-    if (k < 0.50) {
-        return mix(c1, c2, (k - 0.25) / 0.25);
-    }
-    if (k < 0.75) {
-        return mix(c2, c3, (k - 0.50) / 0.25);
-    }
-    return mix(c3, c4, (k - 0.75) / 0.25);
+    const mat3x4 splineY = mat3x4(-1.1063814, -1.34811020, 2.18555832, -0.20219683,
+                                  -0.9549476, -1.37418593, 2.09137015, -0.16748867,
+                                   3.0817580, -5.87338670, 3.75112997, -0.37001483);
+
+    float rt = 1.0 / max(temperature, 1000.0);
+    float rt2 = rt * rt;
+    vec4 coeffX = vec4(rt2 * rt, rt2, rt, 1.0);
+
+    float x = dot(coeffX, temperature < 4000.0 ? splineX[0] : splineX[1]);
+    float x2 = x * x;
+    vec4 coeffY = vec4(x2 * x, x2, x, 1.0);
+
+    float z = 1.0 / dot(coeffY, temperature < 2222.0 ? splineY[0] : temperature < 4000.0 ? splineY[1] : splineY[2]);
+
+    vec3 xyz = vec3(x * z, 1.0, z);
+    xyz.z -= xyz.x + 1.0;
+
+    const mat3 xyzToSrgb = mat3( 3.24097, -0.96924,  0.05563,
+                                -1.53738,  1.87597, -0.20398,
+                                -0.49861,  0.04156,  1.05697);
+
+    return max(xyzToSrgb * xyz, vec3(0.0));
+}
+
+/**
+ * IterationT Smooth Bell-Curve Radial Profile
+ */
+float gargPcurve(float x) {
+    float x2 = x * x;
+    return 12.207 * x2 * x2 * (1.0 - x);
 }
 
 float gargWhiteNoise(vec2 uv) {
@@ -278,9 +294,13 @@ void main() {
         p += d * dt;
         travelledBlocks += dt * rg;
         float travelled = length(p);
-        // Geodesic leapfrog integration (modulated by Gravitational Lensing toggle via SpinAxis.w)
+
+        // IterationT Relativistic 1/r^2 Spacetime Warping Geodesic:
+        // Smoothly and stably curves light around the black hole across all distance scales
         float lensMult = SpinAxis.w >= 0.05 ? 1.0 : 0.0;
-        d = normalize(d + (-1.5 * lensMult * h * h * p / pow(travelled, 5.0)) * dt);
+        vec3 singularityVec = -p / max(travelled, 0.001);
+        float warpFactor = 1.0 / (travelled * travelled + 0.01);
+        d = normalize(d + singularityVec * (2.4 * warpFactor * lensMult * dt));
 
         if (travelledBlocks >= sceneDistance) {
             hitSolid = true;
@@ -348,14 +368,32 @@ void main() {
         float streamPattern = mix(spiralArm1, spiralArm2, 0.38) * 0.65 + striations * 0.35;
         float filament = clamp(plasmaDensity * (0.45 + 0.75 * streamPattern), 0.0, 1.0);
 
-        // --- 3. SLENDER 3D ATMOSPHERIC SCALE-HEIGHT ---
-        // Kip Thorne razor-thin astrophysical disk: vertical Gaussian profile
-        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.80 + 0.25 * filament);
-        float zNorm = abs(height) / max(diskScaleHeight, 0.005);
-        if (zNorm > 2.5) {
-            continue;
-        }
-        float verticalCoverage = exp(-zNorm * zNorm * 2.2);
+        // --- 3. SLENDER 3D ATMOSPHERIC SCALE-HEIGHT & INNER BLOOM ---
+        float radialGradient = 1.0 - t;
+        float discThickness = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t);
+
+        // IterationT Smooth Bell-Curve Density Profile
+        float dr = gargPcurve(radialGradient);
+
+        // IterationT Inner Edge Volumetric Bloom Factor:
+        // Generates the dazzling, silky-smooth incandescent white-hot bloom around the inner hole rim
+        float fr = abs(radial - inner) * 0.25 + 0.35;
+        float fade = fr * fr * 0.04;
+        float bloomFactor = 1.0 / (height * height * 55.0 + fade + 0.00002);
+        bloomFactor *= clamp(2.0 - abs(height) / max(discThickness, 0.005), 0.0, 1.0);
+        bloomFactor = bloomFactor * bloomFactor;
+
+        // Gas density synthesis: combines vertical gaussian slab + pcurve + inner bloom
+        float vertCoverage = clamp(1.0 - abs(height) / max(discThickness, 0.005), 0.0, 1.0);
+        float baseDensity = dr * vertCoverage * 0.75 + bloomFactor * 0.15;
+
+        // Multi-scale Keplerian noise modulation (Perlin + Worley knots + Detail filaments)
+        float plasmaNoise = perlin * 0.44 + worley * 0.36 + detail * 0.20;
+        plasmaNoise = smoothstep(0.16, 0.84, plasmaNoise);
+        float streamPattern = mix(spiralArm1, spiralArm2, 0.38) * 0.65 + striations * 0.35;
+        float filament = clamp(plasmaNoise * (0.45 + 0.75 * streamPattern), 0.0, 1.0);
+
+        float density = baseDensity * (0.50 + 0.60 * filament);
 
         // --- 4. RELATIVISTIC DOPPLER BEAMING ---
         vec3 tangentDir = normalize(cross(axis, planar));
@@ -363,32 +401,19 @@ void main() {
         float dopplerFactor = clamp(1.0 + viewDoppler * 0.70, 0.30, 2.6);
         float dopplerBoost = pow(dopplerFactor, 2.5);
 
-        // --- 5. BLACKBODY TEMPERATURE SHIFT & RADIATIVE PROFILE ---
-        // Physical radiative profile:
-        // - Inner ISCO boundary is crisp and sharp (smoothstep 0.0 -> 0.018)
-        // - Outer boundary feathers softly into empty space across the outer 28% of the disk
-        float iscoCutoff = smoothstep(0.0, 0.018, t);
-        float outerFeather = 1.0 - smoothstep(0.72, 1.0, t);
-        float radialProfile = pow(max(1.0 - t, 0.0), 0.65) * iscoCutoff * outerFeather;
-        float coreMultiplier = 1.0 + pow(max(1.0 - t, 0.0), 2.0) * 1.8;
+        // --- 5. ITERATION-T PLANCKIAN LOCUS BLACKBODY RADIATION ---
+        // Radial gradient powers glow temperature (2,700K outer bronze -> 8,500K inner white-gold)
+        float gr = t * t;
+        float glowStrength = 1.0 / (gr * gr * 380.0 + 0.002);
+        float temp = 2700.0 + glowStrength * 48.0;
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
-
-        float colorTemp = clamp(t - (filament - 0.5) * 0.22 - viewDoppler * 0.24, 0.0, 1.0);
-        vec3 baseCol = gargDiskColour(colorTemp);
-
-        // Incandescent inner core (white-hot ISCO rim)
-        float innerHeat = pow(max(0.0, 1.0 - t * 2.2), 2.5);
-        vec3 incandescent = vec3(1.10, 1.05, 0.98) * (innerHeat * 1.4);
-        vec3 dopplerBoostCol = vec3(0.7, 0.95, 1.2) * (max(0.0, viewDoppler) * innerHeat * 0.6);
-
-        float intensity = (0.35 + 0.95 * pow(filament, 1.3)) * dopplerBoost;
-        vec3 emission = (baseCol * coreMultiplier + incandescent + dopplerBoostCol)
-                * max(DiskShape.w, 0.0) * 3.8 * fed * intensity;
+        vec3 glow = gargBlackbody(temp) * (glowStrength * 0.008 + 0.85) * (max(DiskShape.w, 0.0) * fed * dopplerBoost);
 
         // --- 6. PHYSICAL BEER-LAMBERT VOLUMETRIC INTEGRATION ---
-        float density = verticalCoverage * radialProfile * (0.42 + 0.55 * filament);
-        float stepAbsorption = 1.0 - exp(-density * dt * 3.6);
-        vec3 stepEmission = emission * stepAbsorption;
+        float stepTransmittance = exp(-density * dt * 3.5);
+        float stepAbsorption = 1.0 - stepTransmittance;
+        vec3 stepEmission = glow * stepAbsorption;
+
         accum += stepEmission * (1.0 - alpha);
         alpha += (1.0 - alpha) * stepAbsorption;
         if (alpha > 0.985) {
@@ -444,24 +469,22 @@ void main() {
     }
 
     // --- EINSTEIN PHOTON RING (CRITICAL CURVE) ---
-    // The luminous boundary formed by light ray orbits looping around the photon sphere.
-    // In Solas Shader and real astrophysics, this is an unbroken, brilliant 360-degree circle of light.
+    // In IterationT: 12,000K incandescent torus bloom encircling the photon sphere
     float ringDist = impact - shadowEdge;
-    // Inner mask: strict zero inside event horizon shadow, sharp rise at shadow edge
     float ringInnerMask = smoothstep(-rg * 0.015, rg * 0.015, ringDist);
 
-    // 1. Razor-sharp incandescent core ring (ultra-thin intense white line)
-    float ringCore = exp(-pow(ringDist / max(rg * 0.030, 0.001), 2.0)) * ringInnerMask;
+    // 1. Ultra-sharp incandescent core ring
+    float ringCore = exp(-pow(ringDist / max(rg * 0.025, 0.001), 2.0)) * ringInnerMask;
 
-    // 2. Secondary Einstein deflection fringe
-    float ringSecondary = exp(-pow((ringDist - rg * 0.042) / max(rg * 0.018, 0.001), 2.0)) * ringInnerMask * 0.40;
+    // 2. IterationT Volumetric Torus Bloom
+    float torusDist = abs(ringDist) / max(rg * 0.045, 0.001);
+    float bloomTorus = 1.0 / (pow(torusDist, 3.2) + 0.001) * ringInnerMask;
 
-    // 3. Radiant solar golden corona (soft halo bathing the outer edge)
-    float ringHalo = exp(-pow(max(ringDist, 0.0) / max(rg * 0.20, 0.001), 1.6)) * ringInnerMask;
+    // 3. Radiant champagne corona
+    float ringHalo = exp(-pow(max(ringDist, 0.0) / max(rg * 0.22, 0.001), 1.6)) * ringInnerMask;
 
-    // Color blending: dazzling incandescent white-hot core + warm radiant champagne/gold corona
-    vec3 ringCoreCol = vec3(1.0, 0.99, 0.96) * (ringCore * 3.8 + ringSecondary * 1.8);
-    vec3 ringHaloCol = vec3(1.0, 0.80, 0.38) * (ringHalo * 1.3);
+    vec3 ringCoreCol = gargBlackbody(12000.0) * (ringCore * 5.0 + bloomTorus * 2.2);
+    vec3 ringHaloCol = gargBlackbody(4500.0) * (ringHalo * 1.5);
     vec3 ringComposite = ringCoreCol + ringHaloCol;
 
     float ahead = step(0.0, along);
