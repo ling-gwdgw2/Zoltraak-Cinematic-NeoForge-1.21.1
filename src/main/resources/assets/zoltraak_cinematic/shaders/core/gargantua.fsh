@@ -9,55 +9,8 @@ out vec4 fragColor;
 
 #define SL_SKY_DEPTH 0.99999
 
-/**
- * Luminous Interstellar Deep Space: Multi-layered Diamond Starfield & Glowing Cosmic Nebula
- */
-vec3 gargCosmicSky(vec3 dir, float time, float sceneLum) {
-    // Spherical celestial coordinates
-    vec2 skyUv = vec2(atan(dir.z, dir.x) / 6.2831853 + 0.5, asin(clamp(dir.y, -1.0, 1.0)) / 3.14159265 + 0.5);
-
-    // 1. Organic Interstellar Nebula Dust Lanes (using NoiseSampler hardware texture)
-    vec2 nebUv = skyUv * vec2(2.4, 1.2) + vec2(time * 0.003, time * 0.001);
-    float n1 = dot(textureLod(NoiseSampler, fract(nebUv), 0.0).rgb, vec3(0.333));
-    float n2 = dot(textureLod(NoiseSampler, fract(nebUv * 2.3 + vec2(0.35, 0.72)), 0.0).rgb, vec3(0.333));
-    float n3 = dot(textureLod(NoiseSampler, fract(nebUv * 5.2 - vec2(0.48, 0.22)), 0.0).rgb, vec3(0.333));
-    float nebDensity = pow(clamp(n1 * 0.55 + n2 * 0.32 + n3 * 0.18 - 0.20, 0.0, 1.0), 1.5);
-
-    // Cosmic nebula palette (Solas Shader celestial aesthetic): deep interstellar void, emerald-teal auroral gas, celestial violet, radiant stardust gold
-    vec3 nebBase = vec3(0.03, 0.07, 0.20);
-    vec3 nebEmerald = vec3(0.06, 0.38, 0.26);
-    vec3 nebViolet = vec3(0.42, 0.16, 0.58);
-    vec3 nebHighlight = vec3(1.0, 0.82, 0.45);
-    vec3 nebCol = mix(nebBase, nebEmerald, clamp(n1 * 1.6, 0.0, 1.0));
-    nebCol = mix(nebCol, nebViolet, clamp(n2 * 1.4 - 0.2, 0.0, 1.0));
-    nebCol = mix(nebCol, nebHighlight, pow(n3, 2.0));
-    vec3 nebulaLight = nebCol * (nebDensity * 2.8);
-
-    // 2. Multi-scale Procedural Diamond Starfield
-    // A. Dense distant stellar field
-    vec3 pStar1 = dir * 140.0;
-    vec3 id1 = floor(pStar1);
-    vec3 f1 = fract(pStar1) - 0.5;
-    float hash1 = fract(sin(dot(id1, vec3(127.1, 311.7, 74.7))) * 43758.5453);
-    float star1 = smoothstep(0.965, 1.0, hash1) * exp(-dot(f1, f1) * 75.0);
-
-    // B. Bright sparkling stellar giants with twinkling & spectral colors
-    vec3 pStar2 = dir * 42.0;
-    vec3 id2 = floor(pStar2);
-    vec3 f2 = fract(pStar2) - 0.5;
-    float hash2 = fract(sin(dot(id2, vec3(269.5, 183.3, 419.2))) * 37584.2341);
-    float star2 = smoothstep(0.975, 1.0, hash2) * exp(-dot(f2, f2) * 55.0);
-    float twinkle = 0.72 + 0.28 * sin(time * 2.8 + hash2 * 18.0);
-    vec3 starCol2 = (hash2 > 0.99) ? vec3(0.65, 0.88, 1.0) : ((hash2 > 0.982) ? vec3(1.0, 0.88, 0.6) : vec3(1.0));
-    vec3 starsLight = vec3(star1 * 1.8) + (starCol2 * star2 * twinkle * 4.2);
-
-    vec3 cosmicVoid = nebulaLight + starsLight;
-
-    // 3. Day / Night Smart Harmonization (No dirty black bruises in daylight!)
-    vec3 daySky = nebulaLight * 0.45 + starsLight * 1.5;
-    vec3 nightSky = cosmicVoid;
-    return mix(nightSky, daySky, clamp(sceneLum * 1.8, 0.0, 1.0));
-}
+// Background celestial sky & solid world are sampled directly from SceneSampler with subtle geodesic deflection,
+// guaranteeing 100% mathematical continuity at the bounding sphere boundary with ZERO dark circle artifacts.
 
 // Gargantua: a black hole whose accretion disk is lensed by its own gravity.
 //
@@ -311,9 +264,9 @@ void main() {
         float r = length(planar);
         float dist = abs(h);
 
-        // Radial gradient: 1.0 at inner rim (0.5), 0.0 at outer rim (4.0)
-        float radialGradient = 1.0 - clamp((r - discInner) / discWidth, 0.0, 1.0);
-        float discThickness = 0.09 * radialGradient + 0.004;
+        // IterationT canonical radial gradient: spans 1.0 at inner rim (0.5) to 0.5 at outer rim (4.0)
+        float radialGradient = 1.0 - clamp((r - discInner) / discWidth * 0.5, 0.0, 1.0);
+        float discThickness = 0.10 * radialGradient;
 
         // IterationT Inner Edge Volumetric Bloom Factor
         float fr = abs(r - discInner) + 0.4;
@@ -329,35 +282,34 @@ void main() {
         density = clamp(density + bloomFactor * 0.1, 0.0, 1.0);
 
         if (density > 0.0001 && r >= discInner && r <= discOuter) {
-            // Concentric Keplerian dust rings (FBM^5)
+            // Concentric Keplerian dust rings & turbulence
             float orbitalPhase = time * 0.8;
-            vec2 noiseCoord = vec2(r * 3.2, h * 1.2) + vec2(orbitalPhase * 0.03, 0.0);
-            vec4 noiseSample = textureLod(NoiseSampler, fract(noiseCoord * 0.25), 0.0);
-            float fbm = noiseSample.r * 0.55 + (1.0 - noiseSample.g) * 0.30 + noiseSample.b * 0.16;
-            float fbm2 = fbm * fbm;
-            density *= (fbm2 * fbm2 * fbm) * dr;
+            vec2 noiseCoord = vec2(r * 2.8, h * 0.6) + vec2(orbitalPhase * 0.03, 0.0);
+            float noiseVal = textureLod(NoiseSampler, fract(noiseCoord * 0.25), 0.0).r;
+            float fbm = 0.35 + 0.65 * noiseVal;
+            density *= (fbm * fbm) * dr;
 
             // IterationT True Blackbody Thermal Emission (2,700K -> 27,000K)
             float gr = 1.0 - radialGradient;
             gr = gr * gr;
             float glowStrength = 1.0 / (gr * gr * 400.0 + 0.002);
-            vec3 glow = gargBlackbody(2700.0 + glowStrength * 50.0) * glowStrength;
+            vec3 glow = gargBlackbody(2700.0 + glowStrength * 50.0) * (glowStrength * 1.5 + 0.6);
 
-            // Smooth relativistic Doppler beaming
+            // Relativistic Doppler beaming
             float flowAngle = atan(dot(planar, diskV), dot(planar, diskU));
             glow *= clamp(sin(flowAngle - 1.07) * 0.55 + 1.0, 0.35, 1.75);
 
             // Volumetric Beer-Lambert integration
-            float stepTrans = exp(-density * 7.0 * (stepLength / 0.2));
+            float stepTrans = exp2(-density * 6.0 * (stepLength / 0.2));
             float integral = 1.0 - stepTrans;
             transmittance *= stepTrans;
 
-            result += integral * transmittance * glow;
+            result += integral * transmittance * glow * 4.5;
         }
 
         // 4. IterationT 12,000K Incandescent Photon Torus Bloom
         vec2 torusCircle = vec2(0.95, 0.015);
-        float torusDist = length(vec2(r - torusCircle.x, h - (-0.03)));
+        float torusDist = length(vec2(r - torusCircle.x, h + 0.03));
         float bloomDisc = 1.0 / (pow(torusDist * 3.5, 3.2) + 0.001);
         bloomDisc *= step(0.50, r);
         vec3 col = gargBlackbody(12000.0);
@@ -365,19 +317,12 @@ void main() {
         result += col * bloomDisc * (0.022 * stepLength) * transmittance;
     }
 
-    result *= (1.0 / float(STEPS));
-
-    // --- BACKGROUND SCENE & COSMIC SKY ---
-    vec3 bg;
-    if (sceneDistance >= 1.0e8) {
-        // Celestial background: stars & nebula deflected by 3D geodesic
-        float sceneLum = dot(sceneColour, vec3(0.299, 0.587, 0.114));
-        bg = gargCosmicSky(d, time, sceneLum);
-    } else {
-        // Solid world: subtle gravitational lens shimmer (0.025 offset)
-        vec2 lensOffset = (d.xy - rayDir.xy) * (0.025 * openFactor);
-        bg = texture(SceneSampler, clamp(vUv + lensOffset, 0.001, 0.999)).rgb;
-    }
+    // --- BACKGROUND SCENE & GRAVITATIONAL LENSING ---
+    // Gravitational deflection smoothly bends whatever is behind the black hole
+    // (the player's sky, planets, stars, or solid blocks in the background).
+    // At the bounding sphere boundary, deflection -> 0, guaranteeing zero seam artifacts.
+    vec2 lensOffset = (d.xy - rayDir.xy) * (0.025 * openFactor);
+    vec3 bg = texture(SceneSampler, clamp(vUv + lensOffset, 0.001, 0.999)).rgb;
 
     vec3 behindEffect = bg * transmittance;
     if (hitShadow) {
@@ -389,9 +334,11 @@ void main() {
         }
     }
 
-    // Accretion disk emission (energized during blast / criticality)
+    // Accretion disk emission with soft filmic roll-off (IterationT visual profile):
+    // Preserves rich golden amber & bronze hues on outer disk while inner core saturates to brilliant incandescent white.
     float blastDiskEnergize = 1.0 + blast * 3.5;
-    vec3 diskEmission = result * (openFactor * (1.0 + crit * 1.5) * blastDiskEnergize);
+    vec3 diskRaw = result * (openFactor * (1.0 + crit * 1.5) * blastDiskEnergize);
+    vec3 diskEmission = diskRaw / (diskRaw * 0.45 + 1.0);
 
     // --- APOCALYPTIC SUPERNOVA DETONATION & COSMIC SHOCKWAVE VFX ---
     vec3 supernovaVfx = vec3(0.0);
@@ -439,10 +386,10 @@ void main() {
         supernovaVfx += vec3(1.0, 0.95, 0.88) * (blast * blast * viewProximity * 2.8);
     }
 
-    // Final composite: accretion disk emission + background transmission + supernova VFX
-    vec3 composite = diskEmission + mix(sceneColour, behindEffect, openFactor) + supernovaVfx;
+    // Final composite: background transmitted through disk + glowing accretion disk + supernova VFX
+    vec3 composite = behindEffect + diskEmission + supernovaVfx;
 
-    fragColor = vec4(composite, 1.0);
+    fragColor = vec4(mix(sceneColour, composite, openFactor), 1.0);
 }
 
 
