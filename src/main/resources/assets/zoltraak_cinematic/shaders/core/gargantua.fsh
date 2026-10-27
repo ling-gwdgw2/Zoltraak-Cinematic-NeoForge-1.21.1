@@ -109,9 +109,9 @@ const float GARG_SHADOW = 5.196;
 const float GARG_ESCAPE = 160.0;
 const float GARG_TAU = 6.2831853;
 // Half-thickness scale height of the volumetric plasma disk (in r_g)
-// Slender, razor-sharp astrophysical accretion disk
-const float GARG_THICK_INNER = 0.28;
-const float GARG_THICK_OUTER = 0.45;
+// Slender, razor-sharp astrophysical accretion disk (matching Kip Thorne & Solas)
+const float GARG_THICK_INNER = 0.085;
+const float GARG_THICK_OUTER = 0.150;
 
 /**
  * True Interstellar Blackbody Palette:
@@ -154,6 +154,20 @@ vec2 gargSphereHit(vec3 origin, vec3 dir, float radius) {
     }
     float root = sqrt(disc);
     return vec2(max(-b - root, 0.0), -b + root);
+}
+
+/**
+ * True ACES Filmic Tone Mapping (Krzysztof Narkowicz fit)
+ * Smoothly rolls off high dynamic range radiance into display space:
+ * Prevents flat desaturated #FFFFFF blowout while preserving rich golden-amber, solar yellow, and bronze embers.
+ */
+vec3 acesFilmic(vec3 x) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
 
@@ -306,61 +320,73 @@ void main() {
         );
         float flowAngle = atan(rotatedPos.y, rotatedPos.x);
 
-        // --- 2. SOLAS SHADER WORLEY + PERLIN VOLUMETRIC CLOUD DENSITY ---
-        // Channel R: Perlin Noise | Channel G: Worley Cellular Lobes | Channel B: Detail Noise
-        float boilingTime = time * 0.32;
-        vec2 uv = rotatedPos * 0.028;
+        // --- 2. MULTI-SCALE KEPLERIAN PLASMA ACCRETION DYNAMICS ---
+        // Channel R: Perlin base flow | Channel G: Worley cellular knots | Channel B: High-freq detail filaments
+        float boilingTime = time * 0.28;
+        vec2 uvBase = rotatedPos * 0.032;
         vec2 eddy = vec2(
-            sin(uv.y * 3.14 + boilingTime) * 0.05,
-            cos(uv.x * 3.14 + boilingTime * 0.85) * 0.05
+            sin(uvBase.y * 3.1416 + boilingTime) * 0.045,
+            cos(uvBase.x * 3.1416 + boilingTime * 0.82) * 0.045
         );
-        vec4 noiseTex = textureLod(NoiseSampler, fract(uv + eddy), 0.0);
-        float worley = (1.0 - noiseTex.g) * 0.5 + 0.25;
+        vec4 noiseTex = textureLod(NoiseSampler, fract(uvBase + eddy), 0.0);
         float perlin = noiseTex.r;
-        float cloudNoise = perlin * 0.55 + worley * 0.45;
-        cloudNoise = smoothstep(0.18, 0.82, cloudNoise);
+        float worley = 1.0 - noiseTex.g; // Invert Worley so cellular lobes become luminous plasma knots
+        float detail = noiseTex.b;       // High-frequency turbulent filaments
 
-        // Sweeping spiral accretion arms (interstellar plasma filaments)
-        float whirl = -3.8;
-        float arms = 3.0;
-        float spiralArm = sin((flowAngle + sqrt(radial) * whirl) * arms) * 0.5 + 0.5;
-        float filament = clamp(cloudNoise * (0.65 + 0.45 * spiralArm), 0.0, 1.0);
+        // Multi-frequency gas density synthesis
+        float plasmaDensity = perlin * 0.44 + worley * 0.36 + detail * 0.20;
+        plasmaDensity = smoothstep(0.16, 0.84, plasmaDensity);
+
+        // Concentric Keplerian shear waves & Logarithmic spiral density arms
+        float whirl = -4.2;
+        float spiralPhase = flowAngle + sqrt(radial / inner) * whirl;
+        float spiralArm1 = sin(spiralPhase * 2.0) * 0.5 + 0.5;
+        float spiralArm2 = sin(spiralPhase * 4.0 + 1.2) * 0.5 + 0.5;
+        float striations = sin(radial * 5.2 - orbitalPhase * 1.2) * 0.5 + 0.5; // Fine concentric Keplerian rings
+
+        float streamPattern = mix(spiralArm1, spiralArm2, 0.38) * 0.65 + striations * 0.35;
+        float filament = clamp(plasmaDensity * (0.45 + 0.75 * streamPattern), 0.0, 1.0);
 
         // --- 3. SLENDER 3D ATMOSPHERIC SCALE-HEIGHT ---
-        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.75 + 0.35 * filament);
+        // Kip Thorne razor-thin astrophysical disk: vertical Gaussian profile
+        float diskScaleHeight = mix(GARG_THICK_INNER, GARG_THICK_OUTER, t) * (0.80 + 0.25 * filament);
         float zNorm = abs(height) / max(diskScaleHeight, 0.005);
-        if (zNorm > 2.8) {
+        if (zNorm > 2.5) {
             continue;
         }
-        float verticalCoverage = exp(-zNorm * zNorm * 1.8);
+        float verticalCoverage = exp(-zNorm * zNorm * 2.2);
 
         // --- 4. RELATIVISTIC DOPPLER BEAMING ---
         vec3 tangentDir = normalize(cross(axis, planar));
         float viewDoppler = dot(tangentDir, -d) * keplerSpeed;
-        float dopplerFactor = clamp(1.0 + viewDoppler * 0.72, 0.28, 2.7);
-        float dopplerBoost = pow(dopplerFactor, 2.6);
+        float dopplerFactor = clamp(1.0 + viewDoppler * 0.70, 0.30, 2.6);
+        float dopplerBoost = pow(dopplerFactor, 2.5);
 
         // --- 5. BLACKBODY TEMPERATURE SHIFT & RADIATIVE PROFILE ---
-        // Physical radiative profile: brilliant ISCO inner edge, smoothly tapering outward
-        float radialProfile = pow(max(1.0 - t, 0.0), 0.70) * smoothstep(0.0, 0.03, t) * (1.0 - smoothstep(0.85, 1.0, t));
-        float coreMultiplier = 1.0 + pow(max(1.0 - t, 0.0), 1.8) * 2.2;
+        // Physical radiative profile:
+        // - Inner ISCO boundary is crisp and sharp (smoothstep 0.0 -> 0.018)
+        // - Outer boundary feathers softly into empty space across the outer 28% of the disk
+        float iscoCutoff = smoothstep(0.0, 0.018, t);
+        float outerFeather = 1.0 - smoothstep(0.72, 1.0, t);
+        float radialProfile = pow(max(1.0 - t, 0.0), 0.65) * iscoCutoff * outerFeather;
+        float coreMultiplier = 1.0 + pow(max(1.0 - t, 0.0), 2.0) * 1.8;
         float fed = 1.0 + min(HoleState.w, 6.0) * 0.16;
 
-        float colorTemp = clamp(t - (filament - 0.5) * 0.20 - viewDoppler * 0.26, 0.0, 1.0);
+        float colorTemp = clamp(t - (filament - 0.5) * 0.22 - viewDoppler * 0.24, 0.0, 1.0);
         vec3 baseCol = gargDiskColour(colorTemp);
 
         // Incandescent inner core (white-hot ISCO rim)
-        float innerHeat = pow(max(0.0, 1.0 - t * 1.8), 2.0);
-        vec3 incandescent = vec3(1.25, 1.15, 1.05) * innerHeat;
-        vec3 dopplerBoostCol = vec3(0.8, 1.0, 1.2) * (max(0.0, viewDoppler) * innerHeat * 0.8);
+        float innerHeat = pow(max(0.0, 1.0 - t * 2.2), 2.5);
+        vec3 incandescent = vec3(1.10, 1.05, 0.98) * (innerHeat * 1.4);
+        vec3 dopplerBoostCol = vec3(0.7, 0.95, 1.2) * (max(0.0, viewDoppler) * innerHeat * 0.6);
 
-        float intensity = (0.28 + 1.15 * pow(filament, 1.2)) * dopplerBoost;
+        float intensity = (0.35 + 0.95 * pow(filament, 1.3)) * dopplerBoost;
         vec3 emission = (baseCol * coreMultiplier + incandescent + dopplerBoostCol)
-                * max(DiskShape.w, 0.0) * 8.5 * fed * intensity;
+                * max(DiskShape.w, 0.0) * 3.8 * fed * intensity;
 
         // --- 6. PHYSICAL BEER-LAMBERT VOLUMETRIC INTEGRATION ---
-        float density = verticalCoverage * radialProfile * (0.28 + 0.55 * filament);
-        float stepAbsorption = 1.0 - exp(-density * dt * 2.8);
+        float density = verticalCoverage * radialProfile * (0.30 + 0.50 * filament);
+        float stepAbsorption = 1.0 - exp(-density * dt * 2.6);
         vec3 stepEmission = emission * stepAbsorption;
         accum += stepEmission * (1.0 - alpha);
         alpha += (1.0 - alpha) * stepAbsorption;
@@ -424,17 +450,17 @@ void main() {
     float ringInnerMask = smoothstep(-rg * 0.015, rg * 0.015, ringDist);
 
     // 1. Razor-sharp incandescent core ring (ultra-thin intense white line)
-    float ringCore = exp(-pow(ringDist / max(rg * 0.032, 0.001), 2.0)) * ringInnerMask;
+    float ringCore = exp(-pow(ringDist / max(rg * 0.030, 0.001), 2.0)) * ringInnerMask;
 
     // 2. Secondary Einstein deflection fringe
-    float ringSecondary = exp(-pow((ringDist - rg * 0.045) / max(rg * 0.020, 0.001), 2.0)) * ringInnerMask * 0.45;
+    float ringSecondary = exp(-pow((ringDist - rg * 0.042) / max(rg * 0.018, 0.001), 2.0)) * ringInnerMask * 0.40;
 
     // 3. Radiant solar golden corona (soft halo bathing the outer edge)
-    float ringHalo = exp(-pow(max(ringDist, 0.0) / max(rg * 0.22, 0.001), 1.6)) * ringInnerMask;
+    float ringHalo = exp(-pow(max(ringDist, 0.0) / max(rg * 0.20, 0.001), 1.6)) * ringInnerMask;
 
     // Color blending: dazzling incandescent white-hot core + warm radiant champagne/gold corona
-    vec3 ringCoreCol = vec3(1.0, 0.99, 0.96) * (ringCore * 4.5 + ringSecondary * 2.2);
-    vec3 ringHaloCol = vec3(1.0, 0.78, 0.35) * (ringHalo * 1.5);
+    vec3 ringCoreCol = vec3(1.0, 0.99, 0.96) * (ringCore * 3.8 + ringSecondary * 1.8);
+    vec3 ringHaloCol = vec3(1.0, 0.80, 0.38) * (ringHalo * 1.3);
     vec3 ringComposite = ringCoreCol + ringHaloCol;
 
     float ahead = step(0.0, along);
@@ -448,12 +474,12 @@ void main() {
     float blastDiskEnergize = 1.0 + blast * 3.5;
     vec3 diskRaw = (accum + ring) * (critBoost * blastDiskEnergize * openFactor);
 
-    // --- ACES FILMIC TONE MAPPING FOR ACCRETION DISK ---
-    // Smoothly compresses high dynamic range radiance into display space:
-    // Prevents flat blown-out #FFFFFF clipping, preserving rich solar gold, amber, and bronze embers.
-    vec3 diskToneMapped = diskRaw / (diskRaw + vec3(1.15, 1.32, 1.58));
-    // Gentle vibrancy lift for filmic glow
-    vec3 diskEmission = diskToneMapped * (1.0 + 0.26 * smoothstep(0.0, 0.75, diskToneMapped));
+    // --- TRUE ACES FILMIC TONE MAPPING FOR ACCRETION DISK ---
+    // Smoothly rolls off high dynamic range radiance into filmic display space:
+    // Completely eliminates flat white clipping while preserving intense golden-amber, solar yellow, and bronze embers.
+    vec3 diskToneMapped = acesFilmic(diskRaw * 0.58);
+    // Preserves vibrant hue saturation in midtones
+    vec3 diskEmission = diskToneMapped * (1.0 + 0.12 * smoothstep(0.0, 0.60, diskToneMapped));
 
     // Background behind the disk
     vec3 sceneOrCosmic = (sceneDistance < 1.0e8) ? lensedScene : background;
