@@ -17,7 +17,7 @@ public class ModCinematicEntities {
             ENTITIES.register("zoltraak_beam", () -> EntityType.Builder.<ZoltraakCinematicBeamEntity>of(
                             ZoltraakCinematicBeamEntity::new, MobCategory.MISC)
                     .sized(1.2f, 1.2f)
-                    .clientTrackingRange(128)
+                    .clientTrackingRange(192)
                     .updateInterval(1)
                     .build(ZoltraakCinematicMod.MODID + ":zoltraak_beam"));
 
