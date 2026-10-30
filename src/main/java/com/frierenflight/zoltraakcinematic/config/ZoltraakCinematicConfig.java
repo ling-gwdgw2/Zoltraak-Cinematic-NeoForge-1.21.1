@@ -146,10 +146,10 @@ public class ZoltraakCinematicConfig {
         builder.comment("Zoltraak Piercing Beams & Spells").push("spells_and_beams");
         BEAM_STANDARD_RANGE = builder
                 .comment("Maximum piercing beam length in blocks for standard Zoltraak and Corrupted Zoltraak.")
-                .defineInRange("beamStandardRange", 64.0d, 16.0d, 128.0d);
+                .defineInRange("beamStandardRange", 128.0d, 16.0d, 256.0d);
         BEAM_LARGE_RANGE = builder
                 .comment("Maximum beam length in blocks for charged Great Zoltraak.")
-                .defineInRange("beamLargeRange", 96.0d, 32.0d, 256.0d);
+                .defineInRange("beamLargeRange", 192.0d, 32.0d, 512.0d);
         BEAM_DAMAGE_MULTIPLIER = builder
                 .comment("Global damage multiplier applied to all continuous Zoltraak beams.")
                 .defineInRange("beamDamageMultiplier", 1.0d, 0.1d, 10.0d);
@@ -338,11 +338,11 @@ public class ZoltraakCinematicConfig {
 
     // --- Spells & Beams Getters ---
     public static double getBeamStandardRange() {
-        return SPEC.isLoaded() ? BEAM_STANDARD_RANGE.get() : 64.0d;
+        return SPEC.isLoaded() ? BEAM_STANDARD_RANGE.get() : 128.0d;
     }
 
     public static double getBeamLargeRange() {
-        return SPEC.isLoaded() ? BEAM_LARGE_RANGE.get() : 96.0d;
+        return SPEC.isLoaded() ? BEAM_LARGE_RANGE.get() : 192.0d;
     }
 
     public static double getBeamDamageMultiplier() {

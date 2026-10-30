@@ -67,7 +67,7 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
     private LivingEntity owner;
     private UUID ownerUUID;
     private float damage = 35.0f;
-    private float maxRange = 64.0f;
+    private float maxRange = 128.0f;
     private boolean soundPlayed = false;
     private boolean barrierAbsorbed = false;
     private final Set<Integer> hitEntityIds = new HashSet<>();
@@ -97,12 +97,12 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(DATA_LENGTH, 64.0f);
+        builder.define(DATA_LENGTH, 128.0f);
         builder.define(DATA_OWNER_ID, -1);
         builder.define(DATA_COLOR_THEME, 0);
         builder.define(DATA_MODE, 0);
         builder.define(DATA_DID_IMPACT, false);
-        builder.define(DATA_IMPACT_DIST, 64.0f);
+        builder.define(DATA_IMPACT_DIST, 128.0f);
         builder.define(DATA_IMPACT_NORMAL_X, 0.0f);
         builder.define(DATA_IMPACT_NORMAL_Y, 1.0f);
         builder.define(DATA_IMPACT_NORMAL_Z, 0.0f);

@@ -70,8 +70,9 @@ public class ZoltraakCinematicSpell extends AbstractSpell {
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
             float damage = getSpellPower(spellLevel, entity);
             Vec3 spawnPos = ZoltraakCinematicBeamEntity.getStaffAnchorPos(entity);
+            float range = (float) com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamStandardRange();
 
-            ZoltraakCinematicBeamEntity beam = new ZoltraakCinematicBeamEntity(serverLevel, entity, damage, 64.0f);
+            ZoltraakCinematicBeamEntity beam = new ZoltraakCinematicBeamEntity(serverLevel, entity, damage, range);
             beam.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
             beam.setYRot(entity.getYRot());
             beam.setXRot(entity.getXRot());
@@ -84,7 +85,7 @@ public class ZoltraakCinematicSpell extends AbstractSpell {
     public List<MutableComponent> getUniqueInfo(int spellLevel, LivingEntity caster) {
         return List.of(
                 Component.translatable("ui.irons_spellbooks.damage", Utils.stringTruncation(getSpellPower(spellLevel, caster), 1)),
-                Component.translatable("ui.irons_spellbooks.distance", 64.0),
+                Component.translatable("ui.irons_spellbooks.distance", com.frierenflight.zoltraakcinematic.config.ZoltraakCinematicConfig.getBeamStandardRange()),
                 Component.translatable("ui.irons_spellbooks.radius", 12.0)
         );
     }
