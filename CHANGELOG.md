@@ -7,9 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.0.4] - 2026-10-23
+## [1.0.4] - 2026-10-30
 
-### 100% Clean-Room Overhaul & 1:1 Anime Visual Fidelity (ยกเครื่องโค้ดและเชดเดอร์ใหม่ทั้งหมด 100% Original)
+### Daily Update & Polish (2026-10-30)
+
+#### Added & Improved (ระบบและฟังก์ชันใหม่)
+- **3D Expanding Hemispherical Shockwave Dome & Multi-Lobe Plumes**:
+  - Replaced flat 2D billboard explosions with a full 3D hemispherical shockwave dome (96 triangles) propagating outward along surface normals.
+  - Implemented 3D kinetic arc & spark fountain with 56 parabolic mana sparks launched into 3D airspace upon impact.
+  - Added multi-lobe volumetric rising anime puffs (1 central rising plume + 6 peripheral tumbling puffs orbiting in 3D air), completely preventing terrain block clipping.
+  - Sub-pixel circular soft-fade (`1.0 - smoothstep(0.55, 0.95, r)`) in `zoltraak_impact.fsh` completely eliminates polygonal edge cutoffs against terrain surfaces.
+- **Aerodynamic Supersonic Bow Shock Dome Cap**:
+  - In `cinematic_photon_beam.fsh` and `cinematic_abyssal_beam.fsh`, added a supersonic plasma dome cap rounding the beam wavefront, completely eliminating blunt cylinder slice cuts and white nub protrusions.
+- **Conical Arcane Muzzle Flare & Base Transition**:
+  - In `cinematic_photon_beam.fsh`, added conical muzzle flare (`exp(-distBase / 1.6) * 0.95`) smoothly enveloping the magic circle runes 1:1 with the anime.
+  - Enforced strict base cut-off (`baseFade = smoothstep(0.0, 0.06, distBase)`) completely preventing beam geometry from clipping backwards through the magic circle.
+- **3D World-Space Direction & Origin Locking (แนวทางที่ 1 - ป้องกันอาการสะบัดเมาส์)**:
+  - While charging (`!fired()`), the magic circle and aim vector smoothly follow the player's crosshair and staff.
+  - The instant the beam is fired (`fired()`), the beam's origin and firing direction are rigidly locked in 3D world space (`lockedOrigin`, `lockedDirection`).
+  - Players can flick their mouse, turn their camera, or strafe without sweeping the visual beam; the beam steadily pierces the original target blocks, eliminating visual-server hitbox desync and floating explosions.
+- **Extended Piercing Range to 128 Blocks (with Config Integration)**:
+  - Standard Zoltraak and Corrupted Zoltraak default range increased from 64 blocks to **128 blocks** (`beamStandardRange`), matching typical server simulation distances.
+  - Hooked spell definitions in `ZoltraakCinematicSpell.java` and `CorruptedZoltraakSpell.java` directly into `ZoltraakCinematicConfig.getBeamStandardRange()`.
+  - Scaled Great Zoltraak range to 192 blocks (configurable up to 512 blocks).
+  - Expanded entity `clientTrackingRange` to **192 blocks** in `ModCinematicEntities.java`, ensuring seamless spectator visibility across the entire battlefield.
+
+#### Optimized & Cleaned (การเพิ่มประสิทธิภาพและลดขนาดไฟล์)
+- **Massive JAR File Size Reduction (14.28 MB → 4.35 MB, ~70% Saved)**:
+  - Permanently removed unreferenced 6MB duplicate asset (`Gemini_Generated_Image_bpll5mbpll5mbpll.png`).
+  - Optimized `zoltraak_magic_circle.png` to 1024x1024 using Lanczos super-sampling with maximum lossless PNG compression, reducing texture size from 5.95 MB to 1.92 MB while maintaining 100% visual fidelity in-game.
+- **Licensing & Clean-Room Documentation**:
+  - Fully articulated `NOTICE.md` and public communication clarifying the 100% custom shader engine transition and clean-room originality.
+
+---
+
+### Initial Clean-Room Release (2026-10-23)
 
 #### Clean Room Codebase & Asset Independence (การเขียนทดแทนใหม่ทั้งหมด 100% Original)
 - **100% Original Shaders & Configurations Written from Scratch**:
