@@ -1,7 +1,5 @@
 package com.frierenflight.zoltraakcinematic.client.renderer;
 
-
-
 import com.frierenflight.zoltraakcinematic.ZoltraakCinematicMod;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -32,8 +30,6 @@ import org.joml.Matrix4f;
 
 import org.joml.Vector3f;
 
-
-
 public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> extends EntityRenderer<T> {
 
    private final BlackZoltraakRenderer<T> blackRenderer;
@@ -41,8 +37,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
    private final GreatZoltraakRenderer<T> greatRenderer;
 
    private final RapidZoltraakRenderer<T> rapidRenderer;
-
-
 
    public ZoltraakRenderer(Context c) {
 
@@ -58,15 +52,11 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
    }
 
-
-
    public ResourceLocation getTextureLocation(T e) {
 
       return ResourceLocation.fromNamespaceAndPath(ZoltraakCinematicMod.MODID, "textures/spell/zoltraak_magic_circle.png");
 
    }
-
-
 
    private static float ease(float v) {
 
@@ -76,15 +66,11 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
    }
 
-
-
    private static Vec3 ring(Vec3 u, Vec3 v, double angle, double radius) {
 
       return u.scale(Math.cos(angle) * radius).add(v.scale(Math.sin(angle) * radius));
 
    }
-
-
 
    public void render(T e, float yaw, float partial, PoseStack pose, MultiBufferSource buffers, int light) {
 
@@ -134,8 +120,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             Vec3 v = u.cross(dir).normalize();
 
             Vec3 offset = origin.subtract(e.getPosition(partial));
@@ -156,8 +140,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             Vec3 camRight = new Vec3(new Vector3f(1.0F, 0.0F, 0.0F).rotate(this.entityRenderDispatcher.cameraOrientation()));
 
             Vec3 camUp = new Vec3(new Vector3f(0.0F, 1.0F, 0.0F).rotate(this.entityRenderDispatcher.cameraOrientation()));
@@ -170,8 +152,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             double radius = (e.mode() == ZoltraakMode.LARGE ? 6.2 : (e.mode() == ZoltraakMode.RAPID ? 1.15 : 1.85 * e.scale())) * (0.2 + 0.8 * ease(t / 11.0F));
 
             if (first && e.mode() == ZoltraakMode.SINGLE) {
@@ -180,15 +160,11 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             if (first && e.mode() == ZoltraakMode.RAPID) {
 
                radius *= 0.6;
 
             }
-
-
 
             float formation = Mth.clamp(t / 4.5F, 0.0F, 1.0F);
 
@@ -207,8 +183,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                flush(buffers, circleType);
 
             }
-
-
 
             RenderType glowType = e.black() ? ZoltraakRenderTypes.BLACK_GLOW : ZoltraakRenderTypes.ZOL_GLOW;
 
@@ -229,8 +203,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                   muzzle *= 0.75F;
 
                }
-
-
 
                if (e.black()) {
 
@@ -272,13 +244,9 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             flush(buffers, glowType);
 
             VertexConsumer lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
-
-
 
             if (shot < 0.0F) {
 
@@ -304,8 +272,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
                }
 
-
-
                for (int k = 0; k < 26; k++) {
 
                   double p = (t * 0.065 + k * 0.618) % 1.0;
@@ -324,8 +290,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             if (e.fired() && shot >= 0.0F) {
 
                double head = Math.min(e.length(), shot * 24.0);
@@ -337,8 +301,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                   Vec3 a = primaryCenter;
 
                   Vec3 b = a.add(dir.scale(head));
-
-
 
                   // Camera-Facing Volumetric Radiance Quad (Pure Emissive Anime Shader)
 
@@ -353,8 +315,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
                   flush(buffers, ZoltraakRenderTypes.ZOL_BEAM);
 
                   lines = buffers.getBuffer(ZoltraakRenderTypes.LIGHT);
-
-
 
                   // Kinetic Electric Discharges and Ionized Filaments along perimeter
 
@@ -396,8 +356,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
                }
 
-
-
                if (shot > 5.0F && shot < 18.0F) {
 
                   float aRibbon = (1.0F - ease((shot - 5.0F) / 13.0F)) * 0.22F * energy;
@@ -408,116 +366,84 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
-            float dt = t - e.impactAge();
-
+                        float dt = t - e.impactAge();
             if (e.fired() && e.impact() && dt >= 0.0F && dt < 26.0F) {
-
                Vec3 center = e.end().subtract(origin).add(e.normal().scale(0.09));
-
                float fade = 1.0F - ease(dt / 26.0F);
-
                Vec3 normal = e.normal();
-
                Vec3 iu = normal.cross(new Vec3(0.0, 1.0, 0.0));
-
                if (iu.lengthSqr() < 0.01) {
-
                   iu = u;
-
                } else {
-
                   iu = iu.normalize();
-
                }
-
-
 
                Vec3 iv = iu.cross(normal).normalize();
 
+               // 1. 3D Expanding Hemispherical Shockwave Dome (โดมคลื่นกระแทก 3D ครึ่งทรงกลมขยายตัว)
+               double domeRadius = (1.5 + dt * 0.36) * (e.mode() == ZoltraakMode.LARGE ? 2.2 : 1.2) * e.scale();
+               float domeAlpha = fade * (float)Math.exp(-dt * 0.10) * 0.55F;
+               dome(lines, mat, center, iu, iv, normal, domeRadius, domeAlpha, 0.25F, 0.88F, 1.0F);
+               dome(lines, mat, center, iu.scale(0.98), iv.scale(0.98), normal, domeRadius * 0.98, domeAlpha * 0.65F, 1.0F, 1.0F, 1.0F);
 
-
-
-
-               for (int k = 0; k < 48; k++) {
-
+               // 2. 3D Kinetic Electric Arc & Spark Fountain (น้ำพุสายฟ้าและสะเก็ดพลังเวทย์ 3D รอบทิศทาง)
+               for (int k = 0; k < 56; k++) {
                   double a = k * 2.399;
-
-                  double r = (0.2 + dt * (0.15 + k % 7 * 0.033)) * e.scale();
-
-                  Vec3 ray = ring(iu, iv, a, 1.0).add(normal.scale(0.2 + k % 5 * 0.15)).normalize();
-
-                  Vec3 tip = center.add(ray.scale(r)).add(0.0, -0.006 * dt * dt, 0.0);
-
-                  ribbon(lines, mat, tip.subtract(ray.scale(0.15 + 0.45 * fade)), tip, camRight, 0.013F * e.scale(), fade * 0.8F, 0.7F, 0.9F, 1.0F);
-
+                  double elevation = 0.20 + (k % 7) * 0.10;
+                  double r = (0.3 + dt * (0.22 + (k % 5) * 0.040)) * e.scale();
+                  Vec3 ray = ring(iu, iv, a, Math.cos(elevation)).add(normal.scale(Math.sin(elevation) + 0.30)).normalize();
+                  Vec3 tip = center.add(ray.scale(r)).add(0.0, -0.007 * dt * dt, 0.0);
+                  double sparkLen = (0.25 + 0.45 * fade) * e.scale();
+                  Vec3 tail = tip.subtract(ray.scale(sparkLen));
+                  float sparkWidth = 0.020F * (float)e.scale();
+                  ribbon(lines, mat, tail, tip, camRight, sparkWidth, fade * 0.85F, 0.25F, 0.88F, 1.0F);
+                  ribbon(lines, mat, tail, tip, camRight, sparkWidth * 0.45F, fade * 0.95F, 1.0F, 1.0F, 1.0F);
                }
-
-
 
                flush(buffers, ZoltraakRenderTypes.LIGHT);
 
                RenderType impactGlowType = e.black() ? ZoltraakRenderTypes.BLACK_GLOW : ZoltraakRenderTypes.ZOL_GLOW;
-
                glow = buffers.getBuffer(impactGlowType);
-
                float burst = (float)Math.exp(-dt * 0.27);
-
                if (e.black()) {
-
                   quad(glow, mat, center, iu.scale((3.0 + dt * 0.18) * e.scale()), iv.scale((3.0 + dt * 0.18) * e.scale()), 0.008F, 0.006F, 0.014F, burst * 0.7F);
-
                   quad(glow, mat, center, iu.scale((1.2 + dt * 0.05) * e.scale()), iv.scale((1.2 + dt * 0.05) * e.scale()), 0.008F, 0.006F, 0.014F, burst);
-
                   quad(glow, mat, center, iu.scale((5.0 + dt * 0.2) * e.scale()), iv.scale(0.13 * e.scale()), 0.008F, 0.006F, 0.014F, burst);
-
                   quad(glow, mat, center, iu.scale(0.08 * e.scale()), iv.scale(3.0 * e.scale()), 0.008F, 0.006F, 0.014F, burst);
-
                } else {
-
                   quad(glow, mat, center, iu.scale((3.0 + dt * 0.18) * e.scale()), iv.scale((3.0 + dt * 0.18) * e.scale()), 0.4F, 0.67F, 1.0F, burst * 0.7F);
-
                   quad(glow, mat, center, iu.scale((1.2 + dt * 0.05) * e.scale()), iv.scale((1.2 + dt * 0.05) * e.scale()), 1.0F, 1.0F, 1.0F, burst);
-
                   quad(glow, mat, center, iu.scale((5.0 + dt * 0.2) * e.scale()), iv.scale(0.13 * e.scale()), 0.8F, 0.95F, 1.0F, burst);
-
                   quad(glow, mat, center, iu.scale(0.08 * e.scale()), iv.scale(3.0 * e.scale()), 1.0F, 1.0F, 1.0F, burst);
-
                }
-
                flush(buffers, impactGlowType);
 
-
-
                float progress = Mth.clamp(dt / 26.0F, 0.0F, 1.0F);
-
                RenderType impactType = e.black() ? ZoltraakRenderTypes.BLACK_IMPACT : ZoltraakRenderTypes.ZOL_IMPACT;
-
                VertexConsumer impact = buffers.getBuffer(impactType);
-
                float isBlackVal = e.black() ? 1.0F : 0.0F;
 
+               // 3. Multi-Lobe Volumetric Rising Anime Puffs (กลุ่มก้อนพลังงานระเบิด 3D หลายมิติที่ลอยขึ้นจากหลุม)
+               // A. Central Rising Plume Core
+               Vec3 corePos = center.add(normal.scale(0.35 + dt * 0.15));
+               double coreSize = (2.2 + dt * 0.20) * (e.mode() == ZoltraakMode.LARGE ? 2.0 : 1.1) * e.scale();
+               quad(impact, mat, corePos, camRight.scale(coreSize), camUp.scale(coreSize), progress, isBlackVal, 0.0F, fade);
 
+               // B. 6 Peripheral Tumbling Puffs (Orbiting & expanding into 3D air)
+               for (int k = 0; k < 6; k++) {
+                  double angle = k * (Math.PI * 2.0 / 6.0) + t * 0.06;
+                  double puffDist = (0.7 + dt * 0.16) * (e.mode() == ZoltraakMode.LARGE ? 1.8 : 1.0) * e.scale();
+                  double puffHeight = (0.25 + dt * 0.12 + Math.sin(k * 1.5) * 0.15) * e.scale();
+                  Vec3 puffPos = center.add(ring(iu, iv, angle, puffDist)).add(normal.scale(puffHeight));
+                  double puffSize = (1.5 + dt * 0.16) * (e.mode() == ZoltraakMode.LARGE ? 1.8 : 1.0) * e.scale();
+                  float puffProgress = Mth.clamp((dt + k * 0.7F) / 26.0F, 0.0F, 1.0F);
+                  quad(impact, mat, puffPos, camRight.scale(puffSize), camUp.scale(puffSize), puffProgress, isBlackVal, 0.0F, fade * 0.75F);
+               }
 
-               // 1. Surface Planar Shockwave Disk & Ground Scorch/Fracture Lines
-
-               double surfRadius = (2.4 + dt * 0.28) * (e.mode() == ZoltraakMode.LARGE ? 2.5 : 1.25) * e.scale();
-
-               Vec3 surfCenter = center.add(normal.scale(0.03));
-
-               quad(impact, mat, surfCenter, iu.scale(surfRadius), iv.scale(surfRadius), progress, isBlackVal, 1.0F, fade);
-
-
-
-               // 2. Camera-Facing Volumetric Billowing Anime Dust/Smoke Cloud & Shockwave Crest
-
-               double sparkSize = (3.0 + dt * 0.34) * (e.mode() == ZoltraakMode.LARGE ? 2.4 : 1.2) * e.scale();
-
-               Vec3 sphereCenter = center.add(normal.scale(sparkSize * 0.35));
-
-               quad(impact, mat, sphereCenter, camRight.scale(sparkSize), camUp.scale(sparkSize), progress, isBlackVal, 0.0F, fade);
-
+               // 4. Localized Surface Planar Shockwave & Puncture Crater (Mode 1: isSurface = 1.0F)
+               double surfRadius = (1.4 + dt * 0.10) * (e.mode() == ZoltraakMode.LARGE ? 2.0 : 1.0) * e.scale();
+               Vec3 surfCenter = center.add(normal.scale(0.04));
+               quad(impact, mat, surfCenter, iu.scale(surfRadius), iv.scale(surfRadius), progress, isBlackVal, 1.0F, fade * 0.85F);
                flush(buffers, impactType);
 
             } else {
@@ -526,8 +452,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
             }
 
-
-
             pose.popPose();
 
          }
@@ -535,8 +459,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
       }
 
    }
-
-
 
    private static void arc(
 
@@ -560,8 +482,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
    }
 
-
-
    private static void ribbon(VertexConsumer b, Matrix4f m, Vec3 a, Vec3 c, Vec3 side, float width, float alpha, float r, float g, float blue) {
 
       Vec3 w = side.scale(width);
@@ -571,8 +491,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
       tri(b, m, a.subtract(w), c.add(w), c.subtract(w), r, g, blue, alpha);
 
    }
-
-
 
    private static void tri(VertexConsumer b, Matrix4f m, Vec3 a, Vec3 c, Vec3 d, float r, float g, float blue, float alpha) {
 
@@ -584,7 +502,37 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
    }
 
+   private static void dome(
+      VertexConsumer b, Matrix4f m, Vec3 center, Vec3 iu, Vec3 iv, Vec3 normal, double radius, float alpha, float red, float green, float blue
+   ) {
+      if (alpha < 0.003F) return;
+      int rings = 6;
+      int slices = 16;
+      for (int ringIdx = 0; ringIdx < rings; ringIdx++) {
+         double phi1 = (ringIdx / (double)rings) * (Math.PI * 0.5);
+         double phi2 = ((ringIdx + 1) / (double)rings) * (Math.PI * 0.5);
+         double cos1 = Math.cos(phi1);
+         double sin1 = Math.sin(phi1);
+         double cos2 = Math.cos(phi2);
+         double sin2 = Math.sin(phi2);
 
+         float a1 = alpha * (float)(1.0 - 0.35 * sin1);
+         float a2 = alpha * (float)(1.0 - 0.35 * sin2);
+
+         for (int sliceIdx = 0; sliceIdx < slices; sliceIdx++) {
+            double theta1 = sliceIdx * (Math.PI * 2.0 / slices);
+            double theta2 = (sliceIdx + 1) * (Math.PI * 2.0 / slices);
+
+            Vec3 p00 = center.add(ring(iu, iv, theta1, radius * cos1)).add(normal.scale(radius * sin1));
+            Vec3 p10 = center.add(ring(iu, iv, theta2, radius * cos1)).add(normal.scale(radius * sin1));
+            Vec3 p01 = center.add(ring(iu, iv, theta1, radius * cos2)).add(normal.scale(radius * sin2));
+            Vec3 p11 = center.add(ring(iu, iv, theta2, radius * cos2)).add(normal.scale(radius * sin2));
+
+            tri(b, m, p00, p10, p11, red, green, blue, (a1 + a2) * 0.5F);
+            tri(b, m, p00, p11, p01, red, green, blue, (a1 + a2) * 0.5F);
+         }
+      }
+   }
 
    private static void quad(VertexConsumer b, Matrix4f m, Vec3 c, Vec3 u, Vec3 v, float r, float g, float blue, float a) {
 
@@ -597,8 +545,6 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
       tex(b, m, c.subtract(u).add(v), 0.0F, 0.0F, r, g, blue, a);
 
    }
-
-
 
    private static void beamQuad(VertexConsumer b, Matrix4f m, Vec3 a, Vec3 c, Vec3 w, float age, float alpha, float span, float halfWidth) {
 
@@ -616,15 +562,11 @@ public final class ZoltraakRenderer<T extends Entity & IZoltraakVisualEntity> ex
 
    }
 
-
-
    private static void tex(VertexConsumer b, Matrix4f m, Vec3 p, float u, float v, float r, float g, float blue, float a) {
 
       b.addVertex(m, (float)p.x, (float)p.y, (float)p.z).setUv(u, v).setColor(r, g, blue, a);
 
    }
-
-
 
    private static void flush(MultiBufferSource b, RenderType t) {
 
