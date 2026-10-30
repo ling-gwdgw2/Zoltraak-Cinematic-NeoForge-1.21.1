@@ -161,9 +161,19 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
         }
     }
 
+    private void ensureOwnerResolved() {
+        if (owner == null && level().isClientSide) {
+            int ownerId = this.entityData.get(DATA_OWNER_ID);
+            if (ownerId != -1 && level().getEntity(ownerId) instanceof LivingEntity living) {
+                this.owner = living;
+            }
+        }
+    }
+
     @Override
     public Vec3 visualOrigin(float partial) {
-        if (!fired() && owner != null && owner.isAlive()) {
+        ensureOwnerResolved();
+        if (owner != null && owner.isAlive()) {
             return getStaffAnchorPos(owner, partial);
         }
         return getPosition(partial);
@@ -171,7 +181,8 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
 
     @Override
     public Vec3 visualDirection(float partial) {
-        if (!fired() && owner != null && owner.isAlive()) {
+        ensureOwnerResolved();
+        if (owner != null && owner.isAlive()) {
             return owner.getViewVector(partial).normalize();
         }
         return Vec3.directionFromRotation(getXRot(), getYRot()).normalize();

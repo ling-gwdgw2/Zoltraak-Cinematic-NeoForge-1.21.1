@@ -77,16 +77,17 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
       }
 
       float formation = Mth.clamp(t / 4.5F, 0.0F, 1.0F);
+      Vec3 primaryCenter = dir.scale(first && e.mode() == ZoltraakMode.SINGLE ? 0.7 : 0.03);
       if (circleAlpha > 0.001) {
          VertexConsumer b = buffers.getBuffer(ZoltraakRenderTypes.BLACK_CIRCLE);
-         Vec3 primaryCenter = dir.scale(first && e.mode() == ZoltraakMode.SINGLE ? 0.7 : 0.03);
          quad(b, mat, primaryCenter, u.scale(radius), v.scale(radius), formation, 1.0F, 1.0F, circleAlpha);
          flush(buffers, ZoltraakRenderTypes.BLACK_CIRCLE);
       }
 
       VertexConsumer glow = buffers.getBuffer(ZoltraakRenderTypes.BLACK_GLOW);
       float charge = ease(t / 14.0F);
-      float muzzle = shot < 0.0F ? charge : (float)Math.exp(-Math.max(0.0F, shot) * 0.24);
+      float energy = e.fired() && shot >= 0.0F ? (1.0F - ease((shot - 7.0F) / 11.0F)) : 0.0F;
+      float muzzle = shot < 0.0F ? charge : Math.max((float)Math.exp(-Math.max(0.0F, shot) * 0.24), energy * 0.85F);
       if (muzzle > 0.003) {
          double size = (0.17 + charge * 0.35 + (shot >= 0.0F ? 0.6 * Math.exp(-shot * 0.22) : 0.0)) * (first ? 0.72 : 1.0) * e.scale();
          if (first) {
@@ -94,12 +95,12 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
          }
 
          if (shot >= 0.0F) {
-            quad(glow, mat, Vec3.ZERO, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.008F, 0.006F, 0.014F, muzzle * 0.55F);
-            quad(glow, mat, dir.scale(0.045), camRight.scale(size), camUp.scale(size), 0.008F, 0.006F, 0.014F, muzzle);
-            quad(glow, mat, Vec3.ZERO, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.008F, 0.006F, 0.014F, muzzle);
-            quad(glow, mat, Vec3.ZERO, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.008F, 0.006F, 0.014F, muzzle * 0.7F);
+            quad(glow, mat, primaryCenter, camRight.scale(size * 2.5), camUp.scale(size * 2.5), 0.008F, 0.006F, 0.014F, muzzle * 0.55F);
+            quad(glow, mat, primaryCenter.add(dir.scale(0.045)), camRight.scale(size), camUp.scale(size), 0.008F, 0.006F, 0.014F, muzzle);
+            quad(glow, mat, primaryCenter, camRight.scale(size * 4.0), camUp.scale(size * 0.12), 0.008F, 0.006F, 0.014F, muzzle);
+            quad(glow, mat, primaryCenter, camRight.scale(size * 0.1), camUp.scale(size * 2.0), 0.008F, 0.006F, 0.014F, muzzle * 0.7F);
          } else {
-            quad(glow, mat, dir.scale(0.02), camRight.scale(size * 0.4), camUp.scale(size * 0.4), 0.25F, 0.12F, 0.35F, muzzle * 0.35F);
+            quad(glow, mat, primaryCenter.add(dir.scale(0.02)), camRight.scale(size * 0.4), camUp.scale(size * 0.4), 0.25F, 0.12F, 0.35F, muzzle * 0.35F);
          }
       }
 
@@ -130,20 +131,19 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
       }
 
       if (e.fired() && shot >= 0.0F) {
-         double head = Math.min(e.length(), shot * 12.0);
-         double tail = Math.max(0.0, (shot - 9.0F) * 12.0);
-         float energy = 1.0F - ease((shot - 7.0F) / 11.0F);
+         double head = Math.min(e.length(), shot * 24.0);
+         double tail = 0.0;
          if (head > tail && energy > 0.0F) {
-            Vec3 a = dir.scale(tail);
-            Vec3 b = dir.scale(head);
+            Vec3 a = primaryCenter;
+            Vec3 b = a.add(dir.scale(head));
             flush(buffers, ZoltraakRenderTypes.LIGHT);
             double halfWidth = (first ? 1.05 : 1.45) * e.scale();
             VertexConsumer beam = buffers.getBuffer(ZoltraakRenderTypes.BLACK_BEAM);
             beamQuad(
                beam,
                mat,
-               a.subtract(dir.scale(halfWidth)),
-               b.add(dir.scale(halfWidth)),
+               a.subtract(dir.scale(halfWidth * 0.2)),
+               b.add(dir.scale(halfWidth * 0.2)),
                side.scale(halfWidth),
                t / 64.0F,
                energy,
@@ -156,26 +156,24 @@ public final class BlackZoltraakRenderer<T extends Entity & IZoltraakVisualEntit
             for (int k = 0; k < 9; k++) {
                double z = (shot * 7.0F + k * 6.37) % Math.max(1.0, head);
                double r = (0.35 + 0.12 * Math.sin(t * 0.7 + k)) * e.scale();
-               if (!(z < tail)) {
-                  Vec3 radial = ring(u, v, k * 2.4, r);
-                  ribbon(
-                     lines, mat, dir.scale(Math.max(tail, z - 2.2)).add(radial), dir.scale(z).add(radial), side, 0.008F, energy * 0.65F, 0.28F, 0.15F, 0.38F
-                  );
-               }
+               Vec3 radial = ring(u, v, k * 2.4, r);
+               ribbon(
+                  lines, mat, a.add(dir.scale(Math.max(0.0, z - 2.2))).add(radial), a.add(dir.scale(z)).add(radial), side, 0.008F, energy * 0.65F, 0.28F, 0.15F, 0.38F
+               );
             }
 
             for (int k = 0; k < 3; k++) {
                double z = shot * 3.2 - k * 6;
                if (!(z < 0.0) && !(z > head)) {
                   double r = (0.35 + Math.max(0.0F, shot - k * 2) * 0.07) * e.scale();
-                  arc(lines, mat, dir.scale(z), u, v, r, 0.015F, energy * 0.35F, 0.28F, 0.15F, 0.38F, Math.PI * 2);
+                  arc(lines, mat, a.add(dir.scale(z)), u, v, r, 0.015F, energy * 0.35F, 0.28F, 0.15F, 0.38F, Math.PI * 2);
                }
             }
          }
 
-         if (shot > 7.0F && shot < 25.0F) {
-            float a = (1.0F - ease((shot - 7.0F) / 18.0F)) * 0.32F;
-            ribbon(lines, mat, dir.scale(0.2), dir.scale(e.length()), side, 0.018F * e.scale(), a, 0.28F, 0.15F, 0.38F);
+         if (shot > 5.0F && shot < 18.0F) {
+            float aRibbon = (1.0F - ease((shot - 5.0F) / 13.0F)) * 0.22F * energy;
+            ribbon(lines, mat, primaryCenter.add(dir.scale(0.2)), primaryCenter.add(dir.scale(head)), side, 0.018F * e.scale(), aRibbon, 0.28F, 0.15F, 0.38F);
          }
       }
 

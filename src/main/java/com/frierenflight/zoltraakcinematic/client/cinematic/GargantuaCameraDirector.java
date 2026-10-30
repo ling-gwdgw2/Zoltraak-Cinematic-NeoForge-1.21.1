@@ -156,7 +156,14 @@ public final class GargantuaCameraDirector {
      * Prevents the camera from clipping into terrain, ceilings, or cave walls.
      */
     private static CameraPose clip(Level level, CameraPose pose, Entity viewer) {
-        Vec3 from = pose.look().add(0.0d, 0.5d, 0.0d);
+        if (viewer == null) return pose;
+
+        // If the camera is close to the viewer (Act 0: Over-The-Shoulder Casting),
+        // trace outwards from the player's eye position to prevent snapping to obstacles in front
+        Vec3 eyePos = viewer.getEyePosition();
+        boolean isCloseShot = pose.position().distanceToSqr(eyePos) < 100.0d; // Distance < 10 blocks
+
+        Vec3 from = isCloseShot ? eyePos : pose.look().add(0.0d, 0.5d, 0.0d);
         Vec3 toward = pose.position().subtract(from);
         double length = toward.length();
         if (length < 0.001d) return pose;
@@ -182,9 +189,9 @@ public final class GargantuaCameraDirector {
             Vec3 hitLoc = hit.getLocation();
             double hitDist = hitLoc.distanceTo(from);
 
-            // If an obstacle would force the camera closer than 60 blocks (inside the 54-block disk),
+            // For wide shots (Acts 1-4), if an obstacle would force the camera closer than 60 blocks,
             // elevate camera upward to clear the obstacle while maintaining majestic distance
-            if (hitDist < 60.0d) {
+            if (!isCloseShot && hitDist < 60.0d) {
                 Vec3 elevatedPos = pose.position().add(0.0d, 24.0d, 0.0d);
                 BlockHitResult elevatedHit = level.clip(new ClipContext(
                         from, elevatedPos,

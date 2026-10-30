@@ -10,10 +10,14 @@ uniform mat4 ProjMat;
 out vec2 uv;
 out float age;
 out float energy;
+out float span;
+out float halfWidth;
 
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     uv = UV0;
     age = Color.r * 64.0;
     energy = Color.a;
+    span = max(Color.g * 256.0, 0.01);
+    halfWidth = max(Color.b * 16.0, 0.01);
 }

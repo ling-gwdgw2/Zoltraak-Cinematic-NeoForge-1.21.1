@@ -10,14 +10,14 @@ public enum ZoltraakColorTheme {
     DEMON_SLAYING(
             // Core Beam (Overbright White)
             255, 255, 255, 255,
-            // Inner Sheath (Hyper-Ionized Cyan)
-            0, 240, 255, 230,
-            // Outer Halo (Cosmic Royal Violet)
-            138, 43, 226, 140,
+            // Inner Sheath (Hyper-Ionized Electric Cyan)
+            40, 220, 255, 240,
+            // Outer Halo (Deep Royal Indigo / Cobalt - Zero Red!)
+            10, 24, 110, 220,
             // Spiral 1 (Electric Cyan)
-            0, 245, 255, 240,
-            // Spiral 2 (Vibrant Violet Helix)
-            190, 80, 255, 190,
+            30, 200, 255, 240,
+            // Spiral 2 (Pure Ultramarine / Deep Royal Blue)
+            20, 50, 190, 200,
             // Anamorphic Blade Flare
             220, 255, 255, 255,
             // Radial Starburst
@@ -25,11 +25,11 @@ public enum ZoltraakColorTheme {
             // Shockwave Halo Ring
             180, 240, 255, 240,
             // Electric Arcs & Motes
-            190, 245, 255, 220,
+            120, 220, 255, 240,
             // Muzzle Flash
             240, 255, 255, 255,
-            // Absorption Core (KilaGraph Twilight Blue)
-            20, 100, 220, 190,
+            // Absorption Core (Deep Twilight Sapphire)
+            10, 60, 180, 190,
             // Accretion Ring Tint (RGB)
             255, 255, 255
     ),
