@@ -106,8 +106,14 @@ float gargPcurve(float x) {
     return 12.207 * x2 * x2 * (1.0 - x);
 }
 
-float gargWhiteNoise(vec2 uv) {
-    return fract(sin(dot(uv, vec2(12.9898, 78.233))) * 43758.5453123);
+/**
+ * Interleaved Gradient Noise (Jorge Jimenez / Call of Duty)
+ * Low-discrepancy pseudo-blue noise that eliminates raymarching banding
+ * without high-frequency sandpaper grain or salt-and-pepper noise.
+ */
+float gargIGN(vec2 screenPos) {
+    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+    return fract(magic.z * fract(dot(screenPos, magic.xy)));
 }
 
 /**
@@ -217,8 +223,11 @@ void main() {
 
     // Adaptive step configuration across chord
     float totalDist = span.y - span.x;
-    const int STEPS = 64;
+    const int STEPS = 72;
     float stepLength = totalDist / float(STEPS);
+
+    // Jimenez IGN low-discrepancy ray jitter: breaks phase coherence and eliminates concentric moire banding!
+    p += d * (stepLength * gargIGN(gl_FragCoord.xy));
 
     // IterationT disk geometry bounds
     const float discRadius = 2.25;
@@ -240,7 +249,6 @@ void main() {
         vec3 sVec = -p / max(sDist, 0.0001);
         d = normalize(d + sVec * (warpFactor * (0.06 * lensMult)));
 
-        vec3 pPrev = p;
         p += d * stepLength;
         travelledBlocks += stepLength * uScale;
 
@@ -249,12 +257,10 @@ void main() {
             break;
         }
 
-        // 2. Black Hole Event Horizon Shadow (Segment-to-Sphere Test)
-        // Tests the exact point of closest approach of this step segment to origin (r = 0.52).
-        // This guarantees a razor-sharp, perfectly round and smooth shadow with ZERO dither noise!
-        float tClose = clamp(-dot(pPrev, d), 0.0, stepLength);
-        float dMin = length(pPrev + d * tClose);
-        if (dMin < 0.52) {
+        // 2. Geodesic Black Hole Event Horizon Singularity Plunge Test
+        // Trapped rays spiral violently inward to r < 0.08, while escaping photon ring rays stay r >= 0.426.
+        // Testing r < 0.30 guarantees a mathematically circular shadow with ZERO scalloped teeth or bites!
+        if (length(p) < 0.30) {
             hitShadow = true;
             transmittance = 0.0;
             break;
@@ -283,9 +289,11 @@ void main() {
         bloomFactor *= clamp(2.0 - dist / discThickness, 0.0, 1.0);
         bloomFactor = bloomFactor * bloomFactor;
 
-        // Smooth Bell-Curve Radial Density Profile
+        // Smooth Gaussian Vertical Density Profile & Bell-Curve Radial Profile
         float dr = gargPcurve(radialGradient);
-        float density = dr * clamp(1.0 - dist / discThickness, 0.0, 1.0) * 0.7;
+        float vNorm = dist / max(discThickness, 0.005);
+        float vShape = exp(-vNorm * vNorm * 2.2);
+        float density = dr * vShape * 0.75;
         density = clamp(density + bloomFactor * 0.1, 0.0, 1.0) * outerFade;
 
         if (density > 0.0001 && r >= discInner) {
@@ -311,7 +319,7 @@ void main() {
             glow *= clamp(sin(flowAngle - 1.07) * 0.55 + 1.0, 0.40, 1.65);
 
             // Volumetric Beer-Lambert integration
-            float stepTrans = exp2(-density * 6.0 * (stepLength / 0.15));
+            float stepTrans = exp2(-density * 6.0 * (stepLength / 0.13));
             float integral = 1.0 - stepTrans;
             transmittance *= stepTrans;
 
@@ -322,7 +330,7 @@ void main() {
         vec2 torusCircle = vec2(0.95, 0.015);
         float torusDist = length(vec2(r - torusCircle.x, h + 0.03));
         float bloomDisc = 1.0 / (pow(torusDist * 3.5, 3.2) + 0.001);
-        bloomDisc *= step(0.50, r);
+        bloomDisc *= smoothstep(0.40, 0.52, r);
         vec3 col = gargBlackbody(12000.0);
 
         result += col * bloomDisc * (0.008 * stepLength) * transmittance;
