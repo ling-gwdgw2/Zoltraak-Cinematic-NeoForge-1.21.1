@@ -170,22 +170,41 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
         }
     }
 
+    private Vec3 lockedOrigin = null;
+    private Vec3 lockedDirection = null;
+
     @Override
     public Vec3 visualOrigin(float partial) {
         ensureOwnerResolved();
-        if (owner != null && owner.isAlive()) {
-            return getStaffAnchorPos(owner, partial);
+        if (!fired()) {
+            if (owner != null && owner.isAlive()) {
+                return getStaffAnchorPos(owner, partial);
+            }
+            return getPosition(partial);
         }
-        return getPosition(partial);
+        if (lockedOrigin == null) {
+            lockedOrigin = (owner != null && owner.isAlive())
+                    ? getStaffAnchorPos(owner, partial)
+                    : getPosition(partial);
+        }
+        return lockedOrigin;
     }
 
     @Override
     public Vec3 visualDirection(float partial) {
         ensureOwnerResolved();
-        if (owner != null && owner.isAlive()) {
-            return owner.getViewVector(partial).normalize();
+        if (!fired()) {
+            if (owner != null && owner.isAlive()) {
+                return owner.getViewVector(partial).normalize();
+            }
+            return Vec3.directionFromRotation(getXRot(), getYRot()).normalize();
         }
-        return Vec3.directionFromRotation(getXRot(), getYRot()).normalize();
+        if (lockedDirection == null) {
+            lockedDirection = (owner != null && owner.isAlive())
+                    ? owner.getViewVector(partial).normalize()
+                    : Vec3.directionFromRotation(getXRot(), getYRot()).normalize();
+        }
+        return lockedDirection;
     }
 
     @Override
@@ -311,6 +330,17 @@ public class ZoltraakCinematicBeamEntity extends Entity implements IZoltraakVisu
             setPos(staffPos.x, staffPos.y, staffPos.z);
             setYRot(owner.getYRot());
             setXRot(owner.getXRot());
+        } else if (fired()) {
+            if (lockedDirection == null) {
+                lockedDirection = (owner != null && owner.isAlive())
+                        ? owner.getViewVector(1.0f).normalize()
+                        : Vec3.directionFromRotation(getXRot(), getYRot()).normalize();
+            }
+            if (lockedOrigin == null) {
+                lockedOrigin = (owner != null && owner.isAlive())
+                        ? getStaffAnchorPos(owner, 1.0f)
+                        : getPosition(1.0f);
+            }
         }
 
         Vec3 start = position();
